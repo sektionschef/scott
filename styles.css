@@ -1,0 +1,54 @@
+/* 
+with the help of: 
+frame: https://codepen.io/Kaiyuan/pen/DjBRbV and https://codepen.io/jdhaliwal/pen/wvKpBje 
+label: https://codepen.io/sdthornton/pen/wBZdXq and https://codepen.io/codingtuting/pen/XWrBgQz 
+*/
+
+html,
+body {
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    touch-action: none;
+}
+
+
+/* https://blog.hubspot.com/website/center-an-image-in-html#:~:text=To%20center%20an%20image%20vertically%2C%20you%20can%20wrap%20it%20in,properties%2C%20and%20the%20transform%20property.  */
+/* https://codepen.io/sektionschef/pen/gOjRKOG */
+
+/* https://github.com/sa-azeem/fxhash_template */
+
+#centerDiv {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: white;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* #badAssCanvas {
+	object-fit: contain;
+	max-height: 100%;
+	max-width: 100%;
+	background: hsl(0, 18%, 57%);
+} */
+
+#badAssCanvas {
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    height: 100%;
+}
+
+svg {
+    width: 100%;
+    height: 100%;
+    background-color: white;
+}

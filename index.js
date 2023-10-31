@@ -1,93 +1,139 @@
-// demonstrate seed reset
-// for (let i = 0; i < 10; i++) {
-//   console.log(i, $fx.rand(), $fx.randminter())
-//   $fx.rand.reset();
-//   $fx.randminter.reset();
-// }
+// ########################################
+var BULK = false; // bulk export images - and use direct not lense
+// ########################################
+
+var TITLE = "Scott";
+var ARTIST = "Stefan Schwaha, @sektionschef";
+var DESCRIPTION = "javascript on html canvas";
+var WEBSITE = "https://digitalitility.com";
+var YEAR = "2023";
+
+var BACKGROUNDTONE = "#ffffff";
+
+
+Math.random = $fx.rand;
+noise.seed($fx.rand());
 
 const sp = new URLSearchParams(window.location.search)
 //  console.log(sp);
 
+console.info(`fxhash: %c${$fx.hash}`, 'font-weight: bold');
+
+
+CANVASFORMATS = {
+  "1:1": {
+    "canvasWidth": 900,
+    "canvasHeight": 900,
+  },
+  "16:9": {
+    "canvasWidth": 1600,
+    "canvasHeight": 900,
+  },
+  "9:16": {
+    "canvasWidth": 900,
+    "canvasHeight": 1600,
+  },
+  "DIN A0, 84,1 cm x 118,9 cm": {
+    "canvasWidth": 1272,
+    "canvasHeight": 900,
+  },
+}
+
+canvasFormatChosen = CANVASFORMATS["16:9"];
+// var canvasFormatChosen = CANVASFORMATS[$fx.getParam("format_id")];
+// console.log("Canvas Format: " + canvasFormatChosen);
+
+if (canvasFormatChosen.canvasWidth <= canvasFormatChosen.canvasHeight) {
+  SHORTSIDE = canvasFormatChosen.canvasWidth;
+  LONGSIDE = canvasFormatChosen.canvasHeight;
+  LANDSCAPE = false;
+} else {
+  SHORTSIDE = canvasFormatChosen.canvasHeight;
+  LONGSIDE = canvasFormatChosen.canvasWidth;
+  LANDSCAPE = true;
+}
+
+
 // this is how to define parameters
 $fx.params([
-  {
-    id: "number_id",
-    name: "A number/float64",
-    type: "number",
-    //default: Math.PI,
-    options: {
-      min: 1,
-      max: 10,
-      step: 0.0001,
-    },
-  },
+  // {
+  //   id: "number_id",
+  //   name: "A number/float64",
+  //   type: "number",
+  //   //default: Math.PI,
+  //   options: {
+  //     min: 1,
+  //     max: 10,
+  //     step: 0.0001,
+  //   },
+  // },
 
-  {
-    id: "bigint_id",
-    name: "A bigint",
-    type: "bigint",
-    update: "code-driven",
-    //default: BigInt(Number.MAX_SAFE_INTEGER * 2),
-    options: {
-      min: Number.MIN_SAFE_INTEGER * 4,
-      max: Number.MAX_SAFE_INTEGER * 4,
-      step: 1,
-    },
-  },
-  {
-    id: "string_id_long",
-    name: "A string long",
-    type: "string",
-    update: "code-driven",
-    //default: "hello",
-    options: {
-      minLength: 1,
-      maxLength: 512,
-    },
-  },
-  {
-    id: "select_id",
-    name: "A selection",
-    type: "select",
-    update: "code-driven",
-    //default: "pear",
-    options: {
-      options: ["apple", "orange", "pear"],
-    },
-  },
-  {
-    id: "color_id",
-    name: "A color",
-    type: "color",
-    update: "code-driven",
-    //default: "ff0000",
-  },
-  {
-    id: "boolean_id",
-    name: "A boolean",
-    type: "boolean",
-    update: "code-driven",
-    //default: true,
-  },
-  {
-    id: "string_id",
-    name: "A string",
-    type: "string",
-    update: "code-driven",
-    //default: "hello",
-    options: {
-      minLength: 1,
-      maxLength: 512,
-    },
-  },
+  // {
+  //   id: "bigint_id",
+  //   name: "A bigint",
+  //   type: "bigint",
+  //   update: "code-driven",
+  //   //default: BigInt(Number.MAX_SAFE_INTEGER * 2),
+  //   options: {
+  //     min: Number.MIN_SAFE_INTEGER * 4,
+  //     max: Number.MAX_SAFE_INTEGER * 4,
+  //     step: 1,
+  //   },
+  // },
+  // {
+  //   id: "string_id_long",
+  //   name: "A string long",
+  //   type: "string",
+  //   update: "code-driven",
+  //   //default: "hello",
+  //   options: {
+  //     minLength: 1,
+  //     maxLength: 512,
+  //   },
+  // },
+  // {
+  //   id: "select_id",
+  //   name: "A selection",
+  //   type: "select",
+  //   update: "code-driven",
+  //   //default: "pear",
+  //   options: {
+  //     options: ["apple", "orange", "pear"],
+  //   },
+  // },
+  // {
+  //   id: "color_id",
+  //   name: "A color",
+  //   type: "color",
+  //   update: "code-driven",
+  //   //default: "ff0000",
+  // },
+  // {
+  //   id: "boolean_id",
+  //   name: "A boolean",
+  //   type: "boolean",
+  //   update: "code-driven",
+  //   //default: true,
+  // },
+  // {
+  //   id: "string_id",
+  //   name: "A string",
+  //   type: "string",
+  //   update: "code-driven",
+  //   //default: "hello",
+  //   options: {
+  //     minLength: 1,
+  //     maxLength: 512,
+  //   },
+  // },
 ])
 
 // this is how features can be defined
 $fx.features({
-  "A random feature": Math.floor($fx.rand() * 10),
-  "A random boolean": $fx.rand() > 0.5,
-  "A random string": ["A", "B", "C", "D"].at(Math.floor($fx.rand() * 4)),
-  "Feature from params, its a number": $fx.getParam("number_id"),
+  // "A random feature": Math.floor($fx.rand() * 10),
+  // "A random boolean": $fx.rand() > 0.5,
+  // "A random string": ["A", "B", "C", "D"].at(Math.floor($fx.rand() * 4)),
+  // "Feature from params, its a number": $fx.getParam("number_id"),
 })
 
 function main() {
@@ -106,56 +152,36 @@ function main() {
   // console.log("Single transformed value:");
   // console.log($fx.getParam("color_id"));
 
-  const getContrastTextColor = backgroundColor =>
-    ((parseInt(backgroundColor, 16) >> 16) & 0xff) > 0xaa
-      ? "#000000"
-      : "#ffffff"
+  const targetDiv = document.getElementById('badAssCanvas');
+  const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svgNode.setAttributeNS(null, 'viewBox', '0 0 ' + canvasFormatChosen.canvasWidth + " " + canvasFormatChosen.canvasHeight);
+  svgNode.setAttributeNS(null, 'id', 'svgNode');
+  targetDiv.appendChild(svgNode);
 
-  const bgcolor = $fx.getParam("color_id").hex.rgba
-  const textcolor = getContrastTextColor(bgcolor.replace("#", ""))
+  var defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  defs.setAttributeNS(null, 'id', 'defs');
+  svgNode.appendChild(defs);
 
-  // update the document based on the parameters
-  document.body.style.background = bgcolor
-  document.body.innerHTML = `
-  <div style="color: ${textcolor};">
-    <p>
-    hash: ${$fx.hash}
-    </p>
-    <p>
-    minter: ${$fx.minter}
-    </p>
-    <p>
-    iteration: ${$fx.iteration}
-    </p>
-    <p>
-    inputBytes: ${$fx.inputBytes}
-    </p>
-    <p>
-    context: ${$fx.context}
-    </p>
-    <p>
-    params:
-    </p>
-    <pre>
-    ${$fx.stringifyParams($fx.getRawParams())}
-    </pre>
-  <div>
-  `
-  const btn = document.createElement("button")
-  btn.textContent = "emit random params"
-  btn.addEventListener("click", () => {
-    $fx.emit("params:update", {
-      number_id: $fx.getRandomParam("number_id"),
-      bigint_id: $fx.getRandomParam("bigint_id"),
-      string_id_long: $fx.getRandomParam("string_id_long"),
-      select_id: $fx.getRandomParam("select_id"),
-      color_id: $fx.getRandomParam("color_id"),
-      boolean_id: $fx.getRandomParam("boolean_id"),
-      string_id: $fx.getRandomParam("string_id"),
-    })
-    main()
-  })
-  document.body.appendChild(btn)
+  createPath();
+
+
+  setTagsHTML({
+    "title": TITLE,
+    "artist": ARTIST,
+    "description": DESCRIPTION,
+    "website": WEBSITE,
+    "year": YEAR,
+  });
+
+  if (BULK) {
+    // var filename = `${$fx.getParam("country_id")}_${$fx.getParam("palette_id")}_${$fx.getParam("horizon_id")}_${$fx.getParam("format_id")}_${$fx.getParam("noiseYParam_id")}_${$fx.hash}.svg`;
+
+    // // SAVE SVG
+    // saveSvg(svgNode, filename);
+
+    // setTimeout(reloader, 30000)
+  }
+
 }
 
 main()
@@ -170,3 +196,44 @@ $fx.on(
   },
   (optInDefault, newValues) => main()
 )
+
+
+// Add event listener on keydown -  https://www.section.io/engineering-education/keyboard-events-in-javascript/ 
+document.addEventListener('keydown', (event) => {
+
+  if (event.code == "KeyE") {
+    var filename = TITLE + "_" + $fx.hash + "_" + getTimestamp() + ".svg";
+    // alert("oida is going down");
+
+    saveSvg(svgNode, filename);
+  }
+
+  // Alert the key name and key code on keydown
+  // var name = event.key;
+  // var code = event.code;
+  // alert(`Key pressed ${name} \r\n Key code value: ${code}`);
+
+}, false);
+
+function createPath() {
+
+  const svgNode = document.getElementById('svgNode');
+
+
+  newpath = document.createElementNS('http://www.w3.org/2000/svg', "path");
+
+  newpath.setAttributeNS(null, "id", "pathIdD");
+  newpath.setAttributeNS(null, "d", "M 1,97.857143 C 19.285714,96.428571 24.016862,131.64801 90.714286,132.85714 140.78762,133.7649 202.79376,66.16041 202.79376,66.16041");
+  newpath.setAttributeNS(null, "stroke", "black");
+  newpath.setAttributeNS(null, "stroke-width", 3);
+  newpath.setAttributeNS(null, "opacity", 1);
+  newpath.setAttributeNS(null, "fill", "none");
+
+  svgNode.appendChild(newpath);
+}
+
+function createDrawingGroup() {
+  var groupDrawing = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  groupDrawing.setAttribute("id", "drawing");
+  defs.appendChild(groupDrawing);
+}
