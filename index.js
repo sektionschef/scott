@@ -228,15 +228,21 @@ document.addEventListener('keydown', (event) => {
 function createPath(data) {
 
   var start = data.start
+  var end = data.end
+
+  // needs VECTOR
+  var distance = (end.x - start.x);
+  var controlOnLine = distance / 8; // a third, quarter or so - x coord of control points
+  var controlOffLine = distance / 3;
+
   var controlA = {
-    x: 20,
-    y: 20
+    x: start.x + controlOnLine,
+    y: start.y + controlOffLine
   }
   var controlB = {
-    x: 40,
-    y: 20
+    x: end.x - controlOnLine,
+    y: end.y + controlOffLine
   }
-  var end = data.end
 
 
   newpath = document.createElementNS('http://www.w3.org/2000/svg', "path");
