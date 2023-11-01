@@ -162,17 +162,37 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
+  for (var i = 0; i < 30; i++) {
 
-  createPath({
-    "start": {
-      x: 10,
-      y: 10
-    },
-    "end": {
-      x: 50,
-      y: 10
+    var lenthPath = 140;
+    var areaStart = {
+      "x": 100,
+      "y": 10,
     }
-  });
+    var stepSize = 10;
+
+    createPath({
+      "start": {
+        x: areaStart.x,
+        y: areaStart.y + i * stepSize
+      },
+      "end": {
+        x: areaStart.x + lenthPath,
+        y: areaStart.y + i * stepSize
+      }
+    });
+  }
+
+  // createPath({
+  //   "start": {
+  //     x: 10,
+  //     y: 10
+  //   },
+  //   "end": {
+  //     x: 50,
+  //     y: 10
+  //   }
+  // });
 
 
   setTagsHTML({
@@ -227,23 +247,28 @@ document.addEventListener('keydown', (event) => {
 
 function createPath(data) {
 
-  var start = data.start
-  var end = data.end
+  var start = data.start;
+  var end = data.end;
+
+  // start and end distortion
+  start.x = start.x + gaussianRandAdj(0, 3);
+  end.x = end.x + gaussianRandAdj(0, 3);
+  start.y = start.y + gaussianRandAdj(0, 1);
+  end.y = end.y + gaussianRandAdj(0, 1);
 
   // needs VECTOR
   var distance = (end.x - start.x);
-  var controlOnLine = distance / 8; // a third, quarter or so - x coord of control points
-  var controlOffLine = distance / 3;
+  var controlOnLine = distance / 4; // a third, quarter or so - x coord of control points
+  var controlOffLine = distance / 50;
 
   var controlA = {
-    x: start.x + controlOnLine,
-    y: start.y + controlOffLine
+    x: start.x + gaussianRandAdj(controlOnLine, 12),
+    y: start.y + gaussianRandAdj(0, controlOffLine)
   }
   var controlB = {
-    x: end.x - controlOnLine,
-    y: end.y + controlOffLine
+    x: end.x - gaussianRandAdj(controlOnLine, 12),
+    y: end.y + gaussianRandAdj(0, controlOffLine)
   }
-
 
   newpath = document.createElementNS('http://www.w3.org/2000/svg', "path");
 
@@ -261,7 +286,7 @@ function createPath(data) {
   ${end.y}
   `);
   newpath.setAttributeNS(null, "stroke", "black");
-  newpath.setAttributeNS(null, "stroke-width", 3);
+  newpath.setAttributeNS(null, "stroke-width", 1);
   newpath.setAttributeNS(null, "opacity", 1);
   newpath.setAttributeNS(null, "fill", "none");
 
