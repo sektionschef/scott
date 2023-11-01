@@ -162,7 +162,17 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
-  createPath();
+
+  createPath({
+    "start": {
+      x: 10,
+      y: 10
+    },
+    "end": {
+      x: 50,
+      y: 10
+    }
+  });
 
 
   setTagsHTML({
@@ -215,20 +225,41 @@ document.addEventListener('keydown', (event) => {
 
 }, false);
 
-function createPath() {
+function createPath(data) {
 
-  const svgNode = document.getElementById('svgNode');
+  var start = data.start
+  var controlA = {
+    x: 20,
+    y: 20
+  }
+  var controlB = {
+    x: 40,
+    y: 20
+  }
+  var end = data.end
 
 
   newpath = document.createElementNS('http://www.w3.org/2000/svg', "path");
 
   newpath.setAttributeNS(null, "id", "pathIdD");
-  newpath.setAttributeNS(null, "d", "M 1,97.857143 C 19.285714,96.428571 24.016862,131.64801 90.714286,132.85714 140.78762,133.7649 202.79376,66.16041 202.79376,66.16041");
+  // newpath.setAttributeNS(null, "d", "M 10 10 C 20 20, 40 20, 50 10");
+  newpath.setAttributeNS(null, "d", `M 
+  ${start.x} 
+  ${start.y} 
+  C 
+  ${controlA.x} 
+  ${controlA.y}, 
+  ${controlB.x} 
+  ${controlB.y}, 
+  ${end.x} 
+  ${end.y}
+  `);
   newpath.setAttributeNS(null, "stroke", "black");
   newpath.setAttributeNS(null, "stroke-width", 3);
   newpath.setAttributeNS(null, "opacity", 1);
   newpath.setAttributeNS(null, "fill", "none");
 
+  const svgNode = document.getElementById('svgNode');
   svgNode.appendChild(newpath);
 }
 
