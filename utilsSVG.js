@@ -58,9 +58,17 @@ function vectorFromAngle(angleRadians, vectorMagnitude) {
     return point;
 }
 
+function vectorLength(p1) {
+    return Math.sqrt(p1.x ^ 2 + p1.y ^ 2);
+}
+
 
 function vectorAdd(p1, p2) {
     return { x: p1.x + p2.x, y: p1.y + p2.y }
+}
+
+function vectorSub(p1, p2) {
+    return { x: p2.x - p1.x, y: p2.y - p1.y }
 }
 
 

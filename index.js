@@ -162,18 +162,9 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
-  // vector
-  var pointA = {
-    x: 400,
-    y: 500,
-  }
-  var angleRadians = 0.4;
-  var vectorMagnitude = 30;
-  var pointB = vectorFromAngle(angleRadians, vectorMagnitude)
-  console.log(pointB);
 
-
-  for (var i = 0; i < 30; i++) {
+  // for (var i = 0; i < 30; i++) {
+  for (var i = 0; i < 1; i++) {
 
     var lenthPath = 140;
     var areaStart = {
@@ -259,7 +250,11 @@ document.addEventListener('keydown', (event) => {
 function createPath(data) {
 
   var start = data.start;
-  var end = data.end;
+  var angleRadians = 0.3;
+  var vectorMagnitude = 120;
+  var end = vectorAdd(start, vectorFromAngle(angleRadians, vectorMagnitude))
+
+  // var end = data.end;
 
   // start and end distortion
   start.x = start.x + gaussianRandAdj(0, 3);
@@ -268,17 +263,28 @@ function createPath(data) {
   end.y = end.y + gaussianRandAdj(0, 1);
 
   // needs VECTOR
-  var distance = (end.x - start.x);
-  var controlOnLine = distance / 4; // a third, quarter or so - x coord of control points
-  var controlOffLine = distance / 50;
+  // var distance = (end.x - start.x);
+  var startEnd = vectorSub(start, end);
+  var distance = vectorLength(startEnd);
+
+  var lineSegment = 4;
+  // var controlOnLine = distance / 4; // a third, quarter or so - x coord of control points
+  // var controlOffLine = distance / 50;
+  // var controlOnLine = {
+  //   x: distance.x / 4
+  // }
 
   var controlA = {
-    x: start.x + gaussianRandAdj(controlOnLine, 12),
-    y: start.y + gaussianRandAdj(0, controlOffLine)
+    // x: start.x + gaussianRandAdj(controlOnLine, 12),
+    // y: start.y + gaussianRandAdj(0, controlOffLine)
+    x: start.x + startEnd.x / lineSegment + gaussianRandAdj(0, 3),
+    y: start.y + startEnd.y / lineSegment + gaussianRandAdj(0, 10),
   }
   var controlB = {
-    x: end.x - gaussianRandAdj(controlOnLine, 12),
-    y: end.y + gaussianRandAdj(0, controlOffLine)
+    // x: end.x - gaussianRandAdj(distance / 4, 12),
+    // y: end.y + gaussianRandAdj(0, controlOffLine)
+    x: end.x - startEnd.y / lineSegment + gaussianRandAdj(0, 3),
+    y: end.y - startEnd.y / lineSegment + gaussianRandAdj(0, 10)
   }
 
   newpath = document.createElementNS('http://www.w3.org/2000/svg', "path");
@@ -301,8 +307,53 @@ function createPath(data) {
   newpath.setAttributeNS(null, "opacity", 1);
   newpath.setAttributeNS(null, "fill", "none");
 
+  // DEBUG
+  debugStart = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+  debugStart.setAttributeNS(null, "id", "start");
+  debugStart.setAttributeNS(null, "cx", start.x);
+  debugStart.setAttributeNS(null, "cy", start.y);
+  debugStart.setAttributeNS(null, "r", "3");
+  debugStart.setAttributeNS(null, "stroke", "blue");
+  debugStart.setAttributeNS(null, "stroke-width", 2);
+  debugStart.setAttributeNS(null, "opacity", 1);
+  debugStart.setAttributeNS(null, "fill", "none");
+
+  debugEnd = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+  debugEnd.setAttributeNS(null, "id", "end");
+  debugEnd.setAttributeNS(null, "cx", end.x);
+  debugEnd.setAttributeNS(null, "cy", end.y);
+  debugEnd.setAttributeNS(null, "r", "3");
+  debugEnd.setAttributeNS(null, "stroke", "red");
+  debugEnd.setAttributeNS(null, "stroke-width", 2);
+  debugEnd.setAttributeNS(null, "opacity", 1);
+  debugEnd.setAttributeNS(null, "fill", "none");
+
+  debugControlA = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+  debugControlA.setAttributeNS(null, "id", "controlA");
+  debugControlA.setAttributeNS(null, "cx", controlA.x);
+  debugControlA.setAttributeNS(null, "cy", controlA.y);
+  debugControlA.setAttributeNS(null, "r", "3");
+  debugControlA.setAttributeNS(null, "stroke", "pink");
+  debugControlA.setAttributeNS(null, "stroke-width", 2);
+  debugControlA.setAttributeNS(null, "opacity", 1);
+  debugControlA.setAttributeNS(null, "fill", "none");
+
+  debugControlB = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+  debugControlB.setAttributeNS(null, "id", "controlB");
+  debugControlB.setAttributeNS(null, "cx", controlB.x);
+  debugControlB.setAttributeNS(null, "cy", controlB.y);
+  debugControlB.setAttributeNS(null, "r", "3");
+  debugControlB.setAttributeNS(null, "stroke", "pink");
+  debugControlB.setAttributeNS(null, "stroke-width", 2);
+  debugControlB.setAttributeNS(null, "opacity", 1);
+  debugControlB.setAttributeNS(null, "fill", "none");
+
   const svgNode = document.getElementById('svgNode');
   svgNode.appendChild(newpath);
+  svgNode.appendChild(debugStart);
+  svgNode.appendChild(debugEnd);
+  svgNode.appendChild(debugControlA);
+  svgNode.appendChild(debugControlB);
 }
 
 function createDrawingGroup() {
