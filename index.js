@@ -173,6 +173,7 @@ function main() {
   }
   var startEnd = vectorSub(start, end);
   var stepCount = 70
+  var angleRadians = angleBetweenPoints(start, end)
 
   for (var i = 0; i < stepCount; i++) {
 
@@ -182,7 +183,7 @@ function main() {
         y: start.y + i * startEnd.y / stepCount
       },
       vectorMagnitude: 120,
-      angleRadians: 0.2,
+      angleRadians: (angleRadians - Math.PI / 2) // 0.2,
     });
   }
 

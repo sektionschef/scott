@@ -49,7 +49,8 @@ function angleBetweenPoints(p1, p2) {
     // angle in degrees
     var angleDeg = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
 
-    return angleDeg;
+    // return angleDeg;
+    return angleRadians;
 }
 
 // comes from https://plantpot.works/8660
