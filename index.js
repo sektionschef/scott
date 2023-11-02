@@ -162,6 +162,17 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
+  // vector
+  var pointA = {
+    x: 400,
+    y: 500,
+  }
+  var angleRadians = 0.4;
+  var vectorMagnitude = 30;
+  var pointB = vectorFromAngle(angleRadians, vectorMagnitude)
+  console.log(pointB);
+
+
   for (var i = 0; i < 30; i++) {
 
     var lenthPath = 140;
