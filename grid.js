@@ -6,7 +6,7 @@ class Grid {
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
 
-        this.DEBUG = true;
+        this.DEBUG = false;
         this.marginBoxCount = Math.round(this.shortBoxCount * 0.08);
         this.boxSize = this.shortSide / this.shortBoxCount;
         this.longBoxCount = Math.floor(this.longSide / this.boxSize);
@@ -38,7 +38,8 @@ class Grid {
         if (this.DEBUG) {
             this.showDebug();
         }
-        this.loop();
+        this.loopCategorize();
+        this.loopdebugCategory();
 
     }
 
@@ -46,6 +47,8 @@ class Grid {
 
         var index = 0;
         var stripeIndex = 0;
+
+        var inactive = false;
 
         // h = long, w = short
 
@@ -64,6 +67,8 @@ class Grid {
                 // var polygonA = insidePolygon([center.x, center.y], polyPoints);
                 // var polygonLeft = insidePolygon([center.x, center.y], polyPointsLeft);
 
+                inactive = this.drawSkipMargin(h, w)
+
                 this.boxes.push({
                     "center": center,
                     "A": A,
@@ -73,8 +78,12 @@ class Grid {
                     "height": h,
                     "width": w,
                     "index": index,
-                    "active": false,
+                    "inactive": inactive,
                     "stripeIndex": stripeIndex,
+                    "stripeA": false,
+                    "stripeB": false,
+                    "stripeC": false,
+                    "stripeD": false,
                 })
                 index += 1;
             }
@@ -85,17 +94,17 @@ class Grid {
         }
     }
 
-    drawSkipMargin(box) {
+    drawSkipMargin(h, w) {
         if (this.landscape == false) {
-            return box.height < (this.marginBoxCount) ||
-                box.width < (this.marginBoxCount) ||
-                box.width >= (this.shortBoxCount - this.marginBoxCount) ||
-                box.height >= (this.longBoxCount - this.marginBoxCount);
+            return h < (this.marginBoxCount) ||
+                w < (this.marginBoxCount) ||
+                w >= (this.shortBoxCount - this.marginBoxCount) ||
+                h >= (this.longBoxCount - this.marginBoxCount);
         } else {
-            return box.height < (this.marginBoxCount) ||
-                box.width < (this.marginBoxCount) ||
-                box.width >= (this.longBoxCount - this.marginBoxCount) ||
-                box.height >= (this.shortBoxCount - this.marginBoxCount);
+            return h < (this.marginBoxCount) ||
+                w < (this.marginBoxCount) ||
+                w >= (this.longBoxCount - this.marginBoxCount) ||
+                h >= (this.shortBoxCount - this.marginBoxCount);
         }
     }
 
@@ -117,23 +126,60 @@ class Grid {
         }
     }
 
-    loop() {
-        // let randomIndex = getRandomIndex(this.boxes.length);
+    loopCategorize() {
+        for (var i = 0; i < this.boxes.length; i++) {
 
-        // let i = 0;
-
-        // for (var v = 0; v < randomIndex.length; v++) {
-        for (var v = 0; v < this.boxes.length; v++) {
-
-            // i = randomIndex[v];
-
-            if (this.drawSkipMargin(this.boxes[v])) {
-                continue;
-            } else {
-                this.boxes[v].active = true;
+            // A
+            if (
+                this.boxes[i].inactive == false &&
+                this.boxes[i].stripeIndex % 2 == 0 &&
+                // i >= this.widthBoxCount &&
+                this.boxes[i - this.widthBoxCount].stripeIndex % 2 != 0 &&
+                this.boxes[i - 1].inactive == true
+            ) {
+                this.boxes[i].stripeA = true;
             }
 
-            if (this.boxes[v].stripeIndex % 2 == 0) {
+            // B
+            if (
+                this.boxes[i].inactive == true &&
+                this.boxes[i].stripeIndex % 2 == 0 &&
+                i >= this.widthBoxCount &&
+                this.boxes[i - this.widthBoxCount].stripeIndex % 2 != 0 &&
+                this.boxes[i].inactive == true &&
+                this.boxes[i - 1].inactive == false
+            ) {
+                this.boxes[i - 1].stripeB = true;
+            }
+
+            // C
+            if (
+                this.boxes[i].inactive == false &&
+                this.boxes[i - 1].inactive == true &&
+                this.boxes[i].stripeIndex % 2 == 0 &&
+                this.boxes[i + this.widthBoxCount].stripeIndex % 2 != 0
+            ) {
+                this.boxes[i].stripeC = true;
+            }
+
+            // D
+            if (
+                this.boxes[i].inactive == false &&
+                this.boxes[i + 1].inactive == true &&
+                this.boxes[i].stripeIndex % 2 == 0 &&
+                this.boxes[i + this.widthBoxCount].stripeIndex % 2 != 0
+            ) {
+                this.boxes[i].stripeD = true;
+            }
+
+        }
+    }
+
+    loopdebugCategory() {
+
+        for (var v = 0; v < this.boxes.length; v++) {
+
+            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v].inactive == false) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
                 rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
@@ -149,37 +195,56 @@ class Grid {
             }
 
             // A
-            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v - this.widthBoxCount].stripeIndex % 2 != 0 && this.boxes[v - 1].active == false) {
+            if (this.boxes[v].stripeA == true) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
                 rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
                 rect.setAttributeNS(null, 'height', this.boxSize);
                 rect.setAttributeNS(null, 'width', this.boxSize);
-                // rect.setAttributeNS(null, 'stroke', '#1100ff');
-                // rect.setAttributeNS(null, 'stroke-width', '0.5');
                 rect.setAttributeNS(null, 'fill', '#00ff80');
-                // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
 
                 const svgNode = document.getElementById('svgNode');
                 svgNode.appendChild(rect);
             }
 
             // B
-            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v - this.widthBoxCount].stripeIndex % 2 != 0 && this.boxes[v - 1].active == true) {
+            if (this.boxes[v].stripeB == true) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
                 rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
                 rect.setAttributeNS(null, 'height', this.boxSize);
                 rect.setAttributeNS(null, 'width', this.boxSize);
-                // rect.setAttributeNS(null, 'stroke', '#1100ff');
-                // rect.setAttributeNS(null, 'stroke-width', '0.5');
-                rect.setAttributeNS(null, 'fill', '#00ff80');
-                // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
+                rect.setAttributeNS(null, 'fill', '#e100ff');
 
                 const svgNode = document.getElementById('svgNode');
                 svgNode.appendChild(rect);
             }
 
+            // C
+            if (this.boxes[v].stripeC == true) {
+                var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
+                rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
+                rect.setAttributeNS(null, 'height', this.boxSize);
+                rect.setAttributeNS(null, 'width', this.boxSize);
+                rect.setAttributeNS(null, 'fill', '#ff0000');
+
+                const svgNode = document.getElementById('svgNode');
+                svgNode.appendChild(rect);
+            }
+
+            // D
+            if (this.boxes[v].stripeD == true) {
+                var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
+                rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
+                rect.setAttributeNS(null, 'height', this.boxSize);
+                rect.setAttributeNS(null, 'width', this.boxSize);
+                rect.setAttributeNS(null, 'fill', '#eeff00');
+
+                const svgNode = document.getElementById('svgNode');
+                svgNode.appendChild(rect);
+            }
         }
     }
 }
