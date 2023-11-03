@@ -7,7 +7,7 @@ class Grid {
         this.landscape = data.landscape;
 
         this.DEBUG = true;
-        this.marginBoxCount = Math.round(this.shortBoxCount * 0.1);
+        this.marginBoxCount = Math.round(this.shortBoxCount * 0.08);
         this.boxSize = this.shortSide / this.shortBoxCount;
         this.longBoxCount = Math.floor(this.longSide / this.boxSize);
 
@@ -38,12 +38,14 @@ class Grid {
         if (this.DEBUG) {
             this.showDebug();
         }
+        this.loop();
 
     }
 
     createBoxes() {
 
         var index = 0;
+        var stripeIndex = 0;
 
         // h = long, w = short
 
@@ -71,9 +73,28 @@ class Grid {
                     "height": h,
                     "width": w,
                     "index": index,
+                    "stripeIndex": stripeIndex,
                 })
                 index += 1;
             }
+
+            if (h % 2 == 0) {
+                stripeIndex += 1;
+            }
+        }
+    }
+
+    drawSkipMargin(box) {
+        if (this.landscape == false) {
+            return box.height < (this.marginBoxCount) ||
+                box.width < (this.marginBoxCount) ||
+                box.width >= (this.shortBoxCount - this.marginBoxCount) ||
+                box.height >= (this.longBoxCount - this.marginBoxCount);
+        } else {
+            return box.height < (this.marginBoxCount) ||
+                box.width < (this.marginBoxCount) ||
+                box.width >= (this.longBoxCount - this.marginBoxCount) ||
+                box.height >= (this.shortBoxCount - this.marginBoxCount);
         }
     }
 
@@ -87,11 +108,42 @@ class Grid {
             rect.setAttributeNS(null, 'width', this.boxSize);
             rect.setAttributeNS(null, 'stroke', '#f06');
             rect.setAttributeNS(null, 'stroke-width', '0.5');
-            // rect.setAttributeNS(null, 'fill', 'none');
+            rect.setAttributeNS(null, 'fill', 'none');
             // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
 
             const svgNode = document.getElementById('svgNode');
             svgNode.appendChild(rect);
+        }
+    }
+
+    loop() {
+        let randomIndex = getRandomIndex(this.boxes.length);
+
+        let i = 0;
+
+        for (var v = 0; v < randomIndex.length; v++) {
+
+            i = randomIndex[v];
+
+            if (this.drawSkipMargin(this.boxes[i])) {
+                continue;
+            }
+
+            if (this.boxes[i].stripeIndex % 2 == 0) {
+                var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttributeNS(null, 'x', this.boxes[i].A.x);
+                rect.setAttributeNS(null, 'y', this.boxes[i].A.y);
+                rect.setAttributeNS(null, 'height', this.boxSize);
+                rect.setAttributeNS(null, 'width', this.boxSize);
+                // rect.setAttributeNS(null, 'stroke', '#1100ff');
+                // rect.setAttributeNS(null, 'stroke-width', '0.5');
+                rect.setAttributeNS(null, 'fill', 'blue');
+                // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
+
+                const svgNode = document.getElementById('svgNode');
+                svgNode.appendChild(rect);
+            }
+
         }
     }
 }
