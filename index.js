@@ -1,5 +1,9 @@
 // ########################################
 var BULK = false; // bulk export images - and use direct not lense
+// let RESOLUTIONBOXCOUNT = 160;
+var RESOLUTIONBOXCOUNT = 80;
+// let RESOLUTIONBOXCOUNT = 60;
+// let RESOLUTIONBOXCOUNT = 40;
 // ########################################
 
 var TITLE = "Scott";
@@ -161,6 +165,13 @@ function main() {
   var defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
+
+  let grid = new Grid({
+    shortBoxCount: RESOLUTIONBOXCOUNT,
+    longSide: LONGSIDE,
+    shortSide: SHORTSIDE,
+    landscape: LANDSCAPE,
+  });
 
 
   var start = {
