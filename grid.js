@@ -73,6 +73,7 @@ class Grid {
                     "height": h,
                     "width": w,
                     "index": index,
+                    "active": false,
                     "stripeIndex": stripeIndex,
                 })
                 index += 1;
@@ -117,27 +118,62 @@ class Grid {
     }
 
     loop() {
-        let randomIndex = getRandomIndex(this.boxes.length);
+        // let randomIndex = getRandomIndex(this.boxes.length);
 
-        let i = 0;
+        // let i = 0;
 
-        for (var v = 0; v < randomIndex.length; v++) {
+        // for (var v = 0; v < randomIndex.length; v++) {
+        for (var v = 0; v < this.boxes.length; v++) {
 
-            i = randomIndex[v];
+            // i = randomIndex[v];
 
-            if (this.drawSkipMargin(this.boxes[i])) {
+            if (this.drawSkipMargin(this.boxes[v])) {
                 continue;
+            } else {
+                this.boxes[v].active = true;
             }
 
-            if (this.boxes[i].stripeIndex % 2 == 0) {
+            if (this.boxes[v].stripeIndex % 2 == 0) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-                rect.setAttributeNS(null, 'x', this.boxes[i].A.x);
-                rect.setAttributeNS(null, 'y', this.boxes[i].A.y);
+                rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
+                rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
                 rect.setAttributeNS(null, 'height', this.boxSize);
                 rect.setAttributeNS(null, 'width', this.boxSize);
                 // rect.setAttributeNS(null, 'stroke', '#1100ff');
                 // rect.setAttributeNS(null, 'stroke-width', '0.5');
                 rect.setAttributeNS(null, 'fill', 'blue');
+                // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
+
+                const svgNode = document.getElementById('svgNode');
+                svgNode.appendChild(rect);
+            }
+
+            // A
+            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v - this.widthBoxCount].stripeIndex % 2 != 0 && this.boxes[v - 1].active == false) {
+                var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
+                rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
+                rect.setAttributeNS(null, 'height', this.boxSize);
+                rect.setAttributeNS(null, 'width', this.boxSize);
+                // rect.setAttributeNS(null, 'stroke', '#1100ff');
+                // rect.setAttributeNS(null, 'stroke-width', '0.5');
+                rect.setAttributeNS(null, 'fill', '#00ff80');
+                // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
+
+                const svgNode = document.getElementById('svgNode');
+                svgNode.appendChild(rect);
+            }
+
+            // B
+            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v - this.widthBoxCount].stripeIndex % 2 != 0 && this.boxes[v - 1].active == true) {
+                var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
+                rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
+                rect.setAttributeNS(null, 'height', this.boxSize);
+                rect.setAttributeNS(null, 'width', this.boxSize);
+                // rect.setAttributeNS(null, 'stroke', '#1100ff');
+                // rect.setAttributeNS(null, 'stroke-width', '0.5');
+                rect.setAttributeNS(null, 'fill', '#00ff80');
                 // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
 
                 const svgNode = document.getElementById('svgNode');
