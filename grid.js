@@ -47,8 +47,7 @@ class Grid {
 
         var index = 0;
         var stripeIndex = 0;
-
-        var inactive = false;
+        var inactive = true;
 
         // h = long, w = short
 
@@ -131,33 +130,29 @@ class Grid {
 
             // A
             if (
+                i != 0 &&
+                this.boxes[i - 1].inactive == true &&
                 this.boxes[i].inactive == false &&
-                this.boxes[i].stripeIndex % 2 == 0 &&
-                // i >= this.widthBoxCount &&
-                this.boxes[i - this.widthBoxCount].stripeIndex % 2 != 0 &&
-                this.boxes[i - 1].inactive == true
+                this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
             ) {
                 this.boxes[i].stripeA = true;
             }
 
             // B
             if (
-                this.boxes[i].inactive == true &&
-                this.boxes[i].stripeIndex % 2 == 0 &&
-                i >= this.widthBoxCount &&
-                this.boxes[i - this.widthBoxCount].stripeIndex % 2 != 0 &&
-                this.boxes[i].inactive == true &&
-                this.boxes[i - 1].inactive == false
+                i != 0 &&
+                this.boxes[i - 1].inactive == true &&
+                this.boxes[i].inactive == false &&
+                this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
             ) {
-                this.boxes[i - 1].stripeB = true;
+                this.boxes[i].stripeB = true;
             }
 
             // C
             if (
                 this.boxes[i].inactive == false &&
-                this.boxes[i - 1].inactive == true &&
-                this.boxes[i].stripeIndex % 2 == 0 &&
-                this.boxes[i + this.widthBoxCount].stripeIndex % 2 != 0
+                this.boxes[i + 1].inactive == true &&
+                this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
             ) {
                 this.boxes[i].stripeC = true;
             }
@@ -166,8 +161,7 @@ class Grid {
             if (
                 this.boxes[i].inactive == false &&
                 this.boxes[i + 1].inactive == true &&
-                this.boxes[i].stripeIndex % 2 == 0 &&
-                this.boxes[i + this.widthBoxCount].stripeIndex % 2 != 0
+                this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
             ) {
                 this.boxes[i].stripeD = true;
             }
