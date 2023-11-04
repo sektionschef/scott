@@ -6,8 +6,7 @@ class Grid {
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
 
-        this.DEBUG = false;
-        this.marginBoxCount = Math.round(this.shortBoxCount * 0.08);
+        this.marginBoxCount = Math.round(this.shortBoxCount * 0.09);
         this.boxSize = this.shortSide / this.shortBoxCount;
         this.longBoxCount = Math.floor(this.longSide / this.boxSize);
 
@@ -35,9 +34,7 @@ class Grid {
         this.boxes = [];
 
         this.createBoxes();
-        if (this.DEBUG) {
-            this.showDebug();
-        }
+        this.showDebug();
         this.loopCategorize();
         this.loopdebugCategory();
 
@@ -110,12 +107,19 @@ class Grid {
     showDebug() {
         for (var i = 0; i < this.boxes.length; i++) {
 
+            var colory = "#f06"
+
+
+            if (this.boxes[i].inactive == true) {
+                colory = "#a8a8a8"
+            }
+
             var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
             rect.setAttributeNS(null, 'x', this.boxes[i].A.x);
             rect.setAttributeNS(null, 'y', this.boxes[i].A.y);
             rect.setAttributeNS(null, 'height', this.boxSize);
             rect.setAttributeNS(null, 'width', this.boxSize);
-            rect.setAttributeNS(null, 'stroke', '#f06');
+            rect.setAttributeNS(null, 'stroke', colory);
             rect.setAttributeNS(null, 'stroke-width', '0.5');
             rect.setAttributeNS(null, 'fill', 'none');
             // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
