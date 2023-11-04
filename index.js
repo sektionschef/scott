@@ -166,6 +166,17 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
+
+  // SHAPE
+  // <polygon points="200,10 250,190 160,210" style="fill:lime;stroke:purple;stroke-width:1" />
+  var shapy = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  shapy.setAttributeNS(null, 'points', "200,10 250,190 160,210");
+  shapy.setAttributeNS(null, 'fill', "none");
+  shapy.setAttributeNS(null, 'stroke', "black");
+  shapy.setAttributeNS(null, "stroke-width", 2);
+
+  svgNode.appendChild(shapy);
+
   // GRID
   let grid = new Grid({
     shortBoxCount: RESOLUTIONBOXCOUNT,
@@ -195,14 +206,24 @@ function main() {
       }
 
       for (var i = 0; i < stepCount; i++) {
+        var positionX = start.x + i * startEnd.x / stepCount;
+        var positionY = start.y + i * startEnd.y / stepCount;
+
+        var strokeColor = "black";
+
+        if (pointInPolygon([[200, 10], [250, 190], [160, 210]], [positionX, positionY])) {
+          // console.log("mdiaisk");
+          strokeColor = "red";
+        }
 
         createPath({
           "start": {
-            x: start.x + i * startEnd.x / stepCount,
-            y: start.y + i * startEnd.y / stepCount
+            x: positionX,
+            y: positionY
           },
-          vectorMagnitude: 20,
-          angleRadians: (angleRadians - Math.PI / 2) // 0.2,
+          vectorMagnitude: 25,
+          angleRadians: (angleRadians - Math.PI / 2), // 0.2,
+          strokeColor: strokeColor,
         });
       }
 
@@ -291,6 +312,7 @@ function createPath(data) {
   var start = data.start;
   var angleRadians = data.angleRadians;
   var vectorMagnitude = data.vectorMagnitude;
+  var strokeColor = data.strokeColor;
 
   // create from angle
   var end = vectorAdd(start, vectorFromAngle(angleRadians, vectorMagnitude))
@@ -329,7 +351,8 @@ function createPath(data) {
   ${end.x} 
   ${end.y}
   `);
-  newpath.setAttributeNS(null, "stroke", "black");
+  // newpath.setAttributeNS(null, "stroke", "black");
+  newpath.setAttributeNS(null, "stroke", strokeColor);
   newpath.setAttributeNS(null, "stroke-width", 0.5);
   newpath.setAttributeNS(null, "opacity", 1);
   newpath.setAttributeNS(null, "fill", "none");
