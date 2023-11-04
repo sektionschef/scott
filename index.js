@@ -166,6 +166,7 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
+  // GRID
   let grid = new Grid({
     shortBoxCount: RESOLUTIONBOXCOUNT,
     longSide: LONGSIDE,
@@ -174,29 +175,65 @@ function main() {
   });
 
 
-  var start = {
-    x: 100,
-    y: 100
-  }
-  var end = {
-    x: 300,
-    y: 700
-  }
-  var startEnd = vectorSub(start, end);
-  var stepCount = 70
-  var angleRadians = angleBetweenPoints(start, end)
+  for (const [key, value] of Object.entries(grid.lineVectors)) {
 
-  for (var i = 0; i < stepCount; i++) {
+    // skip empty entries
+    if (value.C.x != "") {
 
-    createPath({
-      "start": {
-        x: start.x + i * startEnd.x / stepCount,
-        y: start.y + i * startEnd.y / stepCount
-      },
-      vectorMagnitude: 120,
-      angleRadians: (angleRadians - Math.PI / 2) // 0.2,
-    });
+      // console.log(value);
+      // console.log(value.D);
+
+
+      var start = value.C
+      var end = value.D
+      var startEnd = vectorSub(start, end);
+      var stepCount = 350
+      var angleRadians = angleBetweenPoints(start, end) + 0.3
+
+      if (value.even == true) {
+        angleRadians += - Math.PI / 5;
+      }
+
+      for (var i = 0; i < stepCount; i++) {
+
+        createPath({
+          "start": {
+            x: start.x + i * startEnd.x / stepCount,
+            y: start.y + i * startEnd.y / stepCount
+          },
+          vectorMagnitude: 20,
+          angleRadians: (angleRadians - Math.PI / 2) // 0.2,
+        });
+      }
+
+    }
   }
+
+
+  // DUMMY LINE
+  // var start = {
+  //   x: 100,
+  //   y: 100
+  // }
+  // var end = {
+  //   x: 300,
+  //   y: 700
+  // }
+  // var startEnd = vectorSub(start, end);
+  // var stepCount = 70
+  // var angleRadians = angleBetweenPoints(start, end)
+
+  // for (var i = 0; i < stepCount; i++) {
+
+  //   createPath({
+  //     "start": {
+  //       x: start.x + i * startEnd.x / stepCount,
+  //       y: start.y + i * startEnd.y / stepCount
+  //     },
+  //     vectorMagnitude: 120,
+  //     angleRadians: (angleRadians - Math.PI / 2) // 0.2,
+  //   });
+  // }
 
 
   setTagsHTML({
@@ -259,22 +296,22 @@ function createPath(data) {
   var end = vectorAdd(start, vectorFromAngle(angleRadians, vectorMagnitude))
 
   // start and end distortion
-  start.x = start.x + gaussianRandAdj(0, 2);
-  end.x = end.x + gaussianRandAdj(0, 2);
-  start.y = start.y + gaussianRandAdj(0, 2);
-  end.y = end.y + gaussianRandAdj(0, 2);
+  start.x = start.x + gaussianRandAdj(0, 1);
+  end.x = end.x + gaussianRandAdj(0, 1);
+  start.y = start.y + gaussianRandAdj(0, 1);
+  end.y = end.y + gaussianRandAdj(0, 1);
 
   var startEnd = vectorSub(start, end);  // vector of diff
 
   var lineSegment = 4;  // where to place the control points
 
   var controlA = {
-    x: start.x + startEnd.x / lineSegment + gaussianRandAdj(0, 3),
-    y: start.y + startEnd.y / lineSegment + gaussianRandAdj(0, 3),
+    x: start.x + startEnd.x / lineSegment + gaussianRandAdj(0, 1),
+    y: start.y + startEnd.y / lineSegment + gaussianRandAdj(0, 1),
   }
   var controlB = {
-    x: end.x - startEnd.x / lineSegment + gaussianRandAdj(0, 3),
-    y: end.y - startEnd.y / lineSegment + gaussianRandAdj(0, 3)
+    x: end.x - startEnd.x / lineSegment + gaussianRandAdj(0, 1),
+    y: end.y - startEnd.y / lineSegment + gaussianRandAdj(0, 1)
   }
 
   newpath = document.createElementNS('http://www.w3.org/2000/svg', "path");
@@ -293,7 +330,7 @@ function createPath(data) {
   ${end.y}
   `);
   newpath.setAttributeNS(null, "stroke", "black");
-  newpath.setAttributeNS(null, "stroke-width", 1);
+  newpath.setAttributeNS(null, "stroke-width", 0.5);
   newpath.setAttributeNS(null, "opacity", 1);
   newpath.setAttributeNS(null, "fill", "none");
 

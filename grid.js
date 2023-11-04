@@ -32,11 +32,12 @@ class Grid {
         }
 
         this.boxes = [];
+        this.lineVectors = {};
 
         this.createBoxes();
-        this.showDebug();
         this.loopCategorize();
-        this.loopdebugCategory();
+        // this.showDebug();
+        // this.loopdebugCategory();
 
     }
 
@@ -88,6 +89,8 @@ class Grid {
                 stripeIndex += 1;
             }
         }
+
+        // console.log(this.boxes);
     }
 
     drawSkipMargin(h, w) {
@@ -132,6 +135,35 @@ class Grid {
     loopCategorize() {
         for (var i = 0; i < this.boxes.length; i++) {
 
+            // add coordinates for 
+            if (i > 0 && this.boxes[i].stripeIndex != this.boxes[i - 1].stripeIndex) {
+
+                var even = false;
+                if (this.boxes[i].stripeIndex % 2 == 0) {
+                    even = true;
+                }
+
+                this.lineVectors[this.boxes[i].stripeIndex] = {
+                    A: {
+                        x: "",
+                        y: ""
+                    },
+                    B: {
+                        x: "",
+                        y: ""
+                    },
+                    C: {
+                        x: "",
+                        y: ""
+                    },
+                    D: {
+                        x: "",
+                        y: ""
+                    },
+                    even: even
+                };
+            }
+
             // A
             if (
                 i != 0 &&
@@ -144,21 +176,25 @@ class Grid {
 
             // B
             if (
-                i != 0 &&
-                this.boxes[i - 1].inactive == true &&
                 this.boxes[i].inactive == false &&
-                this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
+                this.boxes[i + 1].inactive == true &&
+                this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
             ) {
                 this.boxes[i].stripeB = true;
             }
 
             // C
             if (
+                i != 0 &&
+                this.boxes[i - 1].inactive == true &&
                 this.boxes[i].inactive == false &&
-                this.boxes[i + 1].inactive == true &&
-                this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
+                this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
             ) {
                 this.boxes[i].stripeC = true;
+
+                // calc the absolute position
+                this.lineVectors[this.boxes[i].stripeIndex].C.x = this.boxes[i].width * this.boxSize;
+                this.lineVectors[this.boxes[i].stripeIndex].C.y = this.boxes[i].height * this.boxSize + this.boxSize;
             }
 
             // D
@@ -168,9 +204,15 @@ class Grid {
                 this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
             ) {
                 this.boxes[i].stripeD = true;
+
+                // calc the absolute position
+                this.lineVectors[this.boxes[i].stripeIndex].D.x = this.boxes[i].width * this.boxSize + this.boxSize;
+                this.lineVectors[this.boxes[i].stripeIndex].D.y = this.boxes[i].height * this.boxSize + this.boxSize;
             }
 
         }
+
+        // console.log(this.lineVectors)
     }
 
     loopdebugCategory() {
