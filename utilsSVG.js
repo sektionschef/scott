@@ -268,3 +268,78 @@ function getNormallyDistributedRandomNumber(mean, stddev) {
 function reloader() {
     window.location.reload();
 }
+
+function getSteep(A1, A2) {
+    var k = (A1.y - A2.y) / (A1.x - A2.x);
+    // console.log(k);
+    var d = A1.y - k * A1.x;
+    // console.log(d);
+
+    return [k, d];
+}
+
+// get the intersection point with two lines defined by two points. the steep k and d are calculated. then where the two intersect.
+function getIntersectionPoint(A1, A2, B1, B2) {
+
+    ALine = getSteep(A1, A2);
+    BLine = getSteep(B1, B2);
+
+    Ak = ALine[0];
+    Ad = ALine[1];
+    Bk = BLine[0];
+    Bd = BLine[1];
+
+    var x = Math.round((Bd - Ad) / (Ak - Bk));
+    var y = Math.round(Ak * x + Ad);
+
+    // console.log(x);
+
+    if (isNaN(x) && isNaN(x)) {
+    } else {
+        return { x: x, y: y };
+    }
+}
+
+function isOnLine(xp, yp, x1, y1, x2, y2, maxDistance) {
+    var dxL = x2 - x1, dyL = y2 - y1;  // line: vector from (x1,y1) to (x2,y2)
+    var dxP = xp - x1, dyP = yp - y1;  // point: vector from (x1,y1) to (xp,yp)
+
+    var squareLen = dxL * dxL + dyL * dyL;  // squared length of line
+    var dotProd = dxP * dxL + dyP * dyL;  // squared distance of point from (x1,y1) along line
+    var crossProd = dyP * dxL - dxP * dyL;  // area of parallelogram defined by line and point
+
+    // perpendicular distance of point from line
+    var distance = Math.abs(crossProd) / Math.sqrt(squareLen);
+
+    return (distance <= maxDistance && dotProd >= 0 && dotProd <= squareLen);
+}
+
+// POINT IN POLYGON
+/**
+ * Performs the even-odd-rule Algorithm (a raycasting algorithm) to find out whether a point is in a given polygon.
+ * This runs in O(n) where n is the number of edges of the polygon.
+ *
+ * @param {Array} polygon an array representation of the polygon where polygon[i][0] is the x Value of the i-th point and polygon[i][1] is the y Value.
+ * @param {Array} point   an array representation of the point where point[0] is its x Value and point[1] is its y Value
+ * @return {boolean} whether the point is in the polygon (not on the edge, just turn < into <= and > into >= for that)
+ * 
+ * https://www.algorithms-and-technologies.com/point_in_polygon/javascript
+ */
+const pointInPolygon = function (polygon, point) {
+    //A point is in a polygon if a line from the point to infinity crosses the polygon an odd number of times
+    let odd = false;
+    //For each edge (In this case for each point of the polygon and the previous one)
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; i++) {
+        //If a line from the point into infinity crosses this edge
+        if (((polygon[i][1] > point[1]) !== (polygon[j][1] > point[1])) // One point needs to be above, one below our y coordinate
+            // ...and the edge doesn't cross our Y corrdinate before our x coordinate (but between our x coordinate and infinity)
+            && (point[0] < ((polygon[j][0] - polygon[i][0]) * (point[1] - polygon[i][1]) / (polygon[j][1] - polygon[i][1]) + polygon[i][0]))) {
+            // Invert odd
+            odd = !odd;
+        }
+        j = i;
+
+    }
+    //If the number of crossings was odd, the point is in the polygon
+    return odd;
+};
