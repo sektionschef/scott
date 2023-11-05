@@ -60,7 +60,7 @@ function vectorFromAngle(angleRadians, vectorMagnitude) {
 }
 
 function vectorLength(p1) {
-    return Math.sqrt(p1.x ^ 2 + p1.y ^ 2);
+    return Math.sqrt(p1.x * p1.x + p1.y * p1.y);
 }
 
 

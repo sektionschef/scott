@@ -156,6 +156,8 @@ function main() {
   // console.log("Single transformed value:");
   // console.log($fx.getParam("color_id"));
 
+  var POLYGONPOINTS = [[200, 10], [250, 190], [160, 210]];
+
   const targetDiv = document.getElementById('badAssCanvas');
   const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgNode.setAttributeNS(null, 'viewBox', '0 0 ' + canvasFormatChosen.canvasWidth + " " + canvasFormatChosen.canvasHeight);
@@ -168,9 +170,13 @@ function main() {
 
 
   // SHAPE
-  // <polygon points="200,10 250,190 160,210" style="fill:lime;stroke:purple;stroke-width:1" />
+  var pointString = ""
+  for (var i = 0; i < POLYGONPOINTS.length; i++) {
+    pointString = pointString + POLYGONPOINTS[i][0] + "," + POLYGONPOINTS[i][1] + " ";
+  }
   var shapy = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  shapy.setAttributeNS(null, 'points', "200,10 250,190 160,210");
+  // shapy.setAttributeNS(null, 'points', "200,10 250,190 160,210");
+  shapy.setAttributeNS(null, 'points', pointString);
   shapy.setAttributeNS(null, 'fill', "none");
   shapy.setAttributeNS(null, 'stroke', "black");
   shapy.setAttributeNS(null, "stroke-width", 2);
@@ -185,7 +191,21 @@ function main() {
     landscape: LANDSCAPE,
   });
 
+  // TEST CASE
+  // var singleStroke = new strokePath({
+  //   "start": {
+  //     x: 150,
+  //     y: 150
+  //   },
+  //   vectorMagnitude: 225,
+  //   angleRadians: Math.PI / 3, // 0.2,
+  //   strokeColor: "black",
+  //   shape: POLYGONPOINTS,
+  // });
+  // singleStroke.showPath();
 
+
+  // loop through the lines
   for (const [key, value] of Object.entries(grid.lineVectors)) {
 
     // skip empty entries
@@ -210,7 +230,7 @@ function main() {
 
         var strokeColor = "black";
 
-        if (pointInPolygon([[200, 10], [250, 190], [160, 210]], [positionX, positionY])) {
+        if (pointInPolygon(POLYGONPOINTS, [positionX, positionY])) {
           // console.log("mdiaisk");
           strokeColor = "red";
         }
@@ -223,6 +243,7 @@ function main() {
           vectorMagnitude: 25,
           angleRadians: (angleRadians - Math.PI / 2), // 0.2,
           strokeColor: strokeColor,
+          shape: POLYGONPOINTS,
         });
 
         singleStroke.showPath();
