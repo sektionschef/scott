@@ -78,8 +78,8 @@ class strokePath {
                 y: this.start.y + this.startInterPoint.y / this.lineSegment + gaussianRandAdj(0, this.posStd),
             }
             this.controlStartB = {
-                x: this.end.x - this.startInterPoint.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
-                y: this.end.y - this.startInterPoint.y / this.lineSegment + gaussianRandAdj(0, this.posStd)
+                x: this.interPoint.x - this.startInterPoint.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
+                y: this.interPoint.y - this.startInterPoint.y / this.lineSegment + gaussianRandAdj(0, this.posStd)
             }
 
             // form interPoint end
@@ -117,7 +117,7 @@ class strokePath {
         } else {
             this.showContinuousPath();
         }
-        // this.showDebug()
+        this.showDebug()
     }
 
     showContinuousPath() {
@@ -244,9 +244,55 @@ class strokePath {
         this.debugInterPoint.setAttributeNS(null, "opacity", 1);
         this.debugInterPoint.setAttributeNS(null, "fill", "none");
 
+        this.debugControlStartA = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugControlStartA.setAttributeNS(null, "id", "controlA");
+        this.debugControlStartA.setAttributeNS(null, "cx", this.controlStartA.x);
+        this.debugControlStartA.setAttributeNS(null, "cy", this.controlStartA.y);
+        this.debugControlStartA.setAttributeNS(null, "r", "3");
+        this.debugControlStartA.setAttributeNS(null, "stroke", "pink");
+        this.debugControlStartA.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlStartA.setAttributeNS(null, "opacity", 1);
+        this.debugControlStartA.setAttributeNS(null, "fill", "none");
+
+        this.debugControlStartB = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugControlStartB.setAttributeNS(null, "id", "controlB");
+        this.debugControlStartB.setAttributeNS(null, "cx", this.controlStartB.x);
+        this.debugControlStartB.setAttributeNS(null, "cy", this.controlStartB.y);
+        this.debugControlStartB.setAttributeNS(null, "r", "3");
+        this.debugControlStartB.setAttributeNS(null, "stroke", "pink");
+        this.debugControlStartB.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlStartB.setAttributeNS(null, "opacity", 1);
+        this.debugControlStartB.setAttributeNS(null, "fill", "none");
+
+        this.debugControlEndA = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugControlEndA.setAttributeNS(null, "id", "controlA");
+        this.debugControlEndA.setAttributeNS(null, "cx", this.controlEndA.x);
+        this.debugControlEndA.setAttributeNS(null, "cy", this.controlEndA.y);
+        this.debugControlEndA.setAttributeNS(null, "r", "3");
+        this.debugControlEndA.setAttributeNS(null, "stroke", "pink");
+        this.debugControlEndA.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlEndA.setAttributeNS(null, "opacity", 1);
+        this.debugControlEndA.setAttributeNS(null, "fill", "none");
+
+        this.debugControlEndB = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugControlEndB.setAttributeNS(null, "id", "controlB");
+        this.debugControlEndB.setAttributeNS(null, "cx", this.controlEndB.x);
+        this.debugControlEndB.setAttributeNS(null, "cy", this.controlEndB.y);
+        this.debugControlEndB.setAttributeNS(null, "r", "3");
+        this.debugControlEndB.setAttributeNS(null, "stroke", "pink");
+        this.debugControlEndB.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlEndB.setAttributeNS(null, "opacity", 1);
+        this.debugControlEndB.setAttributeNS(null, "fill", "none");
+
         const svgNode = document.getElementById('svgNode');
         if (this.splitSwitch) {
+            svgNode.appendChild(this.debugStart);
+            svgNode.appendChild(this.debugEnd);
             svgNode.appendChild(this.debugInterPoint);
+            svgNode.appendChild(this.debugControlStartA);
+            svgNode.appendChild(this.debugControlStartB);
+            svgNode.appendChild(this.debugControlEndA);
+            svgNode.appendChild(this.debugControlEndB);
         } else {
             svgNode.appendChild(this.debugStart);
             svgNode.appendChild(this.debugEnd);
