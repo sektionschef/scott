@@ -18,6 +18,8 @@ class strokePath {
         this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
         this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
 
+        this.interPointSelected = { x: 30000, y: 30000 };
+
         // if there is an intersection point
         for (var i = 0; i < this.shape.length; i++) {
 
@@ -26,28 +28,17 @@ class strokePath {
                 this.shapeA = { x: this.shape[i][0], y: this.shape[i][1] };
                 this.shapeB = { x: this.shape[i + 1][0], y: this.shape[i + 1][1] }
 
-
                 this.interPoint = getIntersectionPoint(this.start, this.end, this.shapeA, this.shapeB);
                 this.intersectionSwitch = isOnLine(this.interPoint.x, this.interPoint.y, this.start.x, this.start.y, this.end.x, this.end.y, 1);
                 if (this.intersectionSwitch == false) {
                     // no intersection
                     continue;
                 }
+                // lies inside the line segmente, between start and end?
                 this.inBetweenSwitch = (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.shapeA, this.interPoint)))) && (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.interPoint, this.shapeB))));
-                // console.log("neu");
-                // console.log(this.splitSwitch);
-                // console.log(this.shapeA);
-                // console.log(this.shapeB);
-                // console.log(this.interPoint);
-                // console.log(Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))));
-                // console.log(Math.abs(vectorLength(vectorSub(this.shapeA, this.interPoint))));
-                // console.log(Math.abs(vectorLength(vectorSub(this.interPoint, this.shapeB))));
 
                 this.splitSwitch = this.intersectionSwitch && this.inBetweenSwitch;
 
-                if (this.splitSwitch == true) {
-                    break;
-                }
             } else {
                 // closing the loop
                 this.shapeA = { x: this.shape[0][0], y: this.shape[0][1] };
@@ -55,17 +46,27 @@ class strokePath {
 
                 this.interPoint = getIntersectionPoint(this.start, this.end, this.shapeA, this.shapeB);
                 this.intersectionSwitch = isOnLine(this.interPoint.x, this.interPoint.y, this.start.x, this.start.y, this.end.x, this.end.y, 1);
+                // lies inside the line segmente, between start and end?
                 this.inBetweenSwitch = (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.shapeA, this.interPoint)))) && (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.interPoint, this.shapeB))));
+
+                this.splitSwitch = this.intersectionSwitch && this.inBetweenSwitch;
             }
+
+            // select the shortest distance to start
+            if (Math.abs(vectorLength(vectorSub(this.interPoint, this.start))) < Math.abs(vectorLength(vectorSub(this.interPointSelected, this.start)))) {
+                this.interPointSelected = this.interPoint;
+            };
         }
 
-        // lies inside the line segmente, between start and end?
-        // this.inBetweenSwitch = Math.round(Math.abs(vectorLength(vectorSub(this.start, this.end))), 0) == Math.round(Math.abs(vectorLength(vectorSub(this.start, this.interPoint))) + Math.abs(vectorLength(vectorSub(this.interPoint, this.end))), 0);
-        // console.log(this.inBetweenSwitch)
+        // console.log(this.intersectionPoints);
 
-        // dummy
+        // dummy - for preventing errors
         this.controlA = { x: 0, y: 0 };
         this.controlB = { x: 0, y: 0 };
+        this.controlStartA = { x: 0, y: 0 };
+        this.controlStartB = { x: 0, y: 0 };
+        this.controlEndA = { x: 0, y: 0 };
+        this.controlEndB = { x: 0, y: 0 };
 
         if (this.splitSwitch) {
             // console.log("intersecting!")
@@ -117,7 +118,7 @@ class strokePath {
         } else {
             this.showContinuousPath();
         }
-        this.showDebug()
+        // this.showDebug()
     }
 
     showContinuousPath() {

@@ -156,7 +156,7 @@ function main() {
   // console.log("Single transformed value:");
   // console.log($fx.getParam("color_id"));
 
-  var POLYGONPOINTS = [[200, 10], [250, 190], [160, 210]];
+  var POLYGONPOINTS = [[200, 110], [250, 290], [160, 310]];
 
   const targetDiv = document.getElementById('badAssCanvas');
   const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -192,65 +192,65 @@ function main() {
   });
 
   // TEST CASE
-  var singleStroke = new strokePath({
-    "start": {
-      x: 150,
-      y: 150
-    },
-    vectorMagnitude: 225,
-    angleRadians: Math.PI / 3, // 0.2,
-    strokeColor: "black",
-    shape: POLYGONPOINTS,
-  });
-  singleStroke.showPath();
+  // var singleStroke = new strokePath({
+  //   "start": {
+  //     x: 120,
+  //     y: 120
+  //   },
+  //   vectorMagnitude: 225,
+  //   angleRadians: Math.PI / 4, // 0.2,
+  //   strokeColor: "black",
+  //   shape: POLYGONPOINTS,
+  // });
+  // singleStroke.showPath();
 
 
-  // // loop through the lines
-  // for (const [key, value] of Object.entries(grid.lineVectors)) {
+  // loop through the lines
+  for (const [key, value] of Object.entries(grid.lineVectors)) {
 
-  //   // skip empty entries
-  //   if (value.C.x != "") {
+    // skip empty entries
+    if (value.C.x != "") {
 
-  //     // console.log(value);
-  //     // console.log(value.D);
+      // console.log(value);
+      // console.log(value.D);
 
-  //     var start = value.C
-  //     var end = value.D
-  //     var startEnd = vectorSub(start, end);
-  //     var stepCount = 350
-  //     var angleRadians = angleBetweenPoints(start, end) + 0.3
+      var start = value.C
+      var end = value.D
+      var startEnd = vectorSub(start, end);
+      var stepCount = 350
+      var angleRadians = angleBetweenPoints(start, end) + 0.3
 
-  //     if (value.even == true) {
-  //       angleRadians += - Math.PI / 5;
-  //     }
+      if (value.even == true) {
+        angleRadians += - Math.PI / 5;
+      }
 
-  //     for (var i = 0; i < stepCount; i++) {
-  //       var positionX = start.x + i * startEnd.x / stepCount;
-  //       var positionY = start.y + i * startEnd.y / stepCount;
+      for (var i = 0; i < stepCount; i++) {
+        var positionX = start.x + i * startEnd.x / stepCount;
+        var positionY = start.y + i * startEnd.y / stepCount;
 
-  //       var strokeColor = "black";
+        var strokeColor = "black";
 
-  //       if (pointInPolygon(POLYGONPOINTS, [positionX, positionY])) {
-  //         // console.log("mdiaisk");
-  //         strokeColor = "red";
-  //       }
+        if (pointInPolygon(POLYGONPOINTS, [positionX, positionY])) {
+          // console.log("mdiaisk");
+          strokeColor = "red";
+        }
 
-  //       var singleStroke = new strokePath({
-  //         "start": {
-  //           x: positionX,
-  //           y: positionY
-  //         },
-  //         vectorMagnitude: 25,
-  //         angleRadians: (angleRadians - Math.PI / 2), // 0.2,
-  //         strokeColor: strokeColor,
-  //         shape: POLYGONPOINTS,
-  //       });
+        var singleStroke = new strokePath({
+          "start": {
+            x: positionX,
+            y: positionY
+          },
+          vectorMagnitude: 25,
+          angleRadians: (angleRadians - Math.PI / 2), // 0.2,
+          strokeColor: strokeColor,
+          shape: POLYGONPOINTS,
+        });
 
-  //       singleStroke.showPath();
-  //     }
+        singleStroke.showPath();
+      }
 
-  //   }
-  // }
+    }
+  }
 
 
   setTagsHTML({
