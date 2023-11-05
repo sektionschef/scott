@@ -194,7 +194,6 @@ function main() {
       // console.log(value);
       // console.log(value.D);
 
-
       var start = value.C
       var end = value.D
       var startEnd = vectorSub(start, end);
@@ -216,7 +215,7 @@ function main() {
           strokeColor = "red";
         }
 
-        createPath({
+        var singleStroke = new strokePath({
           "start": {
             x: positionX,
             y: positionY
@@ -225,36 +224,12 @@ function main() {
           angleRadians: (angleRadians - Math.PI / 2), // 0.2,
           strokeColor: strokeColor,
         });
+
+        singleStroke.showPath();
       }
 
     }
   }
-
-
-  // DUMMY LINE
-  // var start = {
-  //   x: 100,
-  //   y: 100
-  // }
-  // var end = {
-  //   x: 300,
-  //   y: 700
-  // }
-  // var startEnd = vectorSub(start, end);
-  // var stepCount = 70
-  // var angleRadians = angleBetweenPoints(start, end)
-
-  // for (var i = 0; i < stepCount; i++) {
-
-  //   createPath({
-  //     "start": {
-  //       x: start.x + i * startEnd.x / stepCount,
-  //       y: start.y + i * startEnd.y / stepCount
-  //     },
-  //     vectorMagnitude: 120,
-  //     angleRadians: (angleRadians - Math.PI / 2) // 0.2,
-  //   });
-  // }
 
 
   setTagsHTML({
@@ -307,127 +282,6 @@ document.addEventListener('keydown', (event) => {
 
 }, false);
 
-function createPath(data) {
-
-  var start = data.start;
-  var angleRadians = data.angleRadians;
-  var vectorMagnitude = data.vectorMagnitude;
-  var strokeColor = data.strokeColor;
-
-  // create from angle
-  var end = vectorAdd(start, vectorFromAngle(angleRadians, vectorMagnitude))
-
-  // start and end distortion
-  // start.x = start.x + gaussianRandAdj(0, 1);
-  // end.x = end.x + gaussianRandAdj(0, 1);
-  // start.y = start.y + gaussianRandAdj(0, 1);
-  // end.y = end.y + gaussianRandAdj(0, 1);
-
-  var ShapeLine = {
-    x: 400,
-    y: 600
-  }
-  var interPoint = getIntersectionPoint(start, end, { x: 0, y: 0 }, ShapeLine);
-
-  // console.log(interPoint);
-
-
-  var startEnd = vectorSub(start, end);  // vector of diff
-
-  var lineSegment = 4;  // where to place the control points
-
-  var controlA = {
-    x: start.x + startEnd.x / lineSegment + gaussianRandAdj(0, 1),
-    y: start.y + startEnd.y / lineSegment + gaussianRandAdj(0, 1),
-  }
-  var controlB = {
-    x: end.x - startEnd.x / lineSegment + gaussianRandAdj(0, 1),
-    y: end.y - startEnd.y / lineSegment + gaussianRandAdj(0, 1)
-  }
-
-  newpath = document.createElementNS('http://www.w3.org/2000/svg', "path");
-
-  newpath.setAttributeNS(null, "id", "pathIdD");
-  // newpath.setAttributeNS(null, "d", "M 10 10 C 20 20, 40 20, 50 10");
-  newpath.setAttributeNS(null, "d", `M 
-  ${start.x} 
-  ${start.y} 
-  C 
-  ${controlA.x} 
-  ${controlA.y}, 
-  ${controlB.x} 
-  ${controlB.y}, 
-  ${end.x} 
-  ${end.y}
-  `);
-  // newpath.setAttributeNS(null, "stroke", "black");
-  newpath.setAttributeNS(null, "stroke", strokeColor);
-  newpath.setAttributeNS(null, "stroke-width", 0.5);
-  newpath.setAttributeNS(null, "opacity", 1);
-  newpath.setAttributeNS(null, "fill", "none");
-
-  // DEBUG
-  // debugStart = document.createElementNS('http://www.w3.org/2000/svg', "circle");
-  // debugStart.setAttributeNS(null, "id", "start");
-  // debugStart.setAttributeNS(null, "cx", start.x);
-  // debugStart.setAttributeNS(null, "cy", start.y);
-  // debugStart.setAttributeNS(null, "r", "3");
-  // debugStart.setAttributeNS(null, "stroke", "blue");
-  // debugStart.setAttributeNS(null, "stroke-width", 2);
-  // debugStart.setAttributeNS(null, "opacity", 1);
-  // debugStart.setAttributeNS(null, "fill", "none");
-
-  // debugEnd = document.createElementNS('http://www.w3.org/2000/svg', "circle");
-  // debugEnd.setAttributeNS(null, "id", "end");
-  // debugEnd.setAttributeNS(null, "cx", end.x);
-  // debugEnd.setAttributeNS(null, "cy", end.y);
-  // debugEnd.setAttributeNS(null, "r", "3");
-  // debugEnd.setAttributeNS(null, "stroke", "red");
-  // debugEnd.setAttributeNS(null, "stroke-width", 2);
-  // debugEnd.setAttributeNS(null, "opacity", 1);
-  // debugEnd.setAttributeNS(null, "fill", "none");
-
-  // debugControlA = document.createElementNS('http://www.w3.org/2000/svg', "circle");
-  // debugControlA.setAttributeNS(null, "id", "controlA");
-  // debugControlA.setAttributeNS(null, "cx", controlA.x);
-  // debugControlA.setAttributeNS(null, "cy", controlA.y);
-  // debugControlA.setAttributeNS(null, "r", "3");
-  // debugControlA.setAttributeNS(null, "stroke", "pink");
-  // debugControlA.setAttributeNS(null, "stroke-width", 2);
-  // debugControlA.setAttributeNS(null, "opacity", 1);
-  // debugControlA.setAttributeNS(null, "fill", "none");
-
-  // debugControlB = document.createElementNS('http://www.w3.org/2000/svg', "circle");
-  // debugControlB.setAttributeNS(null, "id", "controlB");
-  // debugControlB.setAttributeNS(null, "cx", controlB.x);
-  // debugControlB.setAttributeNS(null, "cy", controlB.y);
-  // debugControlB.setAttributeNS(null, "r", "3");
-  // debugControlB.setAttributeNS(null, "stroke", "pink");
-  // debugControlB.setAttributeNS(null, "stroke-width", 2);
-  // debugControlB.setAttributeNS(null, "opacity", 1);
-  // debugControlB.setAttributeNS(null, "fill", "none");
-
-  debugInterPoint = document.createElementNS('http://www.w3.org/2000/svg', "circle");
-  debugInterPoint.setAttributeNS(null, "id", "intersect");
-  debugInterPoint.setAttributeNS(null, "cx", interPoint.x);
-  debugInterPoint.setAttributeNS(null, "cy", interPoint.y);
-  debugInterPoint.setAttributeNS(null, "r", "3");
-  debugInterPoint.setAttributeNS(null, "stroke", "cyan");
-  debugInterPoint.setAttributeNS(null, "stroke-width", 1);
-  debugInterPoint.setAttributeNS(null, "opacity", 1);
-  debugInterPoint.setAttributeNS(null, "fill", "none");
-
-  const svgNode = document.getElementById('svgNode');
-  svgNode.appendChild(newpath);
-  // svgNode.appendChild(debugStart);
-  // svgNode.appendChild(debugEnd);
-  // svgNode.appendChild(debugControlA);
-  // svgNode.appendChild(debugControlB);
-
-  if (isOnLine(interPoint.x, interPoint.y, start.x, start.y, end.x, end.y, 1)) {
-    svgNode.appendChild(debugInterPoint);
-  }
-}
 
 function createDrawingGroup() {
   var groupDrawing = document.createElementNS("http://www.w3.org/2000/svg", "g");
