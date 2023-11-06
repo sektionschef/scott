@@ -4,6 +4,7 @@ class strokePath {
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
         this.strokeColor = data.strokeColor;
+        this.strokeColorAction = data.strokeColorAction;
         this.shape = data.shape;
 
         this.lineSegment = 4;  // where to place the control points
@@ -33,8 +34,6 @@ class strokePath {
             }
 
             this.interPointCandidate = getIntersectionPoint(this.shapeA, this.shapeB, this.start, this.end);
-            // needed? intersection point per definition on both lines
-            // this.intersectionSwitch = isOnLine(this.interPointCandidate.x, this.interPointCandidate.y, this.start.x, this.start.y, this.end.x, this.end.y, 1);
 
             // lies inside the line segmente, between start and end?
             this.splitSwitchCandidate = (
@@ -56,7 +55,6 @@ class strokePath {
                 this.interPoint = this.interPointCandidate;
             };
         }
-
 
         // dummy - for preventing errors
         this.controlA = { x: 0, y: 0 };
@@ -120,6 +118,14 @@ class strokePath {
     }
 
     showContinuousPath() {
+
+        // define the color - what is inside?
+        if (pointInPolygon(this.shape, [this.start.x, this.start.y])) {
+            this.strokeColorContinuous = this.strokeColorAction;
+        } else {
+            this.strokeColorContinuous = this.strokeColor;
+        }
+
         this.newPath = document.createElementNS('http://www.w3.org/2000/svg', "path");
         this.newPath.setAttributeNS(null, "id", "pathIdD");
         this.newPath.setAttributeNS(null, "d", `M 
@@ -134,7 +140,7 @@ class strokePath {
             ${this.end.y}
             `);
         // newPath.setAttributeNS(null, "stroke", "black");
-        this.newPath.setAttributeNS(null, "stroke", this.strokeColor);
+        this.newPath.setAttributeNS(null, "stroke", this.strokeColorContinuous);
         this.newPath.setAttributeNS(null, "stroke-width", 0.5);
         this.newPath.setAttributeNS(null, "opacity", 1);
         this.newPath.setAttributeNS(null, "fill", "none");
@@ -144,6 +150,16 @@ class strokePath {
     }
 
     showSplitPath() {
+
+
+        if (pointInPolygon(this.shape, [this.start.x, this.start.y])) {
+            this.strokeColorStart = this.strokeColorAction;
+            this.strokeColorEnd = this.strokeColor;
+        } else {
+            this.strokeColorStart = this.strokeColor;
+            this.strokeColorEnd = this.strokeColorAction;
+        }
+
         this.newPathStart = document.createElementNS('http://www.w3.org/2000/svg', "path");
         this.newPathStart.setAttributeNS(null, "id", "pathIdD");
         this.newPathStart.setAttributeNS(null, "d", `M 
@@ -157,8 +173,7 @@ class strokePath {
             ${this.interPoint.x} 
             ${this.interPoint.y}
             `);
-        this.newPathStart.setAttributeNS(null, "stroke", "#15ff00");
-        // this.newPathStart.setAttributeNS(null, "stroke", this.strokeColor);
+        this.newPathStart.setAttributeNS(null, "stroke", this.strokeColorStart);
         this.newPathStart.setAttributeNS(null, "stroke-width", 0.5);
         this.newPathStart.setAttributeNS(null, "opacity", 1);
         this.newPathStart.setAttributeNS(null, "fill", "none");
@@ -177,8 +192,7 @@ class strokePath {
             ${this.end.x} 
             ${this.end.y}
             `);
-        this.newPathEnd.setAttributeNS(null, "stroke", "#e100ff");
-        // this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColor);
+        this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColorEnd);
         this.newPathEnd.setAttributeNS(null, "stroke-width", 0.5);
         this.newPathEnd.setAttributeNS(null, "opacity", 1);
         this.newPathEnd.setAttributeNS(null, "fill", "none");

@@ -200,6 +200,7 @@ function main() {
   //   vectorMagnitude: 225,
   //   angleRadians: Math.PI / 4, // 0.2,
   //   strokeColor: "black",
+  // strokeColorAction: "red",
   //   shape: POLYGONPOINTS,
   // });
   // singleStroke.showPath();
@@ -228,13 +229,6 @@ function main() {
         var positionX = start.x + i * startEnd.x / stepCount;
         var positionY = start.y + i * startEnd.y / stepCount;
 
-        var strokeColor = "black";
-
-        if (pointInPolygon(POLYGONPOINTS, [positionX, positionY])) {
-          // console.log("mdiaisk");
-          strokeColor = "red";
-        }
-
         var singleStroke = new strokePath({
           "start": {
             x: positionX,
@@ -242,7 +236,8 @@ function main() {
           },
           vectorMagnitude: 25,
           angleRadians: (angleRadians - Math.PI / 2), // 0.2,
-          strokeColor: strokeColor,
+          strokeColor: "black",
+          strokeColorAction: "red",
           shape: POLYGONPOINTS,
         });
 
