@@ -18,47 +18,45 @@ class strokePath {
         this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
         this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
 
-        this.interPointSelected = { x: 30000, y: 30000 };
+        this.interPoint = { x: 99999, y: 99999 };
+        this.splitSwitch = false;
 
         // if there is an intersection point
         for (var i = 0; i < this.shape.length; i++) {
-
             if (i != (this.shape.length - 1)) {
-
                 this.shapeA = { x: this.shape[i][0], y: this.shape[i][1] };
                 this.shapeB = { x: this.shape[i + 1][0], y: this.shape[i + 1][1] }
-
-                this.interPoint = getIntersectionPoint(this.start, this.end, this.shapeA, this.shapeB);
-                this.intersectionSwitch = isOnLine(this.interPoint.x, this.interPoint.y, this.start.x, this.start.y, this.end.x, this.end.y, 1);
-                if (this.intersectionSwitch == false) {
-                    // no intersection
-                    continue;
-                }
-                // lies inside the line segmente, between start and end?
-                this.inBetweenSwitch = (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.shapeA, this.interPoint)))) && (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.interPoint, this.shapeB))));
-
-                this.splitSwitch = this.intersectionSwitch && this.inBetweenSwitch;
-
             } else {
                 // closing the loop
                 this.shapeA = { x: this.shape[0][0], y: this.shape[0][1] };
                 this.shapeB = { x: this.shape[i][0], y: this.shape[i][1] };
+            }
 
-                this.interPoint = getIntersectionPoint(this.start, this.end, this.shapeA, this.shapeB);
-                this.intersectionSwitch = isOnLine(this.interPoint.x, this.interPoint.y, this.start.x, this.start.y, this.end.x, this.end.y, 1);
-                // lies inside the line segmente, between start and end?
-                this.inBetweenSwitch = (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.shapeA, this.interPoint)))) && (Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.interPoint, this.shapeB))));
+            this.interPointCandidate = getIntersectionPoint(this.shapeA, this.shapeB, this.start, this.end);
+            // needed? intersection point per definition on both lines
+            // this.intersectionSwitch = isOnLine(this.interPointCandidate.x, this.interPointCandidate.y, this.start.x, this.start.y, this.end.x, this.end.y, 1);
 
-                this.splitSwitch = this.intersectionSwitch && this.inBetweenSwitch;
+            // lies inside the line segmente, between start and end?
+            this.splitSwitchCandidate = (
+                Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.shapeA, this.interPointCandidate)))
+            ) && (
+                    Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.shapeB)))
+                ) && (
+                    Math.abs(vectorLength(vectorSub(this.start, this.end))) > Math.abs(vectorLength(vectorSub(this.start, this.interPointCandidate)))
+                ) && (
+                    Math.abs(vectorLength(vectorSub(this.start, this.end))) > Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.end)))
+                );
+
+            if (this.splitSwitchCandidate) {
+                this.splitSwitch = true;
             }
 
             // select the shortest distance to start
-            if (Math.abs(vectorLength(vectorSub(this.interPoint, this.start))) < Math.abs(vectorLength(vectorSub(this.interPointSelected, this.start)))) {
-                this.interPointSelected = this.interPoint;
+            if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.start))) < Math.abs(vectorLength(vectorSub(this.interPoint, this.start)))) {
+                this.interPoint = this.interPointCandidate;
             };
         }
 
-        // console.log(this.intersectionPoints);
 
         // dummy - for preventing errors
         this.controlA = { x: 0, y: 0 };

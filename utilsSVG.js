@@ -294,7 +294,7 @@ function getIntersectionPoint(A1, A2, B1, B2) {
 
     // console.log(x);
 
-    if (isNaN(x) && isNaN(x)) {
+    if (isNaN(x) && isNaN(y)) {
     } else {
         return { x: x, y: y };
     }

@@ -195,7 +195,7 @@ function main() {
   // var singleStroke = new strokePath({
   //   "start": {
   //     x: 120,
-  //     y: 120
+  //     y: 180
   //   },
   //   vectorMagnitude: 225,
   //   angleRadians: Math.PI / 4, // 0.2,
