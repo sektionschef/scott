@@ -170,18 +170,17 @@ function main() {
 
 
   // SHAPE
-  var pointString = ""
-  for (var i = 0; i < POLYGONPOINTS.length; i++) {
-    pointString = pointString + POLYGONPOINTS[i][0] + "," + POLYGONPOINTS[i][1] + " ";
-  }
-  var shapy = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  // shapy.setAttributeNS(null, 'points', "200,10 250,190 160,210");
-  shapy.setAttributeNS(null, 'points', pointString);
-  shapy.setAttributeNS(null, 'fill', "none");
-  shapy.setAttributeNS(null, 'stroke', "black");
-  shapy.setAttributeNS(null, "stroke-width", 2);
-
-  svgNode.appendChild(shapy);
+  // var pointString = ""
+  // for (var i = 0; i < POLYGONPOINTS.length; i++) {
+  //   pointString = pointString + POLYGONPOINTS[i][0] + "," + POLYGONPOINTS[i][1] + " ";
+  // }
+  // var shapy = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  // // shapy.setAttributeNS(null, 'points', "200,10 250,190 160,210");
+  // shapy.setAttributeNS(null, 'points', pointString);
+  // shapy.setAttributeNS(null, 'fill', "none");
+  // shapy.setAttributeNS(null, 'stroke', "black");
+  // shapy.setAttributeNS(null, "stroke-width", 2);
+  // svgNode.appendChild(shapy);
 
   // GRID
   let grid = new Grid({
