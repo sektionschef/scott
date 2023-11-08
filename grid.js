@@ -1,6 +1,8 @@
 class Grid {
     constructor(data) {
 
+        this.stripeHeight = 2;
+
         this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
         this.longSide = data.longSide;
         this.shortSide = data.shortSide;
@@ -39,6 +41,8 @@ class Grid {
         // this.showDebug();
         // this.loopdebugCategory();
 
+        this.createShape();
+        this.debugShowShape();
     }
 
     createBoxes() {
@@ -85,7 +89,7 @@ class Grid {
                 index += 1;
             }
 
-            if (h % 2 == 0) {
+            if (h % this.stripeHeight == 0) {
                 stripeIndex += 1;
             }
         }
@@ -139,7 +143,7 @@ class Grid {
             if (i > 0 && this.boxes[i].stripeIndex != this.boxes[i - 1].stripeIndex) {
 
                 var even = false;
-                if (this.boxes[i].stripeIndex % 2 == 0) {
+                if (this.boxes[i].stripeIndex % this.stripeHeight == 0) {
                     even = true;
                 }
 
@@ -219,7 +223,7 @@ class Grid {
 
         for (var v = 0; v < this.boxes.length; v++) {
 
-            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v].inactive == false) {
+            if (this.boxes[v].stripeIndex % this.stripeHeight == 0 && this.boxes[v].inactive == false) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
                 rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
@@ -286,5 +290,58 @@ class Grid {
                 svgNode.appendChild(rect);
             }
         }
+    }
+
+    createShape() {
+
+        this.shapeZ = {};
+
+        var XCalc = Math.round(this.longBoxCount / 12 * 2);
+        var YCalc = 7 * this.stripeHeight + 1;
+        var YCalcHeight = 7;
+
+        // var ACountX = 40;
+        var ACountX = XCalc;
+        var ACounty = YCalc;
+        var CCountX = this.longBoxCount - XCalc;
+        var CCountY = YCalc + YCalcHeight;
+
+        for (var i = 0; i < this.boxes.length; i++) {
+            if (this.boxes[i].width == ACountX && this.boxes[i].height == ACounty) {
+                this.shapeZ.A = this.boxes[i].A;
+            }
+
+            if (this.boxes[i].width == CCountX && this.boxes[i].height == ACounty) {
+                this.shapeZ.B = this.boxes[i].B;
+            }
+
+            if (this.boxes[i].width == CCountX && this.boxes[i].height == CCountY) {
+                this.shapeZ.C = this.boxes[i].C;
+            }
+
+            if (this.boxes[i].width == ACountX && this.boxes[i].height == CCountY) {
+                this.shapeZ.D = this.boxes[i].D;
+            }
+        }
+    }
+
+    debugShowShape() {
+
+        var pointString = `
+        ${this.shapeZ.A.x}, ${this.shapeZ.A.y}
+        ${this.shapeZ.B.x}, ${this.shapeZ.B.y}
+        ${this.shapeZ.C.x}, ${this.shapeZ.C.y}
+        ${this.shapeZ.D.x}, ${this.shapeZ.D.y}
+        `;
+
+        var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        shapsn.setAttributeNS(null, 'points', pointString);
+        shapsn.setAttributeNS(null, 'fill', "none");
+        shapsn.setAttributeNS(null, 'stroke', "black");
+        shapsn.setAttributeNS(null, "stroke-width", 2);
+
+        const svgNode = document.getElementById('svgNode');
+        svgNode.appendChild(shapsn);
+
     }
 }
