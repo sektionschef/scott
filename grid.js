@@ -42,7 +42,7 @@ class Grid {
         // this.loopdebugCategory();
 
         this.createShape();
-        this.debugShowShape();
+        // this.debugShowShape();
 
         this.createStrokePath();
     }
@@ -95,7 +95,6 @@ class Grid {
                 stripeIndex += 1;
             }
         }
-
         // console.log(this.boxes);
     }
 
@@ -358,7 +357,7 @@ class Grid {
         // loop through the lines
         for (const [key, value] of Object.entries(this.lineVectors)) {
 
-            // skip empty entries
+            // skip empty entries, margin
             if (value.C.x != "") {
 
                 // console.log(value);
@@ -369,7 +368,10 @@ class Grid {
                 var startEnd = vectorSub(start, end);
                 var stepCount = 350
                 var angleRadians = angleBetweenPoints(start, end) + 0.3
+                var loopDensity = 1 // how many strokes per point - density
+                var angleRadiansTemp = 0;
 
+                // different for each odd and even line
                 if (value.even == true) {
                     angleRadians += - Math.PI / 5;
                 }
@@ -378,19 +380,39 @@ class Grid {
                     var positionX = start.x + i * startEnd.x / stepCount;
                     var positionY = start.y + i * startEnd.y / stepCount;
 
-                    var singleStroke = new strokePath({
-                        "start": {
-                            x: positionX,
-                            y: positionY
-                        },
-                        vectorMagnitude: 25,
-                        angleRadians: (angleRadians - Math.PI / 2), // 0.2,
-                        strokeColor: "black",
-                        strokeColorAction: "red",
-                        shape: this.shapeZ.pointList,
-                    });
+                    var positionMiddleLineY = positionX + this.boxSize * this.stripeHeight / 2;
 
-                    singleStroke.showPath();
+                    if (pointInPolygon(this.shapeZ.pointList, [positionX, positionMiddleLineY])) {
+                        loopDensity = 2;
+                        // angleRadiansTemp = - Math.PI / 5;t
+                    } else {
+                        loopDensity = 1
+                        // angleRadiansTemp = - Math.PI / 5;
+                    }
+
+                    for (var d = 0; d < loopDensity; d++) {
+
+                        if (d == 1) {
+                            angleRadiansTemp = angleRadians + Math.PI / 5;
+                        } else {
+                            angleRadiansTemp = angleRadians
+                        }
+
+
+                        var singleStroke = new strokePath({
+                            "start": {
+                                x: positionX,
+                                y: positionY
+                            },
+                            vectorMagnitude: 25,
+                            angleRadians: (angleRadiansTemp - Math.PI / 2), // 0.2,
+                            strokeColor: "black",
+                            strokeColorAction: "red",
+                            shape: this.shapeZ.pointList,
+                        });
+
+                        singleStroke.showPath();
+                    }
                 }
 
             }

@@ -69,12 +69,11 @@ function vectorAdd(p1, p2) {
 }
 
 function vectorSub(p1, p2) {
-    // console.log(p2.x - p1.x);
-    // console.log(p2.y - p1.y);
-    // console.log(p1)
-    // console.log(p2)
     return { x: (p2.x - p1.x), y: p2.y - p1.y }
-    // return { x: (1340 - 1340), y: (169 - 169) }
+}
+
+function getMiddlePpoint(p1, p2) {
+    return { x: (p2.x - p1.x) / 2 + p1.x, y: (p2.y - p1.y) / 2 + p1.y }
 }
 
 

@@ -19,6 +19,8 @@ class strokePath {
         this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
         this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
 
+        this.midPoint = getMiddlePpoint(this.start, this.end) // exactly middle to check if it is in polygon or not.
+
         this.interPoint = { x: 99999, y: 99999 };
         this.splitSwitch = false;
 
