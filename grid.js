@@ -367,7 +367,7 @@ class Grid {
                 var end = value.D
                 var startEnd = vectorSub(start, end);
                 var stepCount = 350
-                var angleRadians = angleBetweenPoints(start, end) + 0.3
+                var angleRadians = - Math.PI / 2 + 0.3
                 var loopDensity = 1 // how many strokes per point - density
                 var angleRadiansTemp = 0;
 
@@ -380,20 +380,22 @@ class Grid {
                     var positionX = start.x + i * startEnd.x / stepCount;
                     var positionY = start.y + i * startEnd.y / stepCount;
 
-                    var positionMiddleLineY = positionX + this.boxSize * this.stripeHeight / 2;
+                    var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
                     if (pointInPolygon(this.shapeZ.pointList, [positionX, positionMiddleLineY])) {
                         loopDensity = 2;
-                        // angleRadiansTemp = - Math.PI / 5;t
                     } else {
                         loopDensity = 1
-                        // angleRadiansTemp = - Math.PI / 5;
                     }
 
                     for (var d = 0; d < loopDensity; d++) {
 
-                        if (d == 1) {
-                            angleRadiansTemp = angleRadians + Math.PI / 5;
+                        if (d >= 1) {
+                            if (value.even == true) {
+                                angleRadiansTemp = angleRadians + Math.PI / 5;
+                            } else {
+                                angleRadiansTemp = angleRadians - Math.PI / 5;
+                            }
                         } else {
                             angleRadiansTemp = angleRadians
                         }
@@ -405,16 +407,15 @@ class Grid {
                                 y: positionY
                             },
                             vectorMagnitude: 25,
-                            angleRadians: (angleRadiansTemp - Math.PI / 2), // 0.2,
+                            angleRadians: angleRadiansTemp, // 0.2,
                             strokeColor: "black",
-                            strokeColorAction: "red",
+                            strokeColorAction: "#000000",
                             shape: this.shapeZ.pointList,
                         });
 
                         singleStroke.showPath();
                     }
                 }
-
             }
         }
     }
