@@ -43,6 +43,8 @@ class Grid {
 
         this.createShape();
         this.debugShowShape();
+
+        this.createStrokePath();
     }
 
     createBoxes() {
@@ -323,19 +325,26 @@ class Grid {
                 this.shapeZ.D = this.boxes[i].D;
             }
         }
-    }
 
-    debugShowShape() {
-
-        var pointString = `
+        this.shapeZ.pointString = `
         ${this.shapeZ.A.x}, ${this.shapeZ.A.y}
         ${this.shapeZ.B.x}, ${this.shapeZ.B.y}
         ${this.shapeZ.C.x}, ${this.shapeZ.C.y}
         ${this.shapeZ.D.x}, ${this.shapeZ.D.y}
         `;
 
+        this.shapeZ.pointList = [
+            [this.shapeZ.A.x, this.shapeZ.A.y],
+            [this.shapeZ.B.x, this.shapeZ.B.y],
+            [this.shapeZ.C.x, this.shapeZ.C.y],
+            [this.shapeZ.D.x, this.shapeZ.D.y]
+        ];
+    }
+
+    debugShowShape() {
+
         var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shapsn.setAttributeNS(null, 'points', pointString);
+        shapsn.setAttributeNS(null, 'points', this.shapeZ.pointList);
         shapsn.setAttributeNS(null, 'fill', "none");
         shapsn.setAttributeNS(null, 'stroke', "black");
         shapsn.setAttributeNS(null, "stroke-width", 2);
@@ -343,5 +352,48 @@ class Grid {
         const svgNode = document.getElementById('svgNode');
         svgNode.appendChild(shapsn);
 
+    }
+
+    createStrokePath() {
+        // loop through the lines
+        for (const [key, value] of Object.entries(this.lineVectors)) {
+
+            // skip empty entries
+            if (value.C.x != "") {
+
+                // console.log(value);
+                // console.log(value.D);
+
+                var start = value.C
+                var end = value.D
+                var startEnd = vectorSub(start, end);
+                var stepCount = 350
+                var angleRadians = angleBetweenPoints(start, end) + 0.3
+
+                if (value.even == true) {
+                    angleRadians += - Math.PI / 5;
+                }
+
+                for (var i = 0; i < stepCount; i++) {
+                    var positionX = start.x + i * startEnd.x / stepCount;
+                    var positionY = start.y + i * startEnd.y / stepCount;
+
+                    var singleStroke = new strokePath({
+                        "start": {
+                            x: positionX,
+                            y: positionY
+                        },
+                        vectorMagnitude: 25,
+                        angleRadians: (angleRadians - Math.PI / 2), // 0.2,
+                        strokeColor: "black",
+                        strokeColorAction: "red",
+                        shape: this.shapeZ.pointList,
+                    });
+
+                    singleStroke.showPath();
+                }
+
+            }
+        }
     }
 }

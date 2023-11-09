@@ -69,7 +69,12 @@ function vectorAdd(p1, p2) {
 }
 
 function vectorSub(p1, p2) {
-    return { x: p2.x - p1.x, y: p2.y - p1.y }
+    // console.log(p2.x - p1.x);
+    // console.log(p2.y - p1.y);
+    // console.log(p1)
+    // console.log(p2)
+    return { x: (p2.x - p1.x), y: p2.y - p1.y }
+    // return { x: (1340 - 1340), y: (169 - 169) }
 }
 
 

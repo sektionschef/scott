@@ -34,6 +34,15 @@ class strokePath {
             }
 
             this.interPointCandidate = getIntersectionPoint(this.shapeA, this.shapeB, this.start, this.end);
+            if (this.interPointCandidate === undefined) {
+                // console.log("case")
+                // console.log(this.interPointCandidate);
+                // console.log(this.shapeA);
+                // console.log(this.shapeB);
+                // console.log(this.start);
+                // console.log(this.end);
+                continue;
+            }
 
             // lies inside the line segmente, between start and end?
             this.splitSwitchCandidate = (

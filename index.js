@@ -205,47 +205,6 @@ function main() {
   // singleStroke.showPath();
 
 
-  // loop through the lines
-  for (const [key, value] of Object.entries(grid.lineVectors)) {
-
-    // skip empty entries
-    if (value.C.x != "") {
-
-      // console.log(value);
-      // console.log(value.D);
-
-      var start = value.C
-      var end = value.D
-      var startEnd = vectorSub(start, end);
-      var stepCount = 350
-      var angleRadians = angleBetweenPoints(start, end) + 0.3
-
-      if (value.even == true) {
-        angleRadians += - Math.PI / 5;
-      }
-
-      for (var i = 0; i < stepCount; i++) {
-        var positionX = start.x + i * startEnd.x / stepCount;
-        var positionY = start.y + i * startEnd.y / stepCount;
-
-        var singleStroke = new strokePath({
-          "start": {
-            x: positionX,
-            y: positionY
-          },
-          vectorMagnitude: 25,
-          angleRadians: (angleRadians - Math.PI / 2), // 0.2,
-          strokeColor: "black",
-          strokeColorAction: "red",
-          shape: POLYGONPOINTS,
-        });
-
-        singleStroke.showPath();
-      }
-
-    }
-  }
-
 
   setTagsHTML({
     "title": TITLE,
