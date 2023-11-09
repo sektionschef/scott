@@ -168,6 +168,7 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
+  createBackground();
 
   // SHAPE
   // var pointString = ""
@@ -261,4 +262,17 @@ function createDrawingGroup() {
   var groupDrawing = document.createElementNS("http://www.w3.org/2000/svg", "g");
   groupDrawing.setAttribute("id", "drawing");
   defs.appendChild(groupDrawing);
+}
+
+
+function createBackground() {
+  // create background
+  var backgroundRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  backgroundRect.setAttribute("id", "backgroundRect");
+  backgroundRect.setAttribute("x", "0");
+  backgroundRect.setAttribute("y", "0");
+  backgroundRect.setAttribute("width", "100%");
+  backgroundRect.setAttribute("height", "100%");
+  backgroundRect.setAttribute("fill", BACKGROUNDTONE);
+  svgNode.appendChild(backgroundRect);
 }

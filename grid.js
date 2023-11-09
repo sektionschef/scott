@@ -383,7 +383,7 @@ class Grid {
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
                     if (pointInPolygon(this.shapeZ.pointList, [positionX, positionMiddleLineY])) {
-                        loopDensity = 2;
+                        loopDensity = 2; // 2
                     } else {
                         loopDensity = 1
                     }
