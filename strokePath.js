@@ -126,7 +126,6 @@ class strokePath {
         var midPoint = getMiddlePpoint(this.start, this.end);
 
         // define the color - what is inside?
-        // if (pointInPolygon(this.shape, [this.start.x, this.start.y]) && pointInPolygon(this.shape, [this.end.x, this.end.y])) {
         if (pointInPolygon(this.shape, [midPoint.x, midPoint.y])) {
             this.strokeColorContinuous = this.strokeColorAction;
         } else {
@@ -164,11 +163,9 @@ class strokePath {
         var midPointEndInt = getMiddlePpoint(this.end, this.interPoint);
 
         // make sure both points lie in polygon and not just one on the edge.
-        // if (pointInPolygon(this.shape, [this.start.x, this.start.y]) && pointInPolygon(this.shape, [this.interPoint.x, this.interPoint.y])) {
         if (pointInPolygon(this.shape, [midPointStartInt.x, midPointStartInt.y])) {
             this.strokeColorStart = this.strokeColorAction;
             this.strokeColorEnd = this.strokeColor;
-            // } else if (pointInPolygon(this.shape, [this.end.x, this.end.y]) && pointInPolygon(this.shape, [this.interPoint.x, this.interPoint.y])) {
         } else if (pointInPolygon(this.shape, [midPointEndInt.x, midPointEndInt.y])) {
             this.strokeColorStart = this.strokeColor;
             this.strokeColorEnd = this.strokeColorAction;

@@ -39,10 +39,10 @@ class Grid {
 
         this.createBoxes();
         this.loopCategorize();
-        this.createShape();
-        // this.showDebugBoxes();
+        this.createShapes();
+        this.showDebugBoxes();
         // this.loopdebugCategory();
-        // this.debugShowShape();
+        this.debugShowShape();
 
         this.createStrokePath();
     }
@@ -293,63 +293,145 @@ class Grid {
         }
     }
 
-    createShape() {
+    createShapes() {
 
-        this.shapeZ = {};
+        this.shapeMain = {};
+        this.shapeShadA = {};  // shadow beneath
+        this.shapeShadB = {};  // shadow beneath
 
-        var XCalc = Math.round(this.longBoxCount / 12 * 2);
-        var YCalc = 7 * this.stripeHeight + 1;
-        var YCalcHeight = 7;
+        var shapeMainHeight = 7;
+        var shadAheight = 4;
+        var shadAshift = 8;
 
-        // var ACountX = 40;
-        var ACountX = XCalc;
-        var ACounty = YCalc;
-        var CCountX = this.longBoxCount - XCalc;
-        var CCountY = YCalc + YCalcHeight;
+        var MainAX = Math.round(this.longBoxCount / 24 * 6);
+        var MainAY = 7 * this.stripeHeight + 1;
+        var MainCX = this.longBoxCount - MainAX;
+        var MainCY = MainAY + shapeMainHeight;
+
+        var ShadAAY = MainAY + shapeMainHeight + 1;
 
         for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == ACountX && this.boxes[i].height == ACounty) {
-                this.shapeZ.A = this.boxes[i].A;
+            if (this.boxes[i].width == MainAX && this.boxes[i].height == MainAY) {
+                this.shapeMain.A = this.boxes[i].A;
             }
 
-            if (this.boxes[i].width == CCountX && this.boxes[i].height == ACounty) {
-                this.shapeZ.B = this.boxes[i].B;
+            if (this.boxes[i].width == MainCX && this.boxes[i].height == MainAY) {
+                this.shapeMain.B = this.boxes[i].B;
             }
 
-            if (this.boxes[i].width == CCountX && this.boxes[i].height == CCountY) {
-                this.shapeZ.C = this.boxes[i].C;
+            if (this.boxes[i].width == MainCX && this.boxes[i].height == MainCY) {
+                this.shapeMain.C = this.boxes[i].C;
             }
 
-            if (this.boxes[i].width == ACountX && this.boxes[i].height == CCountY) {
-                this.shapeZ.D = this.boxes[i].D;
+            if (this.boxes[i].width == MainAX && this.boxes[i].height == MainCY) {
+                this.shapeMain.D = this.boxes[i].D;
             }
         }
 
-        this.shapeZ.pointString = `
-        ${this.shapeZ.A.x}, ${this.shapeZ.A.y}
-        ${this.shapeZ.B.x}, ${this.shapeZ.B.y}
-        ${this.shapeZ.C.x}, ${this.shapeZ.C.y}
-        ${this.shapeZ.D.x}, ${this.shapeZ.D.y}
+        for (var i = 0; i < this.boxes.length; i++) {
+            if (this.boxes[i].width == MainAX && this.boxes[i].height == ShadAAY) {
+                this.shapeShadA.A = this.boxes[i].A;
+            }
+
+            if (this.boxes[i].width == MainCX && this.boxes[i].height == ShadAAY) {
+                this.shapeShadA.B = this.boxes[i].B;
+            }
+
+            if (this.boxes[i].width == (MainCX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                this.shapeShadA.C = this.boxes[i].C;
+            }
+
+            if (this.boxes[i].width == (MainAX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                this.shapeShadA.D = this.boxes[i].D;
+            }
+        }
+
+        for (var i = 0; i < this.boxes.length; i++) {
+            if (this.boxes[i].width == (MainCX + 1) && this.boxes[i].height == MainAY) {
+                this.shapeShadB.A = this.boxes[i].A;
+            }
+
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == MainAY + shadAheight) {
+                this.shapeShadB.B = this.boxes[i].D;
+            }
+
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                this.shapeShadB.C = this.boxes[i].D;
+            }
+
+            if (this.boxes[i].width == (MainCX + 1) && this.boxes[i].height == MainCY) {
+                this.shapeShadB.D = this.boxes[i].D;
+            }
+        }
+
+        this.shapeMain.pointString = `
+        ${this.shapeMain.A.x}, ${this.shapeMain.A.y}
+        ${this.shapeMain.B.x}, ${this.shapeMain.B.y}
+        ${this.shapeMain.C.x}, ${this.shapeMain.C.y}
+        ${this.shapeMain.D.x}, ${this.shapeMain.D.y}
+        `;
+        this.shapeShadA.pointString = `
+        ${this.shapeShadA.A.x}, ${this.shapeShadA.A.y}
+        ${this.shapeShadA.B.x}, ${this.shapeShadA.B.y}
+        ${this.shapeShadA.C.x}, ${this.shapeShadA.C.y}
+        ${this.shapeShadA.D.x}, ${this.shapeShadA.D.y}
+        `;
+        this.shapeShadB.pointString = `
+        ${this.shapeShadB.A.x}, ${this.shapeShadB.A.y}
+        ${this.shapeShadB.B.x}, ${this.shapeShadB.B.y}
+        ${this.shapeShadB.C.x}, ${this.shapeShadB.C.y}
+        ${this.shapeShadB.D.x}, ${this.shapeShadB.D.y}
         `;
 
-        this.shapeZ.pointList = [
-            [this.shapeZ.A.x, this.shapeZ.A.y],
-            [this.shapeZ.B.x, this.shapeZ.B.y],
-            [this.shapeZ.C.x, this.shapeZ.C.y],
-            [this.shapeZ.D.x, this.shapeZ.D.y]
+
+        this.shapeMain.pointList = [
+            [this.shapeMain.A.x, this.shapeMain.A.y],
+            [this.shapeMain.B.x, this.shapeMain.B.y],
+            [this.shapeMain.C.x, this.shapeMain.C.y],
+            [this.shapeMain.D.x, this.shapeMain.D.y]
         ];
+        this.shapeShadA.pointList = [
+            [this.shapeShadA.A.x, this.shapeShadA.A.y],
+            [this.shapeShadA.B.x, this.shapeShadA.B.y],
+            [this.shapeShadA.C.x, this.shapeShadA.C.y],
+            [this.shapeShadA.D.x, this.shapeShadA.D.y]
+        ];
+        this.shapeShadB.pointList = [
+            [this.shapeShadB.A.x, this.shapeShadB.A.y],
+            [this.shapeShadB.B.x, this.shapeShadB.B.y],
+            [this.shapeShadB.C.x, this.shapeShadB.C.y],
+            [this.shapeShadB.D.x, this.shapeShadB.D.y]
+        ];
+
     }
 
     debugShowShape() {
 
+        const svgNode = document.getElementById('svgNode');
+
         var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shapsn.setAttributeNS(null, 'points', this.shapeZ.pointList);
+        shapsn.setAttributeNS(null, 'points', this.shapeMain.pointList);
         shapsn.setAttributeNS(null, 'fill', "none");
         shapsn.setAttributeNS(null, 'stroke', "black");
         shapsn.setAttributeNS(null, "stroke-width", 0.5);
 
-        const svgNode = document.getElementById('svgNode');
         svgNode.appendChild(shapsn);
+
+        var shadnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        shadnA.setAttributeNS(null, 'points', this.shapeShadA.pointList);
+        shadnA.setAttributeNS(null, 'fill', "none");
+        shadnA.setAttributeNS(null, 'stroke', "black");
+        shadnA.setAttributeNS(null, "stroke-width", 0.5);
+
+        svgNode.appendChild(shadnA);
+
+        var shadnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        shadnB.setAttributeNS(null, 'points', this.shapeShadB.pointList);
+        shadnB.setAttributeNS(null, 'fill', "none");
+        shadnB.setAttributeNS(null, 'stroke', "black");
+        shadnB.setAttributeNS(null, "stroke-width", 0.5);
+
+        svgNode.appendChild(shadnB);
 
     }
 
@@ -382,7 +464,7 @@ class Grid {
 
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
-                    if (pointInPolygon(this.shapeZ.pointList, [positionX, positionMiddleLineY])) {
+                    if (pointInPolygon(this.shapeMain.pointList, [positionX, positionMiddleLineY])) {
                         loopDensity = 1; // 2
                     } else {
                         loopDensity = 1
@@ -410,7 +492,7 @@ class Grid {
                             angleRadians: angleRadiansLooped, // 0.2,
                             strokeColor: "black",
                             strokeColorAction: "#ff0000",
-                            shape: this.shapeZ.pointList,
+                            shape: this.shapeMain.pointList,
                         });
 
                         singleStroke.showPath();
