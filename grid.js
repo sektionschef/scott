@@ -40,7 +40,7 @@ class Grid {
         this.createBoxes();
         this.loopCategorize();
         this.createShapes();
-        this.showDebugBoxes();
+        // this.showDebugBoxes();
         // this.loopdebugCategory();
         this.debugShowShape();
 
@@ -298,10 +298,14 @@ class Grid {
         this.shapeMain = {};
         this.shapeShadA = {};  // shadow beneath
         this.shapeShadB = {};  // shadow beneath
+        this.shapeShadow = {};  // shadow
 
         var shapeMainHeight = 7;
         var shadAheight = 4;
         var shadAshift = 8;
+        var superShadowShift = 25;  // maybe last box
+        var superShadowHeight = 6;
+        var superShadowHeightMax = 20;
 
         var MainAX = Math.round(this.longBoxCount / 24 * 6);
         var MainAY = 7 * this.stripeHeight + 1;
@@ -364,6 +368,28 @@ class Grid {
             }
         }
 
+        for (var i = 0; i < this.boxes.length; i++) {
+            if (this.boxes[i].width == (MainAX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight + 1)) {
+                this.shapeShadow.A = this.boxes[i].A;
+            }
+
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                this.shapeShadow.B = this.boxes[i].D;
+            }
+
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (MainAY + shadAheight)) {
+                this.shapeShadow.C = this.boxes[i].D;
+            }
+
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShift) && this.boxes[i].height == MainCY + superShadowHeight) {
+                this.shapeShadow.D = this.boxes[i].B;
+            }
+
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShift) && this.boxes[i].height == MainCY + superShadowHeight + superShadowHeightMax) {
+                this.shapeShadow.E = this.boxes[i].C;
+            }
+        }
+
         this.shapeMain.pointString = `
         ${this.shapeMain.A.x}, ${this.shapeMain.A.y}
         ${this.shapeMain.B.x}, ${this.shapeMain.B.y}
@@ -381,6 +407,13 @@ class Grid {
         ${this.shapeShadB.B.x}, ${this.shapeShadB.B.y}
         ${this.shapeShadB.C.x}, ${this.shapeShadB.C.y}
         ${this.shapeShadB.D.x}, ${this.shapeShadB.D.y}
+        `;
+        this.shapeShadow.pointString = `
+        ${this.shapeShadow.A.x}, ${this.shapeShadow.A.y}
+        ${this.shapeShadow.B.x}, ${this.shapeShadow.B.y}
+        ${this.shapeShadow.C.x}, ${this.shapeShadow.C.y}
+        ${this.shapeShadow.D.x}, ${this.shapeShadow.D.y}
+        ${this.shapeShadow.E.x}, ${this.shapeShadow.E.y}
         `;
 
 
@@ -401,6 +434,13 @@ class Grid {
             [this.shapeShadB.B.x, this.shapeShadB.B.y],
             [this.shapeShadB.C.x, this.shapeShadB.C.y],
             [this.shapeShadB.D.x, this.shapeShadB.D.y]
+        ];
+        this.shapeShadow.pointList = [
+            [this.shapeShadow.A.x, this.shapeShadow.A.y],
+            [this.shapeShadow.B.x, this.shapeShadow.B.y],
+            [this.shapeShadow.C.x, this.shapeShadow.C.y],
+            [this.shapeShadow.D.x, this.shapeShadow.D.y],
+            [this.shapeShadow.E.x, this.shapeShadow.E.y]
         ];
 
     }
@@ -432,6 +472,14 @@ class Grid {
         shadnB.setAttributeNS(null, "stroke-width", 0.5);
 
         svgNode.appendChild(shadnB);
+
+        var superShadow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+        superShadow.setAttributeNS(null, 'points', this.shapeShadow.pointList);
+        superShadow.setAttributeNS(null, 'fill', "none");
+        superShadow.setAttributeNS(null, 'stroke', "#000000");
+        superShadow.setAttributeNS(null, "stroke-width", 0.5);
+
+        svgNode.appendChild(superShadow);
 
     }
 
