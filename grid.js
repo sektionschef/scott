@@ -2,13 +2,14 @@ class Grid {
     constructor(data) {
 
         this.stripeHeight = 2;
+        this.marginRelative = 0.09;
 
         this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
         this.longSide = data.longSide;
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
 
-        this.marginBoxCount = Math.round(this.shortBoxCount * 0.09);
+        this.marginBoxCount = Math.round(this.shortBoxCount * this.marginRelative);
         this.boxSize = this.shortSide / this.shortBoxCount;
         this.longBoxCount = Math.floor(this.longSide / this.boxSize);
 
@@ -38,10 +39,9 @@ class Grid {
 
         this.createBoxes();
         this.loopCategorize();
-        // this.showDebug();
-        // this.loopdebugCategory();
-
         this.createShape();
+        // this.showDebugBoxes();
+        // this.loopdebugCategory();
         // this.debugShowShape();
 
         this.createStrokePath();
@@ -50,7 +50,7 @@ class Grid {
     createBoxes() {
 
         var index = 0;
-        var stripeIndex = 0;
+        var stripeIndex = 0;  // which stripe - default 2 boxes height -> 1 stripe
         var inactive = true;
 
         // h = long, w = short
@@ -112,7 +112,7 @@ class Grid {
         }
     }
 
-    showDebug() {
+    showDebugBoxes() {
         for (var i = 0; i < this.boxes.length; i++) {
 
             var colory = "#f06"
@@ -346,7 +346,7 @@ class Grid {
         shapsn.setAttributeNS(null, 'points', this.shapeZ.pointList);
         shapsn.setAttributeNS(null, 'fill', "none");
         shapsn.setAttributeNS(null, 'stroke', "black");
-        shapsn.setAttributeNS(null, "stroke-width", 2);
+        shapsn.setAttributeNS(null, "stroke-width", 0.5);
 
         const svgNode = document.getElementById('svgNode');
         svgNode.appendChild(shapsn);
@@ -354,36 +354,36 @@ class Grid {
     }
 
     createStrokePath() {
+
+        this.stepCount = 350; // how many strokePaths per stripe
+        this.angleRadiansStart = - Math.PI / 2 + 0.3;  // starting angle
+
         // loop through the lines
         for (const [key, value] of Object.entries(this.lineVectors)) {
 
             // skip empty entries, margin
             if (value.C.x != "") {
 
-                // console.log(value);
-                // console.log(value.D);
-
                 var start = value.C
                 var end = value.D
                 var startEnd = vectorSub(start, end);
-                var stepCount = 350
-                var angleRadians = - Math.PI / 2 + 0.3
-                var loopDensity = 1 // how many strokes per point - density
-                var angleRadiansTemp = 0;
+                var loopDensity = 1 // how many strokes per point - density, default 1 loop
+                var angleRadians = this.angleRadiansStart;
+                var angleRadiansLooped = 0;
 
                 // different for each odd and even line
                 if (value.even == true) {
                     angleRadians += - Math.PI / 5;
                 }
 
-                for (var i = 0; i < stepCount; i++) {
-                    var positionX = start.x + i * startEnd.x / stepCount;
-                    var positionY = start.y + i * startEnd.y / stepCount;
+                for (var i = 0; i < this.stepCount; i++) {
+                    var positionX = start.x + i * startEnd.x / this.stepCount;
+                    var positionY = start.y + i * startEnd.y / this.stepCount;
 
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
                     if (pointInPolygon(this.shapeZ.pointList, [positionX, positionMiddleLineY])) {
-                        loopDensity = 2; // 2
+                        loopDensity = 1; // 2
                     } else {
                         loopDensity = 1
                     }
@@ -392,12 +392,12 @@ class Grid {
 
                         if (d >= 1) {
                             if (value.even == true) {
-                                angleRadiansTemp = angleRadians + Math.PI / 5;
+                                angleRadiansLooped = angleRadians + Math.PI / 5;
                             } else {
-                                angleRadiansTemp = angleRadians - Math.PI / 5;
+                                angleRadiansLooped = angleRadians - Math.PI / 5;
                             }
                         } else {
-                            angleRadiansTemp = angleRadians
+                            angleRadiansLooped = angleRadians
                         }
 
 
@@ -407,9 +407,9 @@ class Grid {
                                 y: positionY
                             },
                             vectorMagnitude: 25,
-                            angleRadians: angleRadiansTemp, // 0.2,
+                            angleRadians: angleRadiansLooped, // 0.2,
                             strokeColor: "black",
-                            strokeColorAction: "#000000",
+                            strokeColorAction: "#ff0000",
                             shape: this.shapeZ.pointList,
                         });
 

@@ -21,7 +21,7 @@ noise.seed($fx.rand());
 const sp = new URLSearchParams(window.location.search)
 //  console.log(sp);
 
-console.info(`fxhash: %c${$fx.hash}`, 'font-weight: bold');
+// console.info(`fxhash: %c${$fx.hash}`, 'font-weight: bold');
 
 
 CANVASFORMATS = {
@@ -170,7 +170,7 @@ function main() {
 
   createBackground();
 
-  // SHAPE
+  // DUMMY SHAPE
   // var pointString = ""
   // for (var i = 0; i < POLYGONPOINTS.length; i++) {
   //   pointString = pointString + POLYGONPOINTS[i][0] + "," + POLYGONPOINTS[i][1] + " ";
@@ -200,7 +200,7 @@ function main() {
   //   vectorMagnitude: 225,
   //   angleRadians: Math.PI / 4, // 0.2,
   //   strokeColor: "black",
-  // strokeColorAction: "red",
+  //   strokeColorAction: "red",
   //   shape: POLYGONPOINTS,
   // });
   // singleStroke.showPath();

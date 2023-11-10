@@ -8,7 +8,8 @@ class strokePath {
         this.shape = data.shape;
 
         this.lineSegment = 4;  // where to place the control points
-        this.posStd = 1
+        this.posStd = 1  // misplacmente standard deviation
+        this.minLength = 5;  // a line should have a length of at least
 
         // create from angle
         this.end = vectorAdd(this.start, vectorFromAngle(this.angleRadians, this.vectorMagnitude))
@@ -18,8 +19,6 @@ class strokePath {
         this.end.x = this.end.x + gaussianRandAdj(0, this.posStd);
         this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
         this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
-
-        // this.midPoint = getMiddlePpoint(this.start, this.end) // exactly middle to check if it is in polygon or not.
 
         this.interPoint = { x: 99999, y: 99999 };
         this.splitSwitch = false;
@@ -37,12 +36,6 @@ class strokePath {
 
             this.interPointCandidate = getIntersectionPoint(this.shapeA, this.shapeB, this.start, this.end);
             if (this.interPointCandidate === undefined) {
-                // console.log("case")
-                // console.log(this.interPointCandidate);
-                // console.log(this.shapeA);
-                // console.log(this.shapeB);
-                // console.log(this.start);
-                // console.log(this.end);
                 continue;
             }
 
@@ -130,15 +123,18 @@ class strokePath {
 
     showContinuousPath() {
 
+        var midPoint = getMiddlePpoint(this.start, this.end);
+
         // define the color - what is inside?
-        if (pointInPolygon(this.shape, [this.start.x, this.start.y])) {
+        // if (pointInPolygon(this.shape, [this.start.x, this.start.y]) && pointInPolygon(this.shape, [this.end.x, this.end.y])) {
+        if (pointInPolygon(this.shape, [midPoint.x, midPoint.y])) {
             this.strokeColorContinuous = this.strokeColorAction;
         } else {
             this.strokeColorContinuous = this.strokeColor;
         }
 
         this.newPath = document.createElementNS('http://www.w3.org/2000/svg', "path");
-        this.newPath.setAttributeNS(null, "id", "pathIdD");
+        this.newPath.setAttributeNS(null, "id", ("pathIdD-") + $fx.rand() * 1000);
         this.newPath.setAttributeNS(null, "d", `M 
             ${this.start.x} 
             ${this.start.y} 
@@ -162,18 +158,30 @@ class strokePath {
 
     showSplitPath() {
 
+        const svgNode = document.getElementById('svgNode');
 
-        if (pointInPolygon(this.shape, [this.start.x, this.start.y])) {
+        var midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
+        var midPointEndInt = getMiddlePpoint(this.end, this.interPoint);
+
+        // make sure both points lie in polygon and not just one on the edge.
+        // if (pointInPolygon(this.shape, [this.start.x, this.start.y]) && pointInPolygon(this.shape, [this.interPoint.x, this.interPoint.y])) {
+        if (pointInPolygon(this.shape, [midPointStartInt.x, midPointStartInt.y])) {
             this.strokeColorStart = this.strokeColorAction;
             this.strokeColorEnd = this.strokeColor;
-        } else {
+            // } else if (pointInPolygon(this.shape, [this.end.x, this.end.y]) && pointInPolygon(this.shape, [this.interPoint.x, this.interPoint.y])) {
+        } else if (pointInPolygon(this.shape, [midPointEndInt.x, midPointEndInt.y])) {
             this.strokeColorStart = this.strokeColor;
             this.strokeColorEnd = this.strokeColorAction;
+        } else {
+            this.strokeColorStart = this.strokeColor;
+            this.strokeColorEnd = this.strokeColor;
         }
 
-        this.newPathStart = document.createElementNS('http://www.w3.org/2000/svg', "path");
-        this.newPathStart.setAttributeNS(null, "id", "pathIdD");
-        this.newPathStart.setAttributeNS(null, "d", `M 
+        if (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) {
+
+            this.newPathStart = document.createElementNS('http://www.w3.org/2000/svg', "path");
+            this.newPathStart.setAttributeNS(null, "id", "pathIdD");
+            this.newPathStart.setAttributeNS(null, "d", `M 
             ${this.start.x} 
             ${this.start.y} 
             C 
@@ -184,15 +192,18 @@ class strokePath {
             ${this.interPoint.x} 
             ${this.interPoint.y}
             `);
-        this.newPathStart.setAttributeNS(null, "stroke", this.strokeColorStart);
-        this.newPathStart.setAttributeNS(null, "stroke-width", 0.5);
-        this.newPathStart.setAttributeNS(null, "opacity", 1);
-        this.newPathStart.setAttributeNS(null, "fill", "none");
+            this.newPathStart.setAttributeNS(null, "stroke", this.strokeColorStart);
+            this.newPathStart.setAttributeNS(null, "stroke-width", 0.5);
+            this.newPathStart.setAttributeNS(null, "opacity", 1);
+            this.newPathStart.setAttributeNS(null, "fill", "none");
 
+            svgNode.appendChild(this.newPathStart);
+        }
 
-        this.newPathEnd = document.createElementNS('http://www.w3.org/2000/svg', "path");
-        this.newPathEnd.setAttributeNS(null, "id", "pathIdD");
-        this.newPathEnd.setAttributeNS(null, "d", `M 
+        if (vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength) {
+            this.newPathEnd = document.createElementNS('http://www.w3.org/2000/svg', "path");
+            this.newPathEnd.setAttributeNS(null, "id", "pathIdD");
+            this.newPathEnd.setAttributeNS(null, "d", `M 
             ${this.interPoint.x} 
             ${this.interPoint.y} 
             C 
@@ -203,16 +214,13 @@ class strokePath {
             ${this.end.x} 
             ${this.end.y}
             `);
-        this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColorEnd);
-        this.newPathEnd.setAttributeNS(null, "stroke-width", 0.5);
-        this.newPathEnd.setAttributeNS(null, "opacity", 1);
-        this.newPathEnd.setAttributeNS(null, "fill", "none");
+            this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColorEnd);
+            this.newPathEnd.setAttributeNS(null, "stroke-width", 0.5);
+            this.newPathEnd.setAttributeNS(null, "opacity", 1);
+            this.newPathEnd.setAttributeNS(null, "fill", "none");
 
-
-
-        const svgNode = document.getElementById('svgNode');
-        svgNode.appendChild(this.newPathStart);
-        svgNode.appendChild(this.newPathEnd);
+            svgNode.appendChild(this.newPathEnd);
+        }
     }
 
     showDebug() {
@@ -224,7 +232,7 @@ class strokePath {
         this.debugStart.setAttributeNS(null, "cy", this.start.y);
         this.debugStart.setAttributeNS(null, "r", "3");
         this.debugStart.setAttributeNS(null, "stroke", "blue");
-        this.debugStart.setAttributeNS(null, "stroke-width", 2);
+        this.debugStart.setAttributeNS(null, "stroke-width", 1);
         this.debugStart.setAttributeNS(null, "opacity", 1);
         this.debugStart.setAttributeNS(null, "fill", "none");
 
@@ -234,7 +242,7 @@ class strokePath {
         this.debugEnd.setAttributeNS(null, "cy", this.end.y);
         this.debugEnd.setAttributeNS(null, "r", "3");
         this.debugEnd.setAttributeNS(null, "stroke", "red");
-        this.debugEnd.setAttributeNS(null, "stroke-width", 2);
+        this.debugEnd.setAttributeNS(null, "stroke-width", 1);
         this.debugEnd.setAttributeNS(null, "opacity", 1);
         this.debugEnd.setAttributeNS(null, "fill", "none");
 
@@ -244,7 +252,7 @@ class strokePath {
         this.debugControlA.setAttributeNS(null, "cy", this.controlA.y);
         this.debugControlA.setAttributeNS(null, "r", "3");
         this.debugControlA.setAttributeNS(null, "stroke", "pink");
-        this.debugControlA.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlA.setAttributeNS(null, "stroke-width", 1);
         this.debugControlA.setAttributeNS(null, "opacity", 1);
         this.debugControlA.setAttributeNS(null, "fill", "none");
 
@@ -254,7 +262,7 @@ class strokePath {
         this.debugControlB.setAttributeNS(null, "cy", this.controlB.y);
         this.debugControlB.setAttributeNS(null, "r", "3");
         this.debugControlB.setAttributeNS(null, "stroke", "pink");
-        this.debugControlB.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlB.setAttributeNS(null, "stroke-width", 1);
         this.debugControlB.setAttributeNS(null, "opacity", 1);
         this.debugControlB.setAttributeNS(null, "fill", "none");
 
@@ -264,7 +272,7 @@ class strokePath {
         this.debugInterPoint.setAttributeNS(null, "cy", this.interPoint.y);
         this.debugInterPoint.setAttributeNS(null, "r", "5");
         this.debugInterPoint.setAttributeNS(null, "stroke", "cyan");
-        this.debugInterPoint.setAttributeNS(null, "stroke-width", 2);
+        this.debugInterPoint.setAttributeNS(null, "stroke-width", 1);
         this.debugInterPoint.setAttributeNS(null, "opacity", 1);
         this.debugInterPoint.setAttributeNS(null, "fill", "none");
 
@@ -274,7 +282,7 @@ class strokePath {
         this.debugControlStartA.setAttributeNS(null, "cy", this.controlStartA.y);
         this.debugControlStartA.setAttributeNS(null, "r", "3");
         this.debugControlStartA.setAttributeNS(null, "stroke", "pink");
-        this.debugControlStartA.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlStartA.setAttributeNS(null, "stroke-width", 1);
         this.debugControlStartA.setAttributeNS(null, "opacity", 1);
         this.debugControlStartA.setAttributeNS(null, "fill", "none");
 
@@ -284,7 +292,7 @@ class strokePath {
         this.debugControlStartB.setAttributeNS(null, "cy", this.controlStartB.y);
         this.debugControlStartB.setAttributeNS(null, "r", "3");
         this.debugControlStartB.setAttributeNS(null, "stroke", "pink");
-        this.debugControlStartB.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlStartB.setAttributeNS(null, "stroke-width", 1);
         this.debugControlStartB.setAttributeNS(null, "opacity", 1);
         this.debugControlStartB.setAttributeNS(null, "fill", "none");
 
@@ -294,7 +302,7 @@ class strokePath {
         this.debugControlEndA.setAttributeNS(null, "cy", this.controlEndA.y);
         this.debugControlEndA.setAttributeNS(null, "r", "3");
         this.debugControlEndA.setAttributeNS(null, "stroke", "pink");
-        this.debugControlEndA.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlEndA.setAttributeNS(null, "stroke-width", 1);
         this.debugControlEndA.setAttributeNS(null, "opacity", 1);
         this.debugControlEndA.setAttributeNS(null, "fill", "none");
 
@@ -304,7 +312,7 @@ class strokePath {
         this.debugControlEndB.setAttributeNS(null, "cy", this.controlEndB.y);
         this.debugControlEndB.setAttributeNS(null, "r", "3");
         this.debugControlEndB.setAttributeNS(null, "stroke", "pink");
-        this.debugControlEndB.setAttributeNS(null, "stroke-width", 2);
+        this.debugControlEndB.setAttributeNS(null, "stroke-width", 1);
         this.debugControlEndB.setAttributeNS(null, "opacity", 1);
         this.debugControlEndB.setAttributeNS(null, "fill", "none");
 
