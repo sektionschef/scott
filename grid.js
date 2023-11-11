@@ -3,8 +3,10 @@ class Grid {
 
         this.stripeHeight = 2;
         this.marginRelative = 0.09;
+        this.strokeColor = "#272727",
+            this.strokeColorAction = "#272727",
 
-        this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
+            this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
         this.longSide = data.longSide;
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
@@ -295,10 +297,22 @@ class Grid {
 
     createShapes() {
 
-        this.shapeMain = {};
-        this.shapeShadA = {};  // shadow beneath
-        this.shapeShadB = {};  // shadow beneath
-        this.shapeShadow = {};  // shadow
+        this.shapeMain = {
+            shapeLoop: 1,
+            colorAction: this.strokeColorAction,
+        };
+        this.shapeShadA = {  // shadow beneath
+            shapeLoop: 3,
+            colorAction: this.strokeColorAction,
+        };
+        this.shapeShadB = {  // shadow beneath
+            shapeLoop: 3,
+            colorAction: this.strokeColorAction,
+        };
+        this.shapeShadow = {  // shadow
+            shapeLoop: 2,
+            colorAction: this.strokeColorAction,
+        };
 
         var shapeMainHeight = 7;
         var shadAheight = 4;
@@ -442,7 +456,6 @@ class Grid {
             [this.shapeShadow.D.x, this.shapeShadow.D.y],
             [this.shapeShadow.E.x, this.shapeShadow.E.y]
         ];
-
     }
 
     debugShowShape() {
@@ -497,7 +510,9 @@ class Grid {
                 var start = value.C
                 var end = value.D
                 var startEnd = vectorSub(start, end);
-                var loopDensity = 1 // how many strokes per point - density, default 1 loop
+                var loopDensity = 0 // how many strokes per point - density, default 1 loop
+                var pointList = [];
+                var colorAction = "";
                 var angleRadians = this.angleRadiansStart;
                 var angleRadiansLooped = 0;
 
@@ -510,12 +525,28 @@ class Grid {
                     var positionX = start.x + i * startEnd.x / this.stepCount;
                     var positionY = start.y + i * startEnd.y / this.stepCount;
 
+                    // reference for being in shape is the middle of the stripe
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
+                    // check if in shape
                     if (pointInPolygon(this.shapeMain.pointList, [positionX, positionMiddleLineY])) {
-                        loopDensity = 1; // 2
+                        loopDensity = this.shapeMain.shapeLoop;
+                        pointList = this.shapeMain.pointList;
+                        colorAction = this.shapeMain.colorAction;
+                    } else if (pointInPolygon(this.shapeShadA.pointList, [positionX, positionMiddleLineY])) {
+                        loopDensity = this.shapeShadA.shapeLoop;
+                        pointList = this.shapeShadA.pointList;
+                        colorAction = this.shapeShadA.colorAction;
+                    } else if (pointInPolygon(this.shapeShadB.pointList, [positionX, positionMiddleLineY])) {
+                        loopDensity = this.shapeShadB.shapeLoop;
+                        pointList = this.shapeShadB.pointList;
+                        colorAction = this.shapeShadB.colorAction;
+                    } else if (pointInPolygon(this.shapeShadow.pointList, [positionX, positionMiddleLineY])) {
+                        loopDensity = this.shapeShadow.shapeLoop;
+                        pointList = this.shapeShadow.pointList;
+                        colorAction = this.shapeShadow.colorAction;
                     } else {
-                        loopDensity = 1
+                        loopDensity = 0
                     }
 
                     for (var d = 0; d < loopDensity; d++) {
@@ -538,9 +569,9 @@ class Grid {
                             },
                             vectorMagnitude: 25,
                             angleRadians: angleRadiansLooped, // 0.2,
-                            strokeColor: "black",
-                            strokeColorAction: "#ff0000",
-                            shape: this.shapeMain.pointList,
+                            strokeColor: this.strokeColor,
+                            strokeColorAction: colorAction,
+                            shape: pointList,
                         });
 
                         singleStroke.showPath();
