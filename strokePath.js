@@ -4,18 +4,24 @@
 
 class strokePath {
     constructor(data) {
-        // this.start = data.start;
         this.center = data.center;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
         this.strokeColor = data.strokeColor;
         this.strokeColorAction = data.strokeColorAction;
-        this.shape = data.shape;
+        // this.shape = data.shape;
+        this.shapes = data.shapes;
         this.loopSwitch = data.loopSwitch;
+
+        // dummies
+        this.up = { x: 0, y: 0 };
+        this.down = { x: 0, y: 0 };
+        this.shape = [];
+
 
         this.lineSegment = 4;  // where to place the control points
         this.posStd = 0;// 1  // misplacmente standard deviation
-        this.minLength = 5;  // a line should have a length of at least
+        this.minLength = 0; // 5;  // a line should have a length of at least
 
         // X = Cx + (r * cosine(angle))
         // Y = Cy + (r * sine(angle))
@@ -28,53 +34,57 @@ class strokePath {
             y: this.center.y + (this.vectorMagnitude / 2 * Math.sin(this.angleRadians - Math.PI))
         }
 
-        // create from angle
-        // this.end = vectorAdd(this.start, vectorFromAngle(this.angleRadians, this.vectorMagnitude))
-
         // start and end distortion
         this.start.x = this.start.x + gaussianRandAdj(0, this.posStd);
         this.end.x = this.end.x + gaussianRandAdj(0, this.posStd);
         this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
         this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
 
-        this.interPoint = { x: 99999, y: 99999 };
+        this.interPoint = { x: 0, y: 0 };
         this.splitSwitch = false;
 
-        // if there is an intersection point
-        for (var i = 0; i < this.shape.length; i++) {
-            if (i != (this.shape.length - 1)) {
-                this.shapeA = { x: this.shape[i][0], y: this.shape[i][1] };
-                this.shapeB = { x: this.shape[i + 1][0], y: this.shape[i + 1][1] }
-            } else {
-                // closing the loop
-                this.shapeA = { x: this.shape[0][0], y: this.shape[0][1] };
-                this.shapeB = { x: this.shape[i][0], y: this.shape[i][1] };
-            }
+        for (var o = 0; o < this.shapes.length; o++) {
+            this.shapeCandidate = this.shapes[o];
+            // if there is an intersection point with any shape, closest selected
+            for (var i = 0; i < this.shapeCandidate.length; i++) {
+                if (i != (this.shapeCandidate.length - 1)) {
+                    this.shapeA = { x: this.shapeCandidate[i][0], y: this.shapeCandidate[i][1] };
+                    this.shapeB = { x: this.shapeCandidate[i + 1][0], y: this.shapeCandidate[i + 1][1] }
+                } else {
+                    // closing the loop
+                    this.shapeA = { x: this.shapeCandidate[0][0], y: this.shapeCandidate[0][1] };
+                    this.shapeB = { x: this.shapeCandidate[i][0], y: this.shapeCandidate[i][1] };
+                }
 
-            this.interPointCandidate = getIntersectionPoint(this.shapeA, this.shapeB, this.start, this.end);
-            if (this.interPointCandidate === undefined) {
-                continue;
-            }
+                // this.interPointCandidate = getIntersectionPoint(this.shapeA, this.shapeB, this.start, this.end);
+                this.interPointCandidate = intersect(this.shapeA.x, this.shapeA.y, this.shapeB.x, this.shapeB.y, this.start.x, this.start.y, this.end.x, this.end.y);
+                if (this.interPointCandidate === undefined) {
+                    continue;
+                }
 
-            // lies inside the line segmente, between start and end?
-            this.splitSwitchCandidate = (
-                Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.shapeA, this.interPointCandidate)))
-            ) && (
-                    Math.abs(vectorLength(vectorSub(this.shapeA, this.shapeB))) > Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.shapeB)))
+                var shapeLineLength = vectorLength(vectorSub(this.shapeA, this.shapeB));
+                // lies inside the line segmente, between start and end?
+
+                this.splitSwitchCandidate = (
+                    shapeLineLength > vectorLength(vectorSub(this.shapeA, this.interPointCandidate))
                 ) && (
-                    Math.abs(vectorLength(vectorSub(this.start, this.end))) > Math.abs(vectorLength(vectorSub(this.start, this.interPointCandidate)))
-                ) && (
-                    Math.abs(vectorLength(vectorSub(this.start, this.end))) > Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.end)))
-                );
+                        shapeLineLength > vectorLength(vectorSub(this.interPointCandidate, this.shapeB))
+                    ) && (
+                        this.vectorMagnitude > vectorLength(vectorSub(this.start, this.interPointCandidate))
+                    ) && (
+                        this.vectorMagnitude > vectorLength(vectorSub(this.interPointCandidate, this.end))
+                    );
 
-            if (this.splitSwitchCandidate) {
-                this.splitSwitch = true;
+                if (this.splitSwitchCandidate) {
+                    this.splitSwitch = true;
+                }
+
+                // select the shortest distance to center
+                if (vectorLength(vectorSub(this.interPointCandidate, this.center)) < vectorLength(vectorSub(this.interPoint, this.center))) {
+                    this.interPoint = this.interPointCandidate;
+                    this.shape = this.shapes[o];
+                };
             }
-
-            // select the shortest distance to start
-            if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.start))) < Math.abs(vectorLength(vectorSub(this.interPoint, this.start)))) {
-                this.interPoint = this.interPointCandidate;
-            };
         }
 
         // dummy - for preventing errors
@@ -140,7 +150,7 @@ class strokePath {
 
     showContinuousPath() {
 
-        this.center = getMiddlePpoint(this.start, this.end);
+        // this.center = getMiddlePpoint(this.start, this.end);
 
         // define the color - what is inside?
         if (pointInPolygon(this.shape, [this.center.x, this.center.y])) {
@@ -163,7 +173,7 @@ class strokePath {
             ${this.end.x} 
             ${this.end.y}
             `);
-        // newPath.setAttributeNS(null, "stroke", "black");
+        // this.newPath.setAttributeNS(null, "stroke", "orange");
         this.newPath.setAttributeNS(null, "stroke", this.strokeColorContinuous);
         this.newPath.setAttributeNS(null, "stroke-width", 0.5);
         this.newPath.setAttributeNS(null, "opacity", 1);
@@ -175,23 +185,39 @@ class strokePath {
 
     showSplitPath() {
 
-        this.startInside = true;
-        this.endInside = true;
-
         const svgNode = document.getElementById('svgNode');
 
         var midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
         var midPointEndInt = getMiddlePpoint(this.end, this.interPoint);
 
         // make sure both points lie in polygon and not just one on the edge.
-        if (pointInPolygon(this.shape, [midPointStartInt.x, midPointStartInt.y])) {
-            this.startInside = true;  // is this part in the polygon
-            this.strokeColorStart = this.strokeColorAction;
-            this.strokeColorEnd = this.strokeColor;
-        } else if (pointInPolygon(this.shape, [midPointEndInt.x, midPointEndInt.y])) {
+        // if (pointInPolygon(this.shape, [midPointStartInt.x, midPointStartInt.y])) {
+        //     this.startInside = true;  // is this part in the polygon
+        //     this.strokeColorStart = this.strokeColorAction;
+        //     this.strokeColorEnd = this.strokeColor;
+        // } else if (pointInPolygon(this.shape, [midPointEndInt.x, midPointEndInt.y])) {
+        //     this.endInside = true;  // is this part in the polygon
+        //     this.strokeColorStart = this.strokeColor;
+        //     this.strokeColorEnd = this.strokeColorAction;
+        // } else {
+        //     this.strokeColorStart = this.strokeColor;
+        //     this.strokeColorEnd = this.strokeColor;
+        // }
+
+        this.up = vectorAdd(this.interPoint, { x: 1, y: 1 });
+        this.down = vectorAdd(this.interPoint, { x: -1, y: -1 });
+
+        // check which direction
+        if (pointInPolygon(this.shape, [this.up.x, this.up.y])) {
+            // console.log("to end");
             this.endInside = true;  // is this part in the polygon
             this.strokeColorStart = this.strokeColor;
             this.strokeColorEnd = this.strokeColorAction;
+        } else if (pointInPolygon(this.shape, [this.down.x, this.down.y])) {
+            // console.log("to start");
+            this.startInside = true;  // is this part in the polygon
+            this.strokeColorStart = this.strokeColorAction;
+            this.strokeColorEnd = this.strokeColor;
         } else {
             this.strokeColorStart = this.strokeColor;
             this.strokeColorEnd = this.strokeColor;
@@ -199,7 +225,8 @@ class strokePath {
 
         if (
             vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength &&
-            (this.loopSwitch == false || this.startInside == true)
+            // (this.loopSwitch == false || this.startInside == true)
+            (this.startInside == true)
         ) {
 
             this.newPathStart = document.createElementNS('http://www.w3.org/2000/svg', "path");
@@ -225,8 +252,8 @@ class strokePath {
 
         if (
             vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
-            (this.loopSwitch == false || this.endInside)
-            // (this.endInside)
+            // (this.loopSwitch == false || this.endInside)
+            (this.endInside)
         ) {
             this.newPathEnd = document.createElementNS('http://www.w3.org/2000/svg', "path");
             this.newPathEnd.setAttributeNS(null, "id", "pathIdD");
@@ -253,25 +280,36 @@ class strokePath {
     showDebug() {
 
         // DEBUG
+        this.debugCenter = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugCenter.setAttributeNS(null, "id", "center");
+        this.debugCenter.setAttributeNS(null, "cx", this.center.x);
+        this.debugCenter.setAttributeNS(null, "cy", this.center.y);
+        this.debugCenter.setAttributeNS(null, "r", "0.5");
+        this.debugCenter.setAttributeNS(null, "stroke", "none");
+        // this.debugCenter.setAttributeNS(null, "fill", "none");
+        this.debugCenter.setAttributeNS(null, "fill", "#ff00ea");
+        this.debugCenter.setAttributeNS(null, "stroke-width", 0.1);
+        this.debugCenter.setAttributeNS(null, "opacity", 1);
+
         this.debugStart = document.createElementNS('http://www.w3.org/2000/svg', "circle");
         this.debugStart.setAttributeNS(null, "id", "start");
         this.debugStart.setAttributeNS(null, "cx", this.start.x);
         this.debugStart.setAttributeNS(null, "cy", this.start.y);
-        this.debugStart.setAttributeNS(null, "r", "0.5");
-        this.debugStart.setAttributeNS(null, "stroke", "blue");
+        this.debugStart.setAttributeNS(null, "r", "1");
+        this.debugStart.setAttributeNS(null, "fill", "blue");
         this.debugStart.setAttributeNS(null, "stroke-width", 0.1);
         this.debugStart.setAttributeNS(null, "opacity", 1);
-        this.debugStart.setAttributeNS(null, "fill", "none");
+        this.debugStart.setAttributeNS(null, "stroke", "none");
 
         this.debugEnd = document.createElementNS('http://www.w3.org/2000/svg', "circle");
         this.debugEnd.setAttributeNS(null, "id", "end");
         this.debugEnd.setAttributeNS(null, "cx", this.end.x);
         this.debugEnd.setAttributeNS(null, "cy", this.end.y);
-        this.debugEnd.setAttributeNS(null, "r", "0.5");
-        this.debugEnd.setAttributeNS(null, "stroke", "red");
+        this.debugEnd.setAttributeNS(null, "r", "1");
+        this.debugEnd.setAttributeNS(null, "stroke", "none");
         this.debugEnd.setAttributeNS(null, "stroke-width", 0.1);
         this.debugEnd.setAttributeNS(null, "opacity", 1);
-        this.debugEnd.setAttributeNS(null, "fill", "none");
+        this.debugEnd.setAttributeNS(null, "fill", "red");
 
         this.debugControlA = document.createElementNS('http://www.w3.org/2000/svg', "circle");
         this.debugControlA.setAttributeNS(null, "id", "controlA");
@@ -297,11 +335,11 @@ class strokePath {
         this.debugInterPoint.setAttributeNS(null, "id", "intersect");
         this.debugInterPoint.setAttributeNS(null, "cx", this.interPoint.x);
         this.debugInterPoint.setAttributeNS(null, "cy", this.interPoint.y);
-        this.debugInterPoint.setAttributeNS(null, "r", "0.5");
-        this.debugInterPoint.setAttributeNS(null, "stroke", "cyan");
+        this.debugInterPoint.setAttributeNS(null, "r", "2");
+        this.debugInterPoint.setAttributeNS(null, "stroke", "none");
+        this.debugInterPoint.setAttributeNS(null, "fill", "orange");
         this.debugInterPoint.setAttributeNS(null, "stroke-width", 0.1);
         this.debugInterPoint.setAttributeNS(null, "opacity", 1);
-        this.debugInterPoint.setAttributeNS(null, "fill", "none");
 
         this.debugControlStartA = document.createElementNS('http://www.w3.org/2000/svg', "circle");
         this.debugControlStartA.setAttributeNS(null, "id", "controlA");
@@ -343,16 +381,40 @@ class strokePath {
         this.debugControlEndB.setAttributeNS(null, "opacity", 1);
         this.debugControlEndB.setAttributeNS(null, "fill", "none");
 
+        this.debugUp = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugUp.setAttributeNS(null, "id", "up");
+        this.debugUp.setAttributeNS(null, "cx", this.up.x);
+        this.debugUp.setAttributeNS(null, "cy", this.up.y);
+        this.debugUp.setAttributeNS(null, "r", "0.5");
+        this.debugUp.setAttributeNS(null, "stroke", "#ff0000ff");
+        this.debugUp.setAttributeNS(null, "stroke-width", 0.1);
+        this.debugUp.setAttributeNS(null, "opacity", 1);
+        this.debugUp.setAttributeNS(null, "fill", "none");
+
+        this.debugDown = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugDown.setAttributeNS(null, "id", "up");
+        this.debugDown.setAttributeNS(null, "cx", this.down.x);
+        this.debugDown.setAttributeNS(null, "cy", this.down.y);
+        this.debugDown.setAttributeNS(null, "r", "0.5");
+        this.debugDown.setAttributeNS(null, "stroke", "#ff0000ff");
+        this.debugDown.setAttributeNS(null, "stroke-width", 0.1);
+        this.debugDown.setAttributeNS(null, "opacity", 1);
+        this.debugDown.setAttributeNS(null, "fill", "none");
+
         const svgNode = document.getElementById('svgNode');
         if (this.splitSwitch) {
-            // svgNode.appendChild(this.debugStart);
-            // svgNode.appendChild(this.debugEnd);
+            svgNode.appendChild(this.debugCenter);
+            svgNode.appendChild(this.debugStart);
+            svgNode.appendChild(this.debugEnd);
             svgNode.appendChild(this.debugInterPoint);
             // svgNode.appendChild(this.debugControlStartA);
             // svgNode.appendChild(this.debugControlStartB);
             // svgNode.appendChild(this.debugControlEndA);
             // svgNode.appendChild(this.debugControlEndB);
+            // svgNode.appendChild(this.debugUp);
+            // svgNode.appendChild(this.debugDown);
         } else {
+            svgNode.appendChild(this.debugCenter);
             // svgNode.appendChild(this.debugStart);
             // svgNode.appendChild(this.debugEnd);
             // svgNode.appendChild(this.debugControlA);

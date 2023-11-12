@@ -313,7 +313,7 @@ class Grid {
             colorAction: this.strokeColorAction,
         };
         this.shapeShadow = {  // shadow
-            shapeLoop: 3,
+            shapeLoop: 1,
             colorAction: "#15ff00",
             // colorAction: this.strokeColorAction,
         };
@@ -460,6 +460,13 @@ class Grid {
             [this.shapeShadow.D.x, this.shapeShadow.D.y],
             [this.shapeShadow.E.x, this.shapeShadow.E.y]
         ];
+
+        this.shapes = [
+            this.shapeMain.pointList,
+            this.shapeShadA.pointList,
+            this.shapeShadB.pointList,
+            this.shapeShadow.pointList,
+        ]
     }
 
     debugShowShape() {
@@ -551,6 +558,7 @@ class Grid {
                         colorAction = this.shapeShadow.colorAction;
                     } else {
                         loopDensity = 1;
+                        colorAction = "#0077ff";
                     }
 
                     var loopSwitch = false;
@@ -579,7 +587,8 @@ class Grid {
                             angleRadians: angleRadiansLooped, // 0.2,
                             strokeColor: this.strokeColor,
                             strokeColorAction: colorAction,
-                            shape: pointList,
+                            // shape: pointList,
+                            shapes: this.shapes,
                             loopSwitch: loopSwitch,
                         });
 
