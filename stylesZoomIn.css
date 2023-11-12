@@ -10,16 +10,9 @@ body {
     padding: 0px;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    /* overflow: hidden; */
     touch-action: none;
 }
-
-
-/* https://blog.hubspot.com/website/center-an-image-in-html#:~:text=To%20center%20an%20image%20vertically%2C%20you%20can%20wrap%20it%20in,properties%2C%20and%20the%20transform%20property.  */
-/* https://codepen.io/sektionschef/pen/gOjRKOG */
-
-/* https://github.com/sa-azeem/fxhash_template */
-
 
 #badAssCanvas {
     margin: 0px;
@@ -29,7 +22,7 @@ body {
 }
 
 svg {
-    width: 100%;
-    height: 100%;
-    /* background-color: white; */
+    width: 300%;
+    height: 300%;
+    background-color: white;
 }

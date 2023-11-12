@@ -1,18 +1,35 @@
+// if looped - external part not drawn
+// no distortion mode
+// check if center in polyong not start - eveywhere?
+
 class strokePath {
     constructor(data) {
-        this.start = data.start;
+        // this.start = data.start;
+        this.center = data.center;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
         this.strokeColor = data.strokeColor;
         this.strokeColorAction = data.strokeColorAction;
         this.shape = data.shape;
+        this.loopSwitch = data.loopSwitch;
 
         this.lineSegment = 4;  // where to place the control points
-        this.posStd = 1  // misplacmente standard deviation
+        this.posStd = 0;// 1  // misplacmente standard deviation
         this.minLength = 5;  // a line should have a length of at least
 
+        // X = Cx + (r * cosine(angle))
+        // Y = Cy + (r * sine(angle))
+        this.start = {
+            x: this.center.x + (this.vectorMagnitude / 2 * Math.cos(this.angleRadians)),
+            y: this.center.y + (this.vectorMagnitude / 2 * Math.sin(this.angleRadians))
+        }
+        this.end = {
+            x: this.center.x + (this.vectorMagnitude / 2 * Math.cos(this.angleRadians - Math.PI)),
+            y: this.center.y + (this.vectorMagnitude / 2 * Math.sin(this.angleRadians - Math.PI))
+        }
+
         // create from angle
-        this.end = vectorAdd(this.start, vectorFromAngle(this.angleRadians, this.vectorMagnitude))
+        // this.end = vectorAdd(this.start, vectorFromAngle(this.angleRadians, this.vectorMagnitude))
 
         // start and end distortion
         this.start.x = this.start.x + gaussianRandAdj(0, this.posStd);
@@ -118,22 +135,23 @@ class strokePath {
         } else {
             this.showContinuousPath();
         }
-        // this.showDebug()
+        this.showDebug()
     }
 
     showContinuousPath() {
 
-        var midPoint = getMiddlePpoint(this.start, this.end);
+        this.center = getMiddlePpoint(this.start, this.end);
 
         // define the color - what is inside?
-        if (pointInPolygon(this.shape, [midPoint.x, midPoint.y])) {
+        if (pointInPolygon(this.shape, [this.center.x, this.center.y])) {
             this.strokeColorContinuous = this.strokeColorAction;
         } else {
             this.strokeColorContinuous = this.strokeColor;
         }
 
         this.newPath = document.createElementNS('http://www.w3.org/2000/svg', "path");
-        this.newPath.setAttributeNS(null, "id", ("pathIdD-") + $fx.rand() * 1000);
+        this.newPath.setAttributeNS(null, "id", ("pathIdD-")
+            + $fx.rand() * 1000);
         this.newPath.setAttributeNS(null, "d", `M 
             ${this.start.x} 
             ${this.start.y} 
@@ -157,6 +175,9 @@ class strokePath {
 
     showSplitPath() {
 
+        this.startInside = true;
+        this.endInside = true;
+
         const svgNode = document.getElementById('svgNode');
 
         var midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
@@ -164,9 +185,11 @@ class strokePath {
 
         // make sure both points lie in polygon and not just one on the edge.
         if (pointInPolygon(this.shape, [midPointStartInt.x, midPointStartInt.y])) {
+            this.startInside = true;  // is this part in the polygon
             this.strokeColorStart = this.strokeColorAction;
             this.strokeColorEnd = this.strokeColor;
         } else if (pointInPolygon(this.shape, [midPointEndInt.x, midPointEndInt.y])) {
+            this.endInside = true;  // is this part in the polygon
             this.strokeColorStart = this.strokeColor;
             this.strokeColorEnd = this.strokeColorAction;
         } else {
@@ -174,7 +197,10 @@ class strokePath {
             this.strokeColorEnd = this.strokeColor;
         }
 
-        if (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) {
+        if (
+            vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength &&
+            (this.loopSwitch == false || this.startInside == true)
+        ) {
 
             this.newPathStart = document.createElementNS('http://www.w3.org/2000/svg', "path");
             this.newPathStart.setAttributeNS(null, "id", "pathIdD");
@@ -197,7 +223,11 @@ class strokePath {
             svgNode.appendChild(this.newPathStart);
         }
 
-        if (vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength) {
+        if (
+            vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
+            (this.loopSwitch == false || this.endInside)
+            // (this.endInside)
+        ) {
             this.newPathEnd = document.createElementNS('http://www.w3.org/2000/svg', "path");
             this.newPathEnd.setAttributeNS(null, "id", "pathIdD");
             this.newPathEnd.setAttributeNS(null, "d", `M 
@@ -227,9 +257,9 @@ class strokePath {
         this.debugStart.setAttributeNS(null, "id", "start");
         this.debugStart.setAttributeNS(null, "cx", this.start.x);
         this.debugStart.setAttributeNS(null, "cy", this.start.y);
-        this.debugStart.setAttributeNS(null, "r", "3");
+        this.debugStart.setAttributeNS(null, "r", "0.5");
         this.debugStart.setAttributeNS(null, "stroke", "blue");
-        this.debugStart.setAttributeNS(null, "stroke-width", 1);
+        this.debugStart.setAttributeNS(null, "stroke-width", 0.1);
         this.debugStart.setAttributeNS(null, "opacity", 1);
         this.debugStart.setAttributeNS(null, "fill", "none");
 
@@ -237,9 +267,9 @@ class strokePath {
         this.debugEnd.setAttributeNS(null, "id", "end");
         this.debugEnd.setAttributeNS(null, "cx", this.end.x);
         this.debugEnd.setAttributeNS(null, "cy", this.end.y);
-        this.debugEnd.setAttributeNS(null, "r", "3");
+        this.debugEnd.setAttributeNS(null, "r", "0.5");
         this.debugEnd.setAttributeNS(null, "stroke", "red");
-        this.debugEnd.setAttributeNS(null, "stroke-width", 1);
+        this.debugEnd.setAttributeNS(null, "stroke-width", 0.1);
         this.debugEnd.setAttributeNS(null, "opacity", 1);
         this.debugEnd.setAttributeNS(null, "fill", "none");
 
@@ -247,9 +277,9 @@ class strokePath {
         this.debugControlA.setAttributeNS(null, "id", "controlA");
         this.debugControlA.setAttributeNS(null, "cx", this.controlA.x);
         this.debugControlA.setAttributeNS(null, "cy", this.controlA.y);
-        this.debugControlA.setAttributeNS(null, "r", "3");
+        this.debugControlA.setAttributeNS(null, "r", "0.5");
         this.debugControlA.setAttributeNS(null, "stroke", "pink");
-        this.debugControlA.setAttributeNS(null, "stroke-width", 1);
+        this.debugControlA.setAttributeNS(null, "stroke-width", 0.1);
         this.debugControlA.setAttributeNS(null, "opacity", 1);
         this.debugControlA.setAttributeNS(null, "fill", "none");
 
@@ -257,9 +287,9 @@ class strokePath {
         this.debugControlB.setAttributeNS(null, "id", "controlB");
         this.debugControlB.setAttributeNS(null, "cx", this.controlB.x);
         this.debugControlB.setAttributeNS(null, "cy", this.controlB.y);
-        this.debugControlB.setAttributeNS(null, "r", "3");
+        this.debugControlB.setAttributeNS(null, "r", "0.5");
         this.debugControlB.setAttributeNS(null, "stroke", "pink");
-        this.debugControlB.setAttributeNS(null, "stroke-width", 1);
+        this.debugControlB.setAttributeNS(null, "stroke-width", 0.1);
         this.debugControlB.setAttributeNS(null, "opacity", 1);
         this.debugControlB.setAttributeNS(null, "fill", "none");
 
@@ -267,9 +297,9 @@ class strokePath {
         this.debugInterPoint.setAttributeNS(null, "id", "intersect");
         this.debugInterPoint.setAttributeNS(null, "cx", this.interPoint.x);
         this.debugInterPoint.setAttributeNS(null, "cy", this.interPoint.y);
-        this.debugInterPoint.setAttributeNS(null, "r", "5");
+        this.debugInterPoint.setAttributeNS(null, "r", "0.5");
         this.debugInterPoint.setAttributeNS(null, "stroke", "cyan");
-        this.debugInterPoint.setAttributeNS(null, "stroke-width", 1);
+        this.debugInterPoint.setAttributeNS(null, "stroke-width", 0.1);
         this.debugInterPoint.setAttributeNS(null, "opacity", 1);
         this.debugInterPoint.setAttributeNS(null, "fill", "none");
 
@@ -277,9 +307,9 @@ class strokePath {
         this.debugControlStartA.setAttributeNS(null, "id", "controlA");
         this.debugControlStartA.setAttributeNS(null, "cx", this.controlStartA.x);
         this.debugControlStartA.setAttributeNS(null, "cy", this.controlStartA.y);
-        this.debugControlStartA.setAttributeNS(null, "r", "3");
+        this.debugControlStartA.setAttributeNS(null, "r", "0.5");
         this.debugControlStartA.setAttributeNS(null, "stroke", "pink");
-        this.debugControlStartA.setAttributeNS(null, "stroke-width", 1);
+        this.debugControlStartA.setAttributeNS(null, "stroke-width", 0.1);
         this.debugControlStartA.setAttributeNS(null, "opacity", 1);
         this.debugControlStartA.setAttributeNS(null, "fill", "none");
 
@@ -287,9 +317,9 @@ class strokePath {
         this.debugControlStartB.setAttributeNS(null, "id", "controlB");
         this.debugControlStartB.setAttributeNS(null, "cx", this.controlStartB.x);
         this.debugControlStartB.setAttributeNS(null, "cy", this.controlStartB.y);
-        this.debugControlStartB.setAttributeNS(null, "r", "3");
+        this.debugControlStartB.setAttributeNS(null, "r", "0.5");
         this.debugControlStartB.setAttributeNS(null, "stroke", "pink");
-        this.debugControlStartB.setAttributeNS(null, "stroke-width", 1);
+        this.debugControlStartB.setAttributeNS(null, "stroke-width", 0.1);
         this.debugControlStartB.setAttributeNS(null, "opacity", 1);
         this.debugControlStartB.setAttributeNS(null, "fill", "none");
 
@@ -297,9 +327,9 @@ class strokePath {
         this.debugControlEndA.setAttributeNS(null, "id", "controlA");
         this.debugControlEndA.setAttributeNS(null, "cx", this.controlEndA.x);
         this.debugControlEndA.setAttributeNS(null, "cy", this.controlEndA.y);
-        this.debugControlEndA.setAttributeNS(null, "r", "3");
+        this.debugControlEndA.setAttributeNS(null, "r", "0.5");
         this.debugControlEndA.setAttributeNS(null, "stroke", "pink");
-        this.debugControlEndA.setAttributeNS(null, "stroke-width", 1);
+        this.debugControlEndA.setAttributeNS(null, "stroke-width", 0.1);
         this.debugControlEndA.setAttributeNS(null, "opacity", 1);
         this.debugControlEndA.setAttributeNS(null, "fill", "none");
 
@@ -307,26 +337,26 @@ class strokePath {
         this.debugControlEndB.setAttributeNS(null, "id", "controlB");
         this.debugControlEndB.setAttributeNS(null, "cx", this.controlEndB.x);
         this.debugControlEndB.setAttributeNS(null, "cy", this.controlEndB.y);
-        this.debugControlEndB.setAttributeNS(null, "r", "3");
+        this.debugControlEndB.setAttributeNS(null, "r", "0.5");
         this.debugControlEndB.setAttributeNS(null, "stroke", "pink");
-        this.debugControlEndB.setAttributeNS(null, "stroke-width", 1);
+        this.debugControlEndB.setAttributeNS(null, "stroke-width", 0.1);
         this.debugControlEndB.setAttributeNS(null, "opacity", 1);
         this.debugControlEndB.setAttributeNS(null, "fill", "none");
 
         const svgNode = document.getElementById('svgNode');
         if (this.splitSwitch) {
-            svgNode.appendChild(this.debugStart);
-            svgNode.appendChild(this.debugEnd);
+            // svgNode.appendChild(this.debugStart);
+            // svgNode.appendChild(this.debugEnd);
             svgNode.appendChild(this.debugInterPoint);
-            svgNode.appendChild(this.debugControlStartA);
-            svgNode.appendChild(this.debugControlStartB);
-            svgNode.appendChild(this.debugControlEndA);
-            svgNode.appendChild(this.debugControlEndB);
+            // svgNode.appendChild(this.debugControlStartA);
+            // svgNode.appendChild(this.debugControlStartB);
+            // svgNode.appendChild(this.debugControlEndA);
+            // svgNode.appendChild(this.debugControlEndB);
         } else {
-            svgNode.appendChild(this.debugStart);
-            svgNode.appendChild(this.debugEnd);
-            svgNode.appendChild(this.debugControlA);
-            svgNode.appendChild(this.debugControlB);
+            // svgNode.appendChild(this.debugStart);
+            // svgNode.appendChild(this.debugEnd);
+            // svgNode.appendChild(this.debugControlA);
+            // svgNode.appendChild(this.debugControlB);
         }
     }
 }

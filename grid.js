@@ -42,9 +42,9 @@ class Grid {
         this.createBoxes();
         this.loopCategorize();
         this.createShapes();
-        // this.showDebugBoxes();
         // this.loopdebugCategory();
         this.debugShowShape();
+        // this.showDebugBoxes();
 
         this.createStrokePath();
     }
@@ -130,7 +130,7 @@ class Grid {
             rect.setAttributeNS(null, 'height', this.boxSize);
             rect.setAttributeNS(null, 'width', this.boxSize);
             rect.setAttributeNS(null, 'stroke', colory);
-            rect.setAttributeNS(null, 'stroke-width', '0.5');
+            rect.setAttributeNS(null, 'stroke-width', '0.1');
             rect.setAttributeNS(null, 'fill', 'none');
             // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
 
@@ -298,30 +298,34 @@ class Grid {
     createShapes() {
 
         this.shapeMain = {
-            shapeLoop: 1,
+            shapeLoop: 2,
+            // colorAction: "red",
             colorAction: this.strokeColorAction,
         };
         this.shapeShadA = {  // shadow beneath
             shapeLoop: 3,
+            // colorAction: "#790000",
             colorAction: this.strokeColorAction,
         };
         this.shapeShadB = {  // shadow beneath
-            shapeLoop: 3,
+            shapeLoop: 4,
+            // colorAction: "#6e0000",
             colorAction: this.strokeColorAction,
         };
         this.shapeShadow = {  // shadow
-            shapeLoop: 2,
-            colorAction: this.strokeColorAction,
+            shapeLoop: 3,
+            colorAction: "#15ff00",
+            // colorAction: this.strokeColorAction,
         };
 
+        var MainAX = 35;
         var shapeMainHeight = 7;
-        var shadAheight = 4;
-        var shadAshift = 8;
+        var shadAheight = 5;
+        var shadAshift = 7;
         var superShadowShift = 25;  // maybe last box
-        var superShadowHeight = 6;
+        var superShadowHeight = 16;
         var superShadowHeightMax = 20;
 
-        var MainAX = Math.round(this.longBoxCount / 24 * 6);
         var MainAY = 7 * this.stripeHeight + 1;
         var MainCX = this.longBoxCount - MainAX;
         var MainCY = MainAY + shapeMainHeight;
@@ -546,12 +550,15 @@ class Grid {
                         pointList = this.shapeShadow.pointList;
                         colorAction = this.shapeShadow.colorAction;
                     } else {
-                        loopDensity = 0
+                        loopDensity = 1;
                     }
+
+                    var loopSwitch = false;
 
                     for (var d = 0; d < loopDensity; d++) {
 
                         if (d >= 1) {
+                            loopSwitch = true;
                             if (value.even == true) {
                                 angleRadiansLooped = angleRadians + Math.PI / 5;
                             } else {
@@ -563,15 +570,17 @@ class Grid {
 
 
                         var singleStroke = new strokePath({
-                            "start": {
+                            "center": {
                                 x: positionX,
-                                y: positionY
+                                // y: positionY
+                                y: positionMiddleLineY
                             },
-                            vectorMagnitude: 25,
+                            vectorMagnitude: 23,
                             angleRadians: angleRadiansLooped, // 0.2,
                             strokeColor: this.strokeColor,
                             strokeColorAction: colorAction,
                             shape: pointList,
+                            loopSwitch: loopSwitch,
                         });
 
                         singleStroke.showPath();
