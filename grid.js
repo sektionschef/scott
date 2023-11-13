@@ -3,10 +3,10 @@ class Grid {
 
         this.stripeHeight = 2;
         this.marginRelative = 0.09;
-        this.strokeColor = "#272727",
-            this.strokeColorAction = "#272727",
+        this.strokeColor = "#272727";
+        this.strokeColorAction = "#272727";
 
-            this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
+        this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
         this.longSide = data.longSide;
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
@@ -540,61 +540,62 @@ class Grid {
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
                     // check if in shape
-                    if (pointInPolygon(this.shapeMain.pointList, [positionX, positionMiddleLineY])) {
-                        loopDensity = this.shapeMain.shapeLoop;
-                        pointList = this.shapeMain.pointList;
-                        colorAction = this.shapeMain.colorAction;
-                    } else if (pointInPolygon(this.shapeShadA.pointList, [positionX, positionMiddleLineY])) {
-                        loopDensity = this.shapeShadA.shapeLoop;
-                        pointList = this.shapeShadA.pointList;
-                        colorAction = this.shapeShadA.colorAction;
-                    } else if (pointInPolygon(this.shapeShadB.pointList, [positionX, positionMiddleLineY])) {
-                        loopDensity = this.shapeShadB.shapeLoop;
-                        pointList = this.shapeShadB.pointList;
-                        colorAction = this.shapeShadB.colorAction;
-                    } else if (pointInPolygon(this.shapeShadow.pointList, [positionX, positionMiddleLineY])) {
-                        loopDensity = this.shapeShadow.shapeLoop;
-                        pointList = this.shapeShadow.pointList;
-                        colorAction = this.shapeShadow.colorAction;
-                    } else {
-                        loopDensity = 1;
-                        colorAction = "#0077ff";
-                    }
+                    // if (pointInPolygon(this.shapeMain.pointList, [positionX, positionMiddleLineY])) {
+                    //     loopDensity = this.shapeMain.shapeLoop;
+                    //     pointList = this.shapeMain.pointList;
+                    //     colorAction = this.shapeMain.colorAction;
+                    // } else if (pointInPolygon(this.shapeShadA.pointList, [positionX, positionMiddleLineY])) {
+                    //     loopDensity = this.shapeShadA.shapeLoop;
+                    //     pointList = this.shapeShadA.pointList;
+                    //     colorAction = this.shapeShadA.colorAction;
+                    // } else if (pointInPolygon(this.shapeShadB.pointList, [positionX, positionMiddleLineY])) {
+                    //     loopDensity = this.shapeShadB.shapeLoop;
+                    //     pointList = this.shapeShadB.pointList;
+                    //     colorAction = this.shapeShadB.colorAction;
+                    // } else if (pointInPolygon(this.shapeShadow.pointList, [positionX, positionMiddleLineY])) {
+                    //     loopDensity = this.shapeShadow.shapeLoop;
+                    //     pointList = this.shapeShadow.pointList;
+                    //     colorAction = this.shapeShadow.colorAction;
+                    // } else {
+                    //     loopDensity = 1;
+                    //     colorAction = "#0077ff";
+                    // }
 
-                    var loopSwitch = false;
+                    // var loopSwitch = false;
 
-                    for (var d = 0; d < loopDensity; d++) {
+                    // for (var d = 0; d < loopDensity; d++) {
 
-                        if (d >= 1) {
-                            loopSwitch = true;
-                            if (value.even == true) {
-                                angleRadiansLooped = angleRadians + Math.PI / 5;
-                            } else {
-                                angleRadiansLooped = angleRadians - Math.PI / 5;
-                            }
-                        } else {
-                            angleRadiansLooped = angleRadians
-                        }
+                    //     if (d >= 1) {
+                    //         loopSwitch = true;
+                    //         if (value.even == true) {
+                    //             angleRadiansLooped = angleRadians + Math.PI / 5;
+                    //         } else {
+                    //             angleRadiansLooped = angleRadians - Math.PI / 5;
+                    //         }
+                    //     } else {
+                    //         angleRadiansLooped = angleRadians
+                    //     }
 
 
-                        var singleStroke = new strokePath({
-                            "center": {
-                                x: positionX,
-                                // y: positionY
-                                y: positionMiddleLineY
-                            },
-                            vectorMagnitude: 23,
-                            angleRadians: angleRadiansLooped, // 0.2,
-                            strokeColor: this.strokeColor,
-                            strokeColorAction: colorAction,
-                            // shape: pointList,
-                            shapes: this.shapes,
-                            loopSwitch: loopSwitch,
-                        });
+                    var singleStroke = new strokePath({
+                        "center": {
+                            x: positionX,
+                            // y: positionY
+                            y: positionMiddleLineY
+                        },
+                        vectorMagnitude: 23,
+                        // angleRadians: angleRadiansLooped, // 0.2,
+                        angleRadians: angleRadians, // 0.2,
+                        strokeColor: this.strokeColor,
+                        // strokeColorAction: colorAction,
+                        // shape: pointList,
+                        shapes: this.shapes,
+                        // loopSwitch: loopSwitch,
+                    });
 
-                        singleStroke.showPath();
-                    }
+                    singleStroke.showPath();
                 }
+                // }
             }
         }
     }
