@@ -1,7 +1,3 @@
-// if looped - external part not drawn
-// no distortion mode
-// check if center in polyong not start - eveywhere?
-
 class strokePath {
     constructor(data) {
         this.center = data.center;
@@ -9,7 +5,7 @@ class strokePath {
         this.vectorMagnitude = data.vectorMagnitude;
         // this.strokeColor = data.strokeColor;
         this.strokeColor = "black";
-        this.strokeColorAction = "black";
+        this.strokeColorAction = "red";
         // this.shape = data.shape;
         this.shapes = data.shapes;
         // this.loopSwitch = data.loopSwitch;
@@ -79,16 +75,16 @@ class strokePath {
                 // SIMPLIFY
                 if (this.splitSwitchCandidate) {
                     this.splitSwitch = true;
-                }
 
-                // select the shortest distance to center, here the intersectionPoint and the shape is selected
-                if (vectorLength(vectorSub(this.interPointCandidate, this.center)) < vectorLength(vectorSub(this.interPoint, this.center))) {
-                    this.interPoint = this.interPointCandidate;
-                    this.shape = this.shapes[o];
-                    this.loopDensity = this.shapes[o].shapeLoop;
-                    // this.pointList = this.shapes[o].pointList;
-                    this.strokeColorAction = "black"; // this.shapes[o].colorAction;
-                };
+                    // select the shortest distance to center, here the intersectionPoint and the shape is selected
+                    if (vectorLength(vectorSub(this.interPointCandidate, this.center)) < vectorLength(vectorSub(this.interPoint, this.center))) {
+                        this.interPoint = this.interPointCandidate;
+                        this.shape = this.shapes[o];
+                        this.loopDensity = this.shapes[o].shapeLoop;
+                        // this.pointList = this.shapes[o].pointList;
+                        // this.strokeColorAction = "black"; // this.shapes[o].colorAction;
+                    };
+                }
             }
         }
 
@@ -155,20 +151,19 @@ class strokePath {
 
     showContinuousPath() {
 
-        // this.center = getMiddlePpoint(this.start, this.end);
-
-        // define the color - what is inside?
-        // if (pointInPolygon(this.shape, [this.center.x, this.center.y])) {
-        //     this.strokeColorContinuous = this.strokeColorAction;
-        // } else {
-        //     this.strokeColorContinuous = this.strokeColor;
-        // }
-
+        // this.strokeColorContinuous = "green";
         this.strokeColorContinuous = this.strokeColor;
 
+        for (var o = 0; o < this.shapes.length; o++) {
+            // define the color - easy check
+            if (pointInPolygon(this.shapes[o], [this.center.x, this.center.y])) {
+                // this.strokeColorContinuous = "red";
+                this.strokeColorContinuous = this.strokeColorAction;
+            }
+        }
+
         this.newPath = document.createElementNS('http://www.w3.org/2000/svg', "path");
-        this.newPath.setAttributeNS(null, "id", ("pathIdD-")
-            + $fx.rand() * 1000);
+        this.newPath.setAttributeNS(null, "id", ("pathIdD-"));
         this.newPath.setAttributeNS(null, "d", `M 
             ${this.start.x} 
             ${this.start.y} 
@@ -249,8 +244,8 @@ class strokePath {
             ${this.interPoint.x} 
             ${this.interPoint.y}
             `);
-            this.newPathStart.setAttributeNS(null, "stroke", this.strokeColorStart);
-            // this.newPathStart.setAttributeNS(null, "stroke", "pink");
+            this.newPathStart.setAttributeNS(null, "stroke", "blue");
+            // this.newPathStart.setAttributeNS(null, "stroke", this.strokeColorStart);
             this.newPathStart.setAttributeNS(null, "stroke-width", 0.5);
             this.newPathStart.setAttributeNS(null, "opacity", 1);
             this.newPathStart.setAttributeNS(null, "fill", "none");
@@ -276,8 +271,8 @@ class strokePath {
             ${this.end.x} 
             ${this.end.y}
             `);
-            // this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColorEnd);
             this.newPathEnd.setAttributeNS(null, "stroke", "pink");
+            // this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColorEnd);
             this.newPathEnd.setAttributeNS(null, "stroke-width", 0.5);
             this.newPathEnd.setAttributeNS(null, "opacity", 1);
             this.newPathEnd.setAttributeNS(null, "fill", "none");
