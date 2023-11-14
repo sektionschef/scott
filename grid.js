@@ -598,9 +598,14 @@ class Grid {
 
                     singleStroke.showPath();
 
+
                     // if in polygon
                     if (singleStroke.inside !== undefined) {
                         var loopCount = this.allShapes[singleStroke.inside].shapeLoop;
+                        // if only 1 loop, skip
+                        if (loopCount <= 1) {
+                            continue;
+                        }
 
                         // start later with 1
                         for (var v = 1; v < loopCount; v++) {
@@ -610,8 +615,6 @@ class Grid {
                             } else {
                                 angleRadiansLooped = angleRadians - Math.PI / 5;
                             }
-
-
 
                             var singleStroke = new strokePath({
                                 "center": {
