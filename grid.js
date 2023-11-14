@@ -43,7 +43,7 @@ class Grid {
         this.loopCategorize();
         this.createShapes();
         // this.loopdebugCategory();
-        this.debugShowShape();
+        // this.debugShowShape();
         // this.showDebugBoxes();
 
         this.createStrokePath();

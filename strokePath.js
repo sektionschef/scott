@@ -192,18 +192,18 @@ class strokePath {
         var midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
         var midPointEndInt = getMiddlePpoint(this.end, this.interPoint);
 
-        // make sure both points lie in polygon and not just one on the edge.
-        if (pointInPolygon(this.shape, [midPointStartInt.x, midPointStartInt.y])) {
-            this.startInside = true;  // is this part in the polygon
-            this.strokeColorStart = this.strokeColorAction;
-            this.strokeColorEnd = this.strokeColor;
-        } else if (pointInPolygon(this.shape, [midPointEndInt.x, midPointEndInt.y])) {
-            this.endInside = true;  // is this part in the polygon
-            this.strokeColorStart = this.strokeColor;
-            this.strokeColorEnd = this.strokeColorAction;
-        } else {
-            this.strokeColorStart = this.strokeColor;
-            this.strokeColorEnd = this.strokeColor;
+        this.strokeColorStart = this.strokeColor;
+        this.strokeColorEnd = this.strokeColor;
+
+        for (var o = 0; o < this.shapes.length; o++) {
+            // make sure both points lie in polygon and not just one on the edge.
+            if (pointInPolygon(this.shapes[o], [midPointStartInt.x, midPointStartInt.y])) {
+                this.startInside = true;  // is this part in the polygon
+                this.strokeColorStart = this.strokeColorAction;
+            } else if (pointInPolygon(this.shapes[o], [midPointEndInt.x, midPointEndInt.y])) {
+                this.endInside = true;  // is this part in the polygon
+                this.strokeColorEnd = this.strokeColorAction;
+            }
         }
 
         // this.up = vectorAdd(this.interPoint, { x: 1, y: 1 });
@@ -244,8 +244,8 @@ class strokePath {
             ${this.interPoint.x} 
             ${this.interPoint.y}
             `);
-            this.newPathStart.setAttributeNS(null, "stroke", "blue");
-            // this.newPathStart.setAttributeNS(null, "stroke", this.strokeColorStart);
+            // this.newPathStart.setAttributeNS(null, "stroke", "blue");
+            this.newPathStart.setAttributeNS(null, "stroke", this.strokeColorStart);
             this.newPathStart.setAttributeNS(null, "stroke-width", 0.5);
             this.newPathStart.setAttributeNS(null, "opacity", 1);
             this.newPathStart.setAttributeNS(null, "fill", "none");
@@ -271,8 +271,8 @@ class strokePath {
             ${this.end.x} 
             ${this.end.y}
             `);
-            this.newPathEnd.setAttributeNS(null, "stroke", "pink");
-            // this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColorEnd);
+            // this.newPathEnd.setAttributeNS(null, "stroke", "pink");
+            this.newPathEnd.setAttributeNS(null, "stroke", this.strokeColorEnd);
             this.newPathEnd.setAttributeNS(null, "stroke-width", 0.5);
             this.newPathEnd.setAttributeNS(null, "opacity", 1);
             this.newPathEnd.setAttributeNS(null, "fill", "none");
