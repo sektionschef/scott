@@ -304,7 +304,7 @@ class Grid {
                 colorAction: this.strokeColorAction,
             },
             shapeShadA: {  // shadow beneath
-                shapeLoop: 3,
+                shapeLoop: 2,
                 // colorAction: "#790000",
                 colorAction: this.strokeColorAction,
             },

@@ -144,7 +144,7 @@ class strokePath {
         } else {
             this.showContinuousPath();
         }
-        this.showDebug()
+        // this.showDebug()
     }
 
     showContinuousPath() {
