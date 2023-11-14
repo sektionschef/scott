@@ -6,8 +6,7 @@ class strokePath {
         // this.strokeColor = data.strokeColor;
         this.strokeColor = "black";
         this.strokeColorAction = "red";
-        // this.shape = data.shape;
-        this.shapes = data.shapes;
+        this.allShapes = data.allShapes;
         // this.loopSwitch = data.loopSwitch;
 
         // dummies
@@ -40,8 +39,9 @@ class strokePath {
         this.interPoint = { x: 0, y: 0 };
         this.splitSwitch = false;
 
-        for (var o = 0; o < this.shapes.length; o++) {
-            this.shapeCandidate = this.shapes[o];
+        for (const [key, value] of Object.entries(this.allShapes)) {
+
+            this.shapeCandidate = value.pointList;
             // if there is an intersection point with any shape, closest selected
             for (var i = 0; i < this.shapeCandidate.length; i++) {
                 if (i != (this.shapeCandidate.length - 1)) {
@@ -79,10 +79,8 @@ class strokePath {
                     // select the shortest distance to center, here the intersectionPoint and the shape is selected
                     if (vectorLength(vectorSub(this.interPointCandidate, this.center)) < vectorLength(vectorSub(this.interPoint, this.center))) {
                         this.interPoint = this.interPointCandidate;
-                        this.shape = this.shapes[o];
-                        this.loopDensity = this.shapes[o].shapeLoop;
-                        // this.pointList = this.shapes[o].pointList;
-                        // this.strokeColorAction = "black"; // this.shapes[o].colorAction;
+                        this.shape = value.pointList;
+                        this.loopDensity = 1; // this.shapes[o].shapeLoop;
                     };
                 }
             }
@@ -154,9 +152,11 @@ class strokePath {
         // this.strokeColorContinuous = "green";
         this.strokeColorContinuous = this.strokeColor;
 
-        for (var o = 0; o < this.shapes.length; o++) {
+        // for (var o = 0; o < this.shapes.length; o++) {
+        for (const [key, value] of Object.entries(this.allShapes)) {
+
             // define the color - easy check
-            if (pointInPolygon(this.shapes[o], [this.center.x, this.center.y])) {
+            if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
                 // this.strokeColorContinuous = "red";
                 this.strokeColorContinuous = this.strokeColorAction;
             }
@@ -195,35 +195,17 @@ class strokePath {
         this.strokeColorStart = this.strokeColor;
         this.strokeColorEnd = this.strokeColor;
 
-        for (var o = 0; o < this.shapes.length; o++) {
+        // for (var o = 0; o < this.shapes.length; o++) {
+        for (const [key, value] of Object.entries(this.allShapes)) {
             // make sure both points lie in polygon and not just one on the edge.
-            if (pointInPolygon(this.shapes[o], [midPointStartInt.x, midPointStartInt.y])) {
+            if (pointInPolygon(value.pointList, [midPointStartInt.x, midPointStartInt.y])) {
                 this.startInside = true;  // is this part in the polygon
                 this.strokeColorStart = this.strokeColorAction;
-            } else if (pointInPolygon(this.shapes[o], [midPointEndInt.x, midPointEndInt.y])) {
+            } else if (pointInPolygon(value.pointList, [midPointEndInt.x, midPointEndInt.y])) {
                 this.endInside = true;  // is this part in the polygon
                 this.strokeColorEnd = this.strokeColorAction;
             }
         }
-
-        // this.up = vectorAdd(this.interPoint, { x: 1, y: 1 });
-        // this.down = vectorAdd(this.interPoint, { x: -1, y: -1 });
-
-        // // check which direction
-        // if (pointInPolygon(this.shape, [this.up.x, this.up.y])) {
-        //     // console.log("to end");
-        //     this.endInside = true;  // is this part in the polygon
-        //     this.strokeColorStart = this.strokeColor;
-        //     this.strokeColorEnd = this.strokeColorAction;
-        // } else if (pointInPolygon(this.shape, [this.down.x, this.down.y])) {
-        //     // console.log("to start");
-        //     this.startInside = true;  // is this part in the polygon
-        //     this.strokeColorStart = this.strokeColorAction;
-        //     this.strokeColorEnd = this.strokeColor;
-        // } else {
-        //     this.strokeColorStart = this.strokeColor;
-        //     this.strokeColorEnd = this.strokeColor;
-        // }
 
         if (
             vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength // &&
