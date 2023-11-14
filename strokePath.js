@@ -7,7 +7,7 @@ class strokePath {
         this.strokeColor = "black";
         this.strokeColorAction = "red";
         this.allShapes = data.allShapes;
-        // this.loopSwitch = data.loopSwitch;
+        this.loop = data.loop;
 
         // dummies
         this.up = { x: 0, y: 0 };
@@ -158,13 +158,19 @@ class strokePath {
             // define the color - easy check
             if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
                 // this.strokeColorContinuous = "red";
+                this.inside = key;
+                this.fullInside = true;
                 this.strokeColorContinuous = this.strokeColorAction;
             }
         }
 
-        this.newPath = document.createElementNS('http://www.w3.org/2000/svg', "path");
-        this.newPath.setAttributeNS(null, "id", ("pathIdD-"));
-        this.newPath.setAttributeNS(null, "d", `M 
+        if (  // for inside or for the first loop
+            (this.fullInside == true || this.loop == 0)
+        ) {
+
+            this.newPath = document.createElementNS('http://www.w3.org/2000/svg', "path");
+            this.newPath.setAttributeNS(null, "id", ("pathIdD-"));
+            this.newPath.setAttributeNS(null, "d", `M 
             ${this.start.x} 
             ${this.start.y} 
             C 
@@ -175,14 +181,15 @@ class strokePath {
             ${this.end.x} 
             ${this.end.y}
             `);
-        // this.newPath.setAttributeNS(null, "stroke", "orange");
-        this.newPath.setAttributeNS(null, "stroke", this.strokeColorContinuous);
-        this.newPath.setAttributeNS(null, "stroke-width", 0.5);
-        this.newPath.setAttributeNS(null, "opacity", 1);
-        this.newPath.setAttributeNS(null, "fill", "none");
+            // this.newPath.setAttributeNS(null, "stroke", "orange");
+            this.newPath.setAttributeNS(null, "stroke", this.strokeColorContinuous);
+            this.newPath.setAttributeNS(null, "stroke-width", 0.5);
+            this.newPath.setAttributeNS(null, "opacity", 1);
+            this.newPath.setAttributeNS(null, "fill", "none");
 
-        const svgNode = document.getElementById('svgNode');
-        svgNode.appendChild(this.newPath);
+            const svgNode = document.getElementById('svgNode');
+            svgNode.appendChild(this.newPath);
+        }
     }
 
     showSplitPath() {
@@ -195,22 +202,26 @@ class strokePath {
         this.strokeColorStart = this.strokeColor;
         this.strokeColorEnd = this.strokeColor;
 
+        this.startInside = false;
+        this.endInside = false;
+
         // for (var o = 0; o < this.shapes.length; o++) {
         for (const [key, value] of Object.entries(this.allShapes)) {
             // make sure both points lie in polygon and not just one on the edge.
             if (pointInPolygon(value.pointList, [midPointStartInt.x, midPointStartInt.y])) {
+                this.inside = key;
                 this.startInside = true;  // is this part in the polygon
                 this.strokeColorStart = this.strokeColorAction;
             } else if (pointInPolygon(value.pointList, [midPointEndInt.x, midPointEndInt.y])) {
+                this.inside = key;
                 this.endInside = true;  // is this part in the polygon
                 this.strokeColorEnd = this.strokeColorAction;
             }
         }
 
         if (
-            vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength // &&
-            // (this.loopSwitch == false || this.startInside == true)
-            // (this.startInside == true)
+            (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
+            (this.startInside == true || this.loop == 0)
         ) {
 
             this.newPathStart = document.createElementNS('http://www.w3.org/2000/svg', "path");
@@ -236,9 +247,8 @@ class strokePath {
         }
 
         if (
-            vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength // &&
-            // (this.loopSwitch == false || this.endInside)
-            // (this.endInside == true)
+            vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
+            (this.endInside == true || this.loop == 0)
         ) {
             this.newPathEnd = document.createElementNS('http://www.w3.org/2000/svg', "path");
             this.newPathEnd.setAttributeNS(null, "id", "pathIdD");

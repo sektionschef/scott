@@ -535,6 +535,8 @@ class Grid {
                 }
 
                 for (var i = 0; i < this.stepCount; i++) {
+
+                    angleRadiansLooped = angleRadians;
                     var positionX = start.x + i * startEnd.x / this.stepCount;
                     var positionY = start.y + i * startEnd.y / this.stepCount;
 
@@ -578,7 +580,6 @@ class Grid {
                     //         angleRadiansLooped = angleRadians
                     //     }
 
-
                     var singleStroke = new strokePath({
                         "center": {
                             x: positionX,
@@ -592,10 +593,42 @@ class Grid {
                         // strokeColorAction: colorAction,
                         // shape: pointList,
                         allShapes: this.allShapes,
-                        // loopSwitch: loopSwitch,
+                        loop: 0,
                     });
 
                     singleStroke.showPath();
+
+                    // if in polygon
+                    if (singleStroke.inside !== undefined) {
+                        var loopCount = this.allShapes[singleStroke.inside].shapeLoop;
+
+                        // start later with 1
+                        for (var v = 1; v < loopCount; v++) {
+
+                            if (value.even == true) {
+                                angleRadiansLooped = angleRadians + Math.PI / 5;
+                            } else {
+                                angleRadiansLooped = angleRadians - Math.PI / 5;
+                            }
+
+
+
+                            var singleStroke = new strokePath({
+                                "center": {
+                                    x: positionX,
+                                    y: positionMiddleLineY
+                                },
+                                vectorMagnitude: 23,
+                                // angleRadians: Math.PI / 6 + 0.3 * v, // 0.2,
+                                angleRadians: angleRadiansLooped, // 0.2,
+                                strokeColor: this.strokeColor,
+                                allShapes: this.allShapes,
+                                loop: v,
+                            });
+                        }
+
+                        singleStroke.showPath();
+                    };
                 }
                 // }
             }
