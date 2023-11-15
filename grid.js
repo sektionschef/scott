@@ -3,8 +3,9 @@ class Grid {
 
         this.stripeHeight = 2;
         this.marginRelative = 0.09;
-        this.strokeColor = "#272727";
-        this.strokeColorAction = "#272727";
+        this.strokeColor = "#414141";
+        // this.strokeColorAction = "#272727";
+        this.vectorMagnitude = 24;
 
         this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
         this.longSide = data.longSide;
@@ -300,22 +301,22 @@ class Grid {
         this.allShapes = {
             shapeMain: {
                 shapeLoop: 2,
-                // colorAction: "red",
-                colorAction: this.strokeColorAction,
+                colorAction: "#242424",
+                // colorAction: this.strokeColorAction,
             },
             shapeShadA: {  // shadow beneath
                 shapeLoop: 3,
-                // colorAction: "#790000",
-                colorAction: this.strokeColorAction,
+                colorAction: "#1b1b1b",
+                // colorAction: this.strokeColorAction,
             },
             shapeShadB: {  // shadow beneath
                 shapeLoop: 4,
-                // colorAction: "#6e0000",
-                colorAction: this.strokeColorAction,
+                colorAction: "#131313",
+                // colorAction: this.strokeColorAction,
             },
             shapeShadow: {  // shadow
-                shapeLoop: 1,
-                colorAction: "#15ff00",
+                shapeLoop: 2,
+                colorAction: "#464646",
                 // colorAction: this.strokeColorAction,
             }
         }
@@ -511,7 +512,7 @@ class Grid {
 
     createStrokePath() {
 
-        this.stepCount = 350; // how many strokePaths per stripe
+        this.stepCount = 450; // 350 // how many strokePaths per stripe
         this.angleRadiansStart = - Math.PI / 2 + 0.3;  // starting angle
 
         // loop through the lines
@@ -586,7 +587,7 @@ class Grid {
                             // y: positionY
                             y: positionMiddleLineY
                         },
-                        vectorMagnitude: 23,
+                        vectorMagnitude: this.vectorMagnitude,
                         // angleRadians: angleRadiansLooped, // 0.2,
                         angleRadians: angleRadians, // 0.2,
                         strokeColor: this.strokeColor,

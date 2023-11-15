@@ -1,8 +1,9 @@
 class strokePath {
     constructor(data) {
         this.lineSegment = 4;  // where to place the control points
-        this.posStd = 0;// 1  // misplacmente standard deviation
-        this.minLength = 0; // 5;  // a line should have a length of at least
+        this.posStd = 0.6;// 1  // misplacmente standard deviation
+        this.posStdCon = 0.4;  // control points
+        this.minLength = 3; // 5;  // a line should have a length of at least
 
         this.center = data.center;
         this.angleRadians = data.angleRadians;
@@ -102,24 +103,24 @@ class strokePath {
             this.startInterPoint = vectorSub(this.start, this.interPoint);  // vector of diff
 
             this.controlStartA = {
-                x: this.start.x + this.startInterPoint.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
-                y: this.start.y + this.startInterPoint.y / this.lineSegment + gaussianRandAdj(0, this.posStd),
+                x: this.start.x + this.startInterPoint.x / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
+                y: this.start.y + this.startInterPoint.y / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
             }
             this.controlStartB = {
-                x: this.interPoint.x - this.startInterPoint.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
-                y: this.interPoint.y - this.startInterPoint.y / this.lineSegment + gaussianRandAdj(0, this.posStd)
+                x: this.interPoint.x - this.startInterPoint.x / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
+                y: this.interPoint.y - this.startInterPoint.y / this.lineSegment + gaussianRandAdj(0, this.posStdCon)
             }
 
             // form interPoint end
             this.interPointEnd = vectorSub(this.interPoint, this.end);  // vector of diff
 
             this.controlEndA = {
-                x: this.interPoint.x + this.interPointEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
-                y: this.interPoint.y + this.interPointEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStd),
+                x: this.interPoint.x + this.interPointEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
+                y: this.interPoint.y + this.interPointEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
             }
             this.controlEndB = {
-                x: this.end.x - this.interPointEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
-                y: this.end.y - this.interPointEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStd)
+                x: this.end.x - this.interPointEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
+                y: this.end.y - this.interPointEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStdCon)
             }
 
         } else {
@@ -127,12 +128,12 @@ class strokePath {
             this.startEnd = vectorSub(this.start, this.end);  // vector of diff
 
             this.controlA = {
-                x: this.start.x + this.startEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
-                y: this.start.y + this.startEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStd),
+                x: this.start.x + this.startEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
+                y: this.start.y + this.startEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
             }
             this.controlB = {
-                x: this.end.x - this.startEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStd),
-                y: this.end.y - this.startEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStd)
+                x: this.end.x - this.startEnd.x / this.lineSegment + gaussianRandAdj(0, this.posStdCon),
+                y: this.end.y - this.startEnd.y / this.lineSegment + gaussianRandAdj(0, this.posStdCon)
             }
         }
 
@@ -161,7 +162,8 @@ class strokePath {
                 // this.strokeColorContinuous = "red";
                 this.inside = key;
                 this.fullInside = true;
-                this.strokeColorContinuous = this.strokeColorAction;
+                // this.strokeColorContinuous = this.strokeColorAction;
+                this.strokeColorContinuous = value.colorAction;
             }
         }
 
@@ -171,6 +173,7 @@ class strokePath {
 
             this.newPath = document.createElementNS('http://www.w3.org/2000/svg', "path");
             this.newPath.setAttributeNS(null, "id", ("pathIdD-"));
+            this.newPath.setAttributeNS(null, "filter", "url(#filterPencil)");
             this.newPath.setAttributeNS(null, "d", `M 
             ${this.start.x} 
             ${this.start.y} 
@@ -212,11 +215,13 @@ class strokePath {
             if (pointInPolygon(value.pointList, [midPointStartInt.x, midPointStartInt.y])) {
                 this.inside = key;
                 this.startInside = true;  // is this part in the polygon
-                this.strokeColorStart = this.strokeColorAction;
+                // this.strokeColorStart = this.strokeColorAction;
+                this.strokeColorStart = value.colorAction;
             } else if (pointInPolygon(value.pointList, [midPointEndInt.x, midPointEndInt.y])) {
                 this.inside = key;
                 this.endInside = true;  // is this part in the polygon
-                this.strokeColorEnd = this.strokeColorAction;
+                // this.strokeColorEnd = this.strokeColorAction;
+                this.strokeColorEnd = value.colorAction;
             }
         }
 
@@ -227,6 +232,7 @@ class strokePath {
 
             this.newPathStart = document.createElementNS('http://www.w3.org/2000/svg', "path");
             this.newPathStart.setAttributeNS(null, "id", "pathIdD");
+            this.newPathStart.setAttributeNS(null, "filter", "url(#filterPencil)");
             this.newPathStart.setAttributeNS(null, "d", `M 
             ${this.start.x} 
             ${this.start.y} 
@@ -253,6 +259,7 @@ class strokePath {
         ) {
             this.newPathEnd = document.createElementNS('http://www.w3.org/2000/svg', "path");
             this.newPathEnd.setAttributeNS(null, "id", "pathIdD");
+            this.newPathEnd.setAttributeNS(null, "filter", "url(#filterPencil)");
             this.newPathEnd.setAttributeNS(null, "d", `M 
             ${this.interPoint.x} 
             ${this.interPoint.y} 

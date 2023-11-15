@@ -168,6 +168,49 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
+  /*
+  <filter id="noise1">
+  <feTurbulence baseFrequency="0.5"/>
+  <feDisplacementMap in="SourceGraphic" scale="7"/>
+ </filter>
+<path filter="url(#noise1)" d="${path_d}" stroke="#000" fill="none" stroke-width="1px" transform="translate(0,-150)"/>
+*/
+
+  // function createNoiseFilter() {
+  var filterPencil = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+  filterPencil.setAttribute("id", "filterPencil");
+  filterPencil.setAttribute("x", "0");
+  filterPencil.setAttribute("y", "0");
+  // added
+  filterPencil.setAttribute("filterUnits", "objectBoundingBox");
+  filterPencil.setAttribute("primitiveUnits", "userSpaceOnUse");
+  filterPencil.setAttribute("color-interpolation-filters", "linearRGB");
+
+  var turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
+  turbulence.setAttribute("id", "turbulence");
+  // turbulence.setAttribute("in", "filterObjA");
+  turbulence.setAttribute("type", "fractalNoise");
+  turbulence.setAttribute("baseFrequency", "0.5");
+  turbulence.setAttribute("numOctaves", "6");
+  // turbulence.setAttribute("seed", "15");
+  turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
+  turbulence.setAttribute("stitchTiles", "stitch");
+  turbulence.setAttribute("x", "0%");
+  turbulence.setAttribute("y", "0%");
+  turbulence.setAttribute("width", "100%");
+  turbulence.setAttribute("height", "100%");
+  turbulence.setAttribute("result", "turbulence");
+
+  var displacement = document.createElementNS("http://www.w3.org/2000/svg", "feDisplacementMap");
+  displacement.setAttribute("id", "displacement");
+  displacement.setAttribute("scale", "3");
+  displacement.setAttribute("in", "SourceGraphic");
+
+  filterPencil.appendChild(turbulence);
+  filterPencil.appendChild(displacement);
+  defs.appendChild(filterPencil);
+  // }
+
   createBackground();
 
   // DUMMY SHAPE
