@@ -304,7 +304,7 @@ class Grid {
                 colorAction: this.strokeColorAction,
             },
             shapeShadA: {  // shadow beneath
-                shapeLoop: 2,
+                shapeLoop: 3,
                 // colorAction: "#790000",
                 colorAction: this.strokeColorAction,
             },
@@ -628,9 +628,9 @@ class Grid {
                                 allShapes: this.allShapes,
                                 loop: v,
                             });
-                        }
 
-                        singleStroke.showPath();
+                            singleStroke.showPath();
+                        }
                     };
                 }
                 // }

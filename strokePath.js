@@ -1,5 +1,9 @@
 class strokePath {
     constructor(data) {
+        this.lineSegment = 4;  // where to place the control points
+        this.posStd = 0;// 1  // misplacmente standard deviation
+        this.minLength = 0; // 5;  // a line should have a length of at least
+
         this.center = data.center;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
@@ -15,9 +19,6 @@ class strokePath {
         this.shape = [];
 
 
-        this.lineSegment = 4;  // where to place the control points
-        this.posStd = 1;// 1  // misplacmente standard deviation
-        this.minLength = 0; // 5;  // a line should have a length of at least
 
         // X = Cx + (r * cosine(angle))
         // Y = Cy + (r * sine(angle))
