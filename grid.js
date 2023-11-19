@@ -48,42 +48,42 @@ class Grid {
         this.debugShowShape();
         // this.showDebugBoxes();
 
-        // this.createStrokePath();
+        this.createStrokePath();
 
-        var posX = 410;
-        var posY = 265;
+        // var posX = 610;
+        // var posY = 270;
 
-        // sau
-        var debugStroke = new strokePath({
-            "center": {
-                x: posX,
-                y: posY
-            },
-            vectorMagnitude: this.vectorMagnitude,
-            angleRadians: Math.PI / 2.5, // 0.2,
-            strokeColor: this.strokeColor,
-            allShapes: this.allShapes,
-            loop: 0,
-        });
+        // // sau
+        // var debugStroke = new strokePath({
+        //     "center": {
+        //         x: posX,
+        //         y: posY
+        //     },
+        //     vectorMagnitude: this.vectorMagnitude,
+        //     angleRadians: Math.PI / 2.5, // 0.2,
+        //     strokeColor: this.strokeColor,
+        //     allShapes: this.allShapes,
+        //     loop: 0,
+        // });
 
-        debugStroke.showPath();
+        // debugStroke.showPath();
 
-        for (var c = 0; c < 3; c++) {
+        // for (var c = 0; c < 2; c++) {
 
-            var debugStroke2 = new strokePath({
-                "center": {
-                    x: posX,
-                    y: posY
-                },
-                vectorMagnitude: this.vectorMagnitude,
-                angleRadians: Math.PI / 2.5 + c * 0.5, // 0.2,
-                strokeColor: this.strokeColor,
-                allShapes: this.allShapes,
-                loop: 0,
-            });
+        //     var debugStroke2 = new strokePath({
+        //         "center": {
+        //             x: posX,
+        //             y: posY
+        //         },
+        //         vectorMagnitude: this.vectorMagnitude,
+        //         angleRadians: Math.PI / 2.5 + c * 0.5, // 0.2,
+        //         strokeColor: this.strokeColor,
+        //         allShapes: this.allShapes,
+        //         loop: 0,
+        //     });
 
-            debugStroke2.showPath();
-        }
+        //     debugStroke2.showPath();
+        // }
     }
 
     createBoxes() {
@@ -341,12 +341,12 @@ class Grid {
                 // colorAction: "red",
             },
             shapeShadA: {  // shadow beneath
-                shapeLoop: 4,
+                shapeLoop: 3,
                 // colorAction: "#1b1b1b",
                 colorAction: "green",
             },
             shapeShadB: {  // shadow beneath
-                shapeLoop: 4,
+                shapeLoop: 3,
                 colorAction: "#131313",
                 // colorAction: this.strokeColorAction,
             },
@@ -576,48 +576,45 @@ class Grid {
                     // reference for being in shape is the middle of the stripe
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
-                    // var singleStroke = new strokePath({
-                    //     "center": {
-                    //         x: positionX,
-                    //         // y: positionY
-                    //         y: positionMiddleLineY
-                    //     },
-                    //     vectorMagnitude: this.vectorMagnitude,
-                    //     angleRadians: angleRadians, // 0.2,
-                    //     strokeColor: this.strokeColor,
-                    //     allShapes: this.allShapes,
-                    //     loop: 0,
-                    // });
+                    var singleStroke = new strokePath({
+                        "center": {
+                            x: positionX,
+                            // y: positionY
+                            y: positionMiddleLineY
+                        },
+                        vectorMagnitude: this.vectorMagnitude,
+                        angleRadians: angleRadians, // 0.2,
+                        strokeColor: this.strokeColor,
+                        allShapes: this.allShapes,
+                        loop: 0,
+                    });
 
-                    // singleStroke.showPath();
-
-                    // if (singleStroke.fullInside !== undefined || singleStroke.startInside !== undefined || singleStroke.endInside !== undefined) {
+                    singleStroke.showPath();
 
                     // start later with 1
-                    // for (var v = 1; v < singleStroke.shapeLoop; v++) {
+                    for (var v = 1; v < singleStroke.shapeLoop; v++) {
 
-                    //     if (value.even == true) {
-                    //         angleRadiansLooped = angleRadians + Math.PI / 5;
-                    //     } else {
-                    //         angleRadiansLooped = angleRadians - Math.PI / 5;
-                    //     }
+                        if (value.even == true) {
+                            angleRadiansLooped = angleRadians + Math.PI / 5;
+                        } else {
+                            angleRadiansLooped = angleRadians - Math.PI / 5;
+                        }
 
-                    // var singleStroke = new strokePath({
-                    //     "center": {
-                    //         x: positionX,
-                    //         y: positionMiddleLineY
-                    //     },
-                    //     vectorMagnitude: this.vectorMagnitude,
-                    //     // angleRadians: Math.PI / 6 + 0.3 * v, // 0.2,
-                    //     angleRadians: angleRadiansLooped, // 0.2,
-                    //     strokeColor: this.strokeColor,
-                    //     allShapes: this.allShapes,
-                    //     loop: v,
-                    // });
+                        var singleStroke = new strokePath({
+                            "center": {
+                                x: positionX,
+                                y: positionMiddleLineY
+                            },
+                            vectorMagnitude: this.vectorMagnitude,
+                            // angleRadians: Math.PI / 6 + 0.3 * v, // 0.2,
+                            angleRadians: angleRadiansLooped, // 0.2,
+                            strokeColor: this.strokeColor,
+                            allShapes: this.allShapes,
+                            loop: v,
+                        });
 
-                    // singleStroke.showPath();
-                    // }
-                    // }
+                        singleStroke.showPath();
+                    }
                 }
             }
         }

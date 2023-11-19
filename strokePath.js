@@ -55,6 +55,12 @@ class strokePath {
 
         for (const [key, value] of Object.entries(this.allShapes)) {
 
+            if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
+
+            } else {
+                continue;
+            }
+
             this.shapeCandidate = value.pointList;
 
             // if there is an intersection point with any shape, closest selected
