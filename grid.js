@@ -1,11 +1,12 @@
 class Grid {
     constructor(data) {
-
+        this.stepCount = 350; // 350 // how many strokePaths per stripe
+        this.angleRadiansStart = - Math.PI / 2 + 0.3;  // starting angle
         this.stripeHeight = 2;
         this.marginRelative = 0.09;
-        this.strokeColor = "#414141";
+        this.strokeColor = "#494949";
         // this.strokeColorAction = "#272727";
-        this.vectorMagnitude = 24;
+        this.vectorMagnitude = 25;
 
         this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
         this.longSide = data.longSide;
@@ -44,10 +45,45 @@ class Grid {
         this.loopCategorize();
         this.createShapes();
         // this.loopdebugCategory();
-        // this.debugShowShape();
+        this.debugShowShape();
         // this.showDebugBoxes();
 
-        this.createStrokePath();
+        // this.createStrokePath();
+
+        var posX = 410;
+        var posY = 265;
+
+        // sau
+        var debugStroke = new strokePath({
+            "center": {
+                x: posX,
+                y: posY
+            },
+            vectorMagnitude: this.vectorMagnitude,
+            angleRadians: Math.PI / 2.5, // 0.2,
+            strokeColor: this.strokeColor,
+            allShapes: this.allShapes,
+            loop: 0,
+        });
+
+        debugStroke.showPath();
+
+        for (var c = 0; c < 3; c++) {
+
+            var debugStroke2 = new strokePath({
+                "center": {
+                    x: posX,
+                    y: posY
+                },
+                vectorMagnitude: this.vectorMagnitude,
+                angleRadians: Math.PI / 2.5 + c * 0.5, // 0.2,
+                strokeColor: this.strokeColor,
+                allShapes: this.allShapes,
+                loop: 0,
+            });
+
+            debugStroke2.showPath();
+        }
     }
 
     createBoxes() {
@@ -302,12 +338,12 @@ class Grid {
             shapeMain: {
                 shapeLoop: 2,
                 colorAction: "#242424",
-                // colorAction: this.strokeColorAction,
+                // colorAction: "red",
             },
             shapeShadA: {  // shadow beneath
-                shapeLoop: 3,
-                colorAction: "#1b1b1b",
-                // colorAction: this.strokeColorAction,
+                shapeLoop: 4,
+                // colorAction: "#1b1b1b",
+                colorAction: "green",
             },
             shapeShadB: {  // shadow beneath
                 shapeLoop: 4,
@@ -474,46 +510,44 @@ class Grid {
 
     debugShowShape() {
 
+        var colory = "orange";
         const svgNode = document.getElementById('svgNode');
 
         var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         shapsn.setAttributeNS(null, 'points', this.allShapes.shapeMain.pointList);
         shapsn.setAttributeNS(null, 'fill', "none");
-        shapsn.setAttributeNS(null, 'stroke', "black");
-        shapsn.setAttributeNS(null, "stroke-width", 0.5);
+        shapsn.setAttributeNS(null, 'stroke', colory);
+        shapsn.setAttributeNS(null, "stroke-width", 1);
 
         svgNode.appendChild(shapsn);
 
         var shadnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         shadnA.setAttributeNS(null, 'points', this.allShapes.shapeShadA.pointList);
         shadnA.setAttributeNS(null, 'fill', "none");
-        shadnA.setAttributeNS(null, 'stroke', "black");
-        shadnA.setAttributeNS(null, "stroke-width", 0.5);
+        shadnA.setAttributeNS(null, 'stroke', colory);
+        shadnA.setAttributeNS(null, "stroke-width", 1);
 
         svgNode.appendChild(shadnA);
 
         var shadnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         shadnB.setAttributeNS(null, 'points', this.allShapes.shapeShadB.pointList);
         shadnB.setAttributeNS(null, 'fill', "none");
-        shadnB.setAttributeNS(null, 'stroke', "black");
-        shadnB.setAttributeNS(null, "stroke-width", 0.5);
+        shadnB.setAttributeNS(null, 'stroke', colory);
+        shadnB.setAttributeNS(null, "stroke-width", 1);
 
         svgNode.appendChild(shadnB);
 
         var superShadow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         superShadow.setAttributeNS(null, 'points', this.allShapes.shapeShadow.pointList);
         superShadow.setAttributeNS(null, 'fill', "none");
-        superShadow.setAttributeNS(null, 'stroke', "#000000");
-        superShadow.setAttributeNS(null, "stroke-width", 0.5);
+        superShadow.setAttributeNS(null, 'stroke', colory);
+        superShadow.setAttributeNS(null, "stroke-width", 1);
 
         svgNode.appendChild(superShadow);
 
     }
 
     createStrokePath() {
-
-        this.stepCount = 450; // 350 // how many strokePaths per stripe
-        this.angleRadiansStart = - Math.PI / 2 + 0.3;  // starting angle
 
         // loop through the lines
         for (const [key, value] of Object.entries(this.lineVectors)) {
@@ -524,9 +558,7 @@ class Grid {
                 var start = value.C
                 var end = value.D
                 var startEnd = vectorSub(start, end);
-                var loopDensity = 0 // how many strokes per point - density, default 1 loop
-                var pointList = [];
-                var colorAction = "";
+
                 var angleRadians = this.angleRadiansStart;
                 var angleRadiansLooped = 0;
 
@@ -544,97 +576,49 @@ class Grid {
                     // reference for being in shape is the middle of the stripe
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
-                    // check if in shape
-                    // if (pointInPolygon(this.shapeMain.pointList, [positionX, positionMiddleLineY])) {
-                    //     loopDensity = this.shapeMain.shapeLoop;
-                    //     pointList = this.shapeMain.pointList;
-                    //     colorAction = this.shapeMain.colorAction;
-                    // } else if (pointInPolygon(this.shapeShadA.pointList, [positionX, positionMiddleLineY])) {
-                    //     loopDensity = this.shapeShadA.shapeLoop;
-                    //     pointList = this.shapeShadA.pointList;
-                    //     colorAction = this.shapeShadA.colorAction;
-                    // } else if (pointInPolygon(this.shapeShadB.pointList, [positionX, positionMiddleLineY])) {
-                    //     loopDensity = this.shapeShadB.shapeLoop;
-                    //     pointList = this.shapeShadB.pointList;
-                    //     colorAction = this.shapeShadB.colorAction;
-                    // } else if (pointInPolygon(this.shapeShadow.pointList, [positionX, positionMiddleLineY])) {
-                    //     loopDensity = this.shapeShadow.shapeLoop;
-                    //     pointList = this.shapeShadow.pointList;
-                    //     colorAction = this.shapeShadow.colorAction;
-                    // } else {
-                    //     loopDensity = 1;
-                    //     colorAction = "#0077ff";
-                    // }
+                    // var singleStroke = new strokePath({
+                    //     "center": {
+                    //         x: positionX,
+                    //         // y: positionY
+                    //         y: positionMiddleLineY
+                    //     },
+                    //     vectorMagnitude: this.vectorMagnitude,
+                    //     angleRadians: angleRadians, // 0.2,
+                    //     strokeColor: this.strokeColor,
+                    //     allShapes: this.allShapes,
+                    //     loop: 0,
+                    // });
 
-                    // var loopSwitch = false;
+                    // singleStroke.showPath();
 
-                    // for (var d = 0; d < loopDensity; d++) {
+                    // if (singleStroke.fullInside !== undefined || singleStroke.startInside !== undefined || singleStroke.endInside !== undefined) {
 
-                    //     if (d >= 1) {
-                    //         loopSwitch = true;
-                    //         if (value.even == true) {
-                    //             angleRadiansLooped = angleRadians + Math.PI / 5;
-                    //         } else {
-                    //             angleRadiansLooped = angleRadians - Math.PI / 5;
-                    //         }
+                    // start later with 1
+                    // for (var v = 1; v < singleStroke.shapeLoop; v++) {
+
+                    //     if (value.even == true) {
+                    //         angleRadiansLooped = angleRadians + Math.PI / 5;
                     //     } else {
-                    //         angleRadiansLooped = angleRadians
+                    //         angleRadiansLooped = angleRadians - Math.PI / 5;
                     //     }
 
-                    var singleStroke = new strokePath({
-                        "center": {
-                            x: positionX,
-                            // y: positionY
-                            y: positionMiddleLineY
-                        },
-                        vectorMagnitude: this.vectorMagnitude,
-                        // angleRadians: angleRadiansLooped, // 0.2,
-                        angleRadians: angleRadians, // 0.2,
-                        strokeColor: this.strokeColor,
-                        // strokeColorAction: colorAction,
-                        // shape: pointList,
-                        allShapes: this.allShapes,
-                        loop: 0,
-                    });
+                    // var singleStroke = new strokePath({
+                    //     "center": {
+                    //         x: positionX,
+                    //         y: positionMiddleLineY
+                    //     },
+                    //     vectorMagnitude: this.vectorMagnitude,
+                    //     // angleRadians: Math.PI / 6 + 0.3 * v, // 0.2,
+                    //     angleRadians: angleRadiansLooped, // 0.2,
+                    //     strokeColor: this.strokeColor,
+                    //     allShapes: this.allShapes,
+                    //     loop: v,
+                    // });
 
-                    singleStroke.showPath();
-
-
-                    // if in polygon
-                    if (singleStroke.inside !== undefined) {
-                        var loopCount = this.allShapes[singleStroke.inside].shapeLoop;
-                        // if only 1 loop, skip
-                        if (loopCount <= 1) {
-                            continue;
-                        }
-
-                        // start later with 1
-                        for (var v = 1; v < loopCount; v++) {
-
-                            if (value.even == true) {
-                                angleRadiansLooped = angleRadians + Math.PI / 5;
-                            } else {
-                                angleRadiansLooped = angleRadians - Math.PI / 5;
-                            }
-
-                            var singleStroke = new strokePath({
-                                "center": {
-                                    x: positionX,
-                                    y: positionMiddleLineY
-                                },
-                                vectorMagnitude: 23,
-                                // angleRadians: Math.PI / 6 + 0.3 * v, // 0.2,
-                                angleRadians: angleRadiansLooped, // 0.2,
-                                strokeColor: this.strokeColor,
-                                allShapes: this.allShapes,
-                                loop: v,
-                            });
-
-                            singleStroke.showPath();
-                        }
-                    };
+                    // singleStroke.showPath();
+                    // }
+                    // }
                 }
-                // }
             }
         }
     }

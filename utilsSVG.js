@@ -273,36 +273,36 @@ function reloader() {
     window.location.reload();
 }
 
-function getSteep(A1, A2) {
-    var k = (A1.y - A2.y) / (A1.x - A2.x);
-    // console.log(k);
-    var d = A1.y - k * A1.x;
-    // console.log(d);
+// function getSteep(A1, A2) {
+//     var k = (A1.y - A2.y) / (A1.x - A2.x);
+//     // console.log(k);
+//     var d = A1.y - k * A1.x;
+//     // console.log(d);
 
-    return [k, d];
-}
+//     return [k, d];
+// }
 
-// get the intersection point with two lines defined by two points. the steep k and d are calculated. then where the two intersect.
-function getIntersectionPoint(A1, A2, B1, B2) {
+// // get the intersection point with two lines defined by two points. the steep k and d are calculated. then where the two intersect.
+// function getIntersectionPoint(A1, A2, B1, B2) {
 
-    ALine = getSteep(A1, A2);
-    BLine = getSteep(B1, B2);
+//     ALine = getSteep(A1, A2);
+//     BLine = getSteep(B1, B2);
 
-    Ak = ALine[0];
-    Ad = ALine[1];
-    Bk = BLine[0];
-    Bd = BLine[1];
+//     Ak = ALine[0];
+//     Ad = ALine[1];
+//     Bk = BLine[0];
+//     Bd = BLine[1];
 
-    var x = Math.round((Bd - Ad) / (Ak - Bk));
-    var y = Math.round(Ak * x + Ad);
+//     var x = Math.round((Bd - Ad) / (Ak - Bk));
+//     var y = Math.round(Ak * x + Ad);
 
-    // console.log(x);
+//     // console.log(x);
 
-    if (isNaN(x) && isNaN(y)) {
-    } else {
-        return { x: x, y: y };
-    }
-}
+//     if (isNaN(x) && isNaN(y)) {
+//     } else {
+//         return { x: x, y: y };
+//     }
+// }
 
 // line intercept math by Paul Bourke http://paulbourke.net/geometry/pointlineplane/
 // Determine the intersection point of two line segments
