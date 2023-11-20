@@ -4,7 +4,7 @@ class Grid {
         this.angleRadiansStart = - Math.PI / 2 + 0.3;  // starting angle
         this.stripeHeight = 2;
         this.marginRelative = 0.09;
-        this.strokeColor = "#494949";
+        this.strokeColor = "#494949ff";
         // this.strokeColorAction = "#272727";
         this.vectorMagnitude = 25;
 
@@ -549,8 +549,21 @@ class Grid {
 
     createStrokePath() {
 
+        var loopMax = 4;
+
         // loop through the lines
         for (const [key, value] of Object.entries(this.lineVectors)) {
+
+            // var angleRadians = this.angleRadiansStart;
+            var angleRadiansStart = Math.PI / 2;
+            var angleRadians = 0;
+
+            // change per line
+            if (value.even == true) {
+                angleRadians = angleRadiansStart + Math.PI / 5;
+            } else {
+                angleRadians = angleRadiansStart - Math.PI / 5;
+            }
 
             // skip empty entries, margin
             if (value.C.x != "") {
@@ -559,45 +572,27 @@ class Grid {
                 var end = value.D
                 var startEnd = vectorSub(start, end);
 
-                var angleRadians = this.angleRadiansStart;
-                var angleRadiansLooped = 0;
-
-                // different for each odd and even line
-                if (value.even == true) {
-                    angleRadians += - Math.PI / 5;
-                }
-
                 for (var i = 0; i < this.stepCount; i++) {
 
-                    angleRadiansLooped = angleRadians;
                     var positionX = start.x + i * startEnd.x / this.stepCount;
                     var positionY = start.y + i * startEnd.y / this.stepCount;
 
                     // reference for being in shape is the middle of the stripe
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
-                    var singleStroke = new strokePath({
-                        "center": {
-                            x: positionX,
-                            // y: positionY
-                            y: positionMiddleLineY
-                        },
-                        vectorMagnitude: this.vectorMagnitude,
-                        angleRadians: angleRadians, // 0.2,
-                        strokeColor: this.strokeColor,
-                        allShapes: this.allShapes,
-                        loop: 0,
-                    });
+                    for (var v = 0; v < loopMax; v++) {
 
-                    singleStroke.showPath();
-
-                    // start later with 1
-                    for (var v = 1; v < singleStroke.shapeLoop; v++) {
-
-                        if (value.even == true) {
-                            angleRadiansLooped = angleRadians + Math.PI / 5;
-                        } else {
-                            angleRadiansLooped = angleRadians - Math.PI / 5;
+                        // first loop
+                        if (v == 0) {
+                            var angleRadiansLooped = angleRadians;
+                        } else if (v % 2 == 1 && value.even == true) {
+                            var angleRadiansLooped = angleRadians - 2 * Math.PI / 5;
+                        } else if (v % 2 == 1 && value.even == false) {
+                            var angleRadiansLooped = angleRadians + 2 * Math.PI / 5;
+                        } else if (v % 2 == 0 && value.even == true) {
+                            var angleRadiansLooped = angleRadians;
+                        } else if (v % 2 == 0 && value.even == false) {
+                            var angleRadiansLooped = angleRadians;
                         }
 
                         var singleStroke = new strokePath({
@@ -606,7 +601,6 @@ class Grid {
                                 y: positionMiddleLineY
                             },
                             vectorMagnitude: this.vectorMagnitude,
-                            // angleRadians: Math.PI / 6 + 0.3 * v, // 0.2,
                             angleRadians: angleRadiansLooped, // 0.2,
                             strokeColor: this.strokeColor,
                             allShapes: this.allShapes,
