@@ -336,7 +336,7 @@ class Grid {
 
         this.allShapes = {
             shapeMain: {
-                shapeLoop: 1,
+                shapeLoop: 2,
                 colorAction: "#5c5c5c",
                 // colorAction: "red",
             },
