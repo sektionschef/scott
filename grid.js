@@ -45,7 +45,7 @@ class Grid {
         this.loopCategorize();
         this.createShapes();
         // this.loopdebugCategory();
-        this.debugShowShape();
+        // this.debugShowShape();
         // this.showDebugBoxes();
 
         this.createStrokePath();
@@ -336,23 +336,23 @@ class Grid {
 
         this.allShapes = {
             shapeMain: {
-                shapeLoop: 2,
-                colorAction: "#242424",
+                shapeLoop: 1,
+                colorAction: "#5c5c5c",
                 // colorAction: "red",
             },
             shapeShadA: {  // shadow beneath
-                shapeLoop: 3,
-                // colorAction: "#1b1b1b",
-                colorAction: "green",
+                shapeLoop: 4,
+                colorAction: "#5c5c5c",
+                // colorAction: "green",
             },
             shapeShadB: {  // shadow beneath
-                shapeLoop: 3,
-                colorAction: "#131313",
+                shapeLoop: 4,
+                colorAction: "#5c5c5c",
                 // colorAction: this.strokeColorAction,
             },
             shapeShadow: {  // shadow
                 shapeLoop: 2,
-                colorAction: "#464646",
+                colorAction: "#5c5c5c",
                 // colorAction: this.strokeColorAction,
             }
         }

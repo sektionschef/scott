@@ -1,11 +1,11 @@
 class strokePath {
     constructor(data) {
         this.lineSegment = 4;  // where to place the control points
-        this.posStd = 0.4; // 0.6;// 1  // misplacmente standard deviation
+        this.posStd = 0.8; // 0.6;// 1  // misplacmente standard deviation
         this.posStdCon = 1; // 0.4;  // control points
         this.posStdShiftX = 0.5; // add variance to x so no total overlap
         this.minLength = 0; // 5;  // a line should have a length of at least
-        this.strokeWidth = 1;
+        this.strokeWidth = 0.5;
         this.path = false;
 
         this.center = data.center;
@@ -178,6 +178,11 @@ class strokePath {
 
     showPath() {
 
+        // skip if loop passed
+        if (this.loop >= this.shapeLoop) {
+            return;
+        }
+
         if (this.splitSwitch) {
             this.showSplitPath();
         } else {
@@ -190,7 +195,10 @@ class strokePath {
 
         // for inside or for the first loop
         if (
-            (this.fullInside !== "" || this.loop == 0)
+            // strokes in white area
+            // (this.fullInside !== "" || this.loop == 0)
+            // no strokes in whitespace
+            (this.fullInside !== "" && this.loop <= this.shapeLoop)
         ) {
 
             if (this.path) {
@@ -214,8 +222,13 @@ class strokePath {
         const svgNode = document.getElementById('svgNode');
 
         if (
+            // (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
+            // (this.loop == 0 || this.startInside !== "")
+
+            // no strokes in whitespace
             (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
-            (this.loop == 0 || this.startInside !== "")
+            (this.startInside !== "") &&
+            (this.loop <= this.shapeLoop)
         ) {
 
             if (this.path) {
@@ -234,9 +247,13 @@ class strokePath {
         }
 
         if (
+            // vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
+            // (this.endInside != "" || this.loop == 0)
+
+            // no strokes in whitespace
             vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
-            (this.endInside != "" || this.loop == 0)
-            // this.endInside != ""
+            (this.endInside != "") &&
+            (this.loop <= this.shapeLoop)
         ) {
             if (this.path) {
                 this.newPathEnd = this.drawPath(this.interPoint, this.controlEndA, this.controlEndB, this.end);
