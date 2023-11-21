@@ -178,11 +178,6 @@ class strokePath {
 
     showPath() {
 
-        // skip if loop passed
-        if (this.loop >= this.shapeLoop) {
-            return;
-        }
-
         if (this.splitSwitch) {
             this.showSplitPath();
         } else {
@@ -198,7 +193,7 @@ class strokePath {
             // strokes in white area
             // (this.fullInside !== "" || this.loop == 0)
             // no strokes in whitespace
-            (this.fullInside !== "" && this.loop <= this.shapeLoop)
+            (this.fullInside !== "" && this.loop < this.shapeLoop)
         ) {
 
             if (this.path) {
@@ -228,7 +223,7 @@ class strokePath {
             // no strokes in whitespace
             (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
             (this.startInside !== "") &&
-            (this.loop <= this.shapeLoop)
+            (this.loop < this.shapeLoop)
         ) {
 
             if (this.path) {
@@ -253,7 +248,7 @@ class strokePath {
             // no strokes in whitespace
             vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
             (this.endInside != "") &&
-            (this.loop <= this.shapeLoop)
+            (this.loop < this.shapeLoop)
         ) {
             if (this.path) {
                 this.newPathEnd = this.drawPath(this.interPoint, this.controlEndA, this.controlEndB, this.end);
