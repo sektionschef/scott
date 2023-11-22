@@ -1,6 +1,6 @@
 class Grid {
     constructor(data) {
-        this.stepCount = 350; // 350 // how many strokePaths per stripe
+        this.stepCount = 300; // 350 // how many strokePaths per stripe
         this.angleRadiansStart = - Math.PI / 2 + 0.3;  // starting angle
         this.stripeHeight = 2;
         this.marginRelative = 0.09;
@@ -336,12 +336,12 @@ class Grid {
 
         this.allShapes = {
             shapeMain: {
-                shapeLoop: 2,
+                shapeLoop: 1,
                 colorAction: "#5c5c5c",
                 // colorAction: "red",
             },
             shapeShadA: {  // shadow beneath
-                shapeLoop: 4,
+                shapeLoop: 2,
                 colorAction: "#5c5c5c",
                 // colorAction: "green",
             },
@@ -351,7 +351,7 @@ class Grid {
                 // colorAction: this.strokeColorAction,
             },
             shapeShadow: {  // shadow
-                shapeLoop: 2,
+                shapeLoop: 1,
                 colorAction: "#5c5c5c",
                 // colorAction: this.strokeColorAction,
             }

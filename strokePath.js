@@ -3,9 +3,9 @@ class strokePath {
         this.lineSegment = 4;  // where to place the control points
         this.posStd = 0.8; // 0.6;// 1  // misplacmente standard deviation
         this.posStdCon = 1; // 0.4;  // control points
-        this.posStdShiftX = 0.5; // add variance to x so no total overlap
+        this.posStdShiftX = 0; // add variance to x so no total overlap
         this.minLength = 0; // 5;  // a line should have a length of at least
-        this.strokeWidth = 0.5;
+        this.strokeWidth = 1;
         this.path = false;
 
         this.center = data.center;
@@ -192,11 +192,11 @@ class strokePath {
         // for inside or for the first loop
         if (
             // strokes in white area
-            (this.fullInside !== "" || this.loop == 0) &&
-            (this.loop < this.shapeLoop)
+            // (this.fullInside !== "" || this.loop == 0) &&
+            // (this.loop < this.shapeLoop)
 
             // no strokes in whitespace
-            // (this.fullInside !== "" && this.loop < this.shapeLoop)
+            (this.fullInside !== "" && this.loop < this.shapeLoop)
         ) {
 
             if (this.path) {
@@ -220,14 +220,14 @@ class strokePath {
         const svgNode = document.getElementById('svgNode');
 
         if (
-            (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
-            (this.loop == 0 || this.startInside !== "") &&
-            (this.loop < this.shapeLoop)
+            // (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
+            // (this.loop == 0 || this.startInside !== "") &&
+            // (this.loop < this.shapeLoop)
 
             // no strokes in whitespace
-            // (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
-            // (this.startInside !== "") &&
-            // (this.loop < this.shapeLoop)
+            (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
+            (this.startInside !== "") &&
+            (this.loop < this.shapeLoop)
         ) {
 
             if (this.path) {
@@ -246,14 +246,14 @@ class strokePath {
         }
 
         if (
-            vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
-            (this.endInside != "" || this.loop == 0) &&
-            (this.loop < this.shapeLoop)
+            // vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
+            // (this.endInside != "" || this.loop == 0) &&
+            // (this.loop < this.shapeLoop)
 
             // no strokes in whitespace
-            // vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
-            // (this.endInside != "") &&
-            // (this.loop < this.shapeLoop)
+            vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
+            (this.endInside != "") &&
+            (this.loop < this.shapeLoop)
         ) {
             if (this.path) {
                 this.newPathEnd = this.drawPath(this.interPoint, this.controlEndA, this.controlEndB, this.end);

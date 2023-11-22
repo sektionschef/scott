@@ -174,6 +174,7 @@ function main() {
 
 
   createBackground();
+  createPaperFilter();
   // createPencilNoiseFilter();
 
   // DUMMY SHAPE
@@ -279,7 +280,9 @@ function createBackground() {
   backgroundRect.setAttribute("y", "0");
   backgroundRect.setAttribute("width", "100%");
   backgroundRect.setAttribute("height", "100%");
-  backgroundRect.setAttribute("fill", BACKGROUNDTONE);
+  // backgroundRect.setAttribute("fill", BACKGROUNDTONE);
+  backgroundRect.setAttribute("fill", "none");
+  backgroundRect.setAttribute("filter", "url(#filterPaper)");
   svgNode.appendChild(backgroundRect);
 }
 
@@ -293,11 +296,11 @@ function createPencilNoiseFilter() {
   filterPencil.setAttribute("primitiveUnits", "userSpaceOnUse");
   filterPencil.setAttribute("color-interpolation-filters", "linearRGB");
 
-  var turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
+  let turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
   turbulence.setAttribute("id", "turbulence");
   // turbulence.setAttribute("in", "filterObjA");
   turbulence.setAttribute("type", "fractalNoise");
-  turbulence.setAttribute("baseFrequency", "0.05");
+  turbulence.setAttribute("baseFrequency", "0.21");
   turbulence.setAttribute("numOctaves", "20");
   // turbulence.setAttribute("seed", "15");
   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
@@ -310,7 +313,7 @@ function createPencilNoiseFilter() {
 
   var displacement = document.createElementNS("http://www.w3.org/2000/svg", "feDisplacementMap");
   displacement.setAttribute("id", "displacement");
-  displacement.setAttribute("scale", "3");
+  displacement.setAttribute("scale", "1");
   displacement.setAttribute("in", "SourceGraphic");
 
   filterPencil.appendChild(turbulence);
@@ -318,6 +321,51 @@ function createPencilNoiseFilter() {
   defs.appendChild(filterPencil);
 }
 
-// console.log(onclick.clientX);  // Horizontal
-// let y = event.clientY;  // Vertical)
+function createPaperFilter() {
 
+  // <feTurbulence type="fractalNoise" baseFrequency='0.04' numOctaves="5" result='noise' />
+  //   <feDiffuseLighting in='noise' lighting-color='white' surfaceScale='2'>
+  //   <feDistantLight azimuth='45' elevation='60' />
+  // </feDiffuseLighting>
+
+  var filterPaper = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+  filterPaper.setAttribute("id", "filterPaper");
+  filterPaper.setAttribute("x", "0");
+  filterPaper.setAttribute("y", "0");
+  // added
+  filterPaper.setAttribute("filterUnits", "objectBoundingBox");
+  filterPaper.setAttribute("primitiveUnits", "userSpaceOnUse");
+  filterPaper.setAttribute("color-interpolation-filters", "linearRGB");
+
+  let turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
+  turbulence.setAttribute("id", "turbulence");
+  turbulence.setAttribute("type", "fractalNoise");
+  turbulence.setAttribute("baseFrequency", "0.4"); // 0.04
+  turbulence.setAttribute("numOctaves", "5");
+  // turbulence.setAttribute("seed", "15");
+  turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
+  turbulence.setAttribute("stitchTiles", "stitch");
+  turbulence.setAttribute("x", "0%");
+  turbulence.setAttribute("y", "0%");
+  turbulence.setAttribute("width", "100%");
+  turbulence.setAttribute("height", "100%");
+  turbulence.setAttribute("result", "turbulence");
+
+  let diffuseLighting = document.createElementNS("http://www.w3.org/2000/svg", "feDiffuseLighting");
+  diffuseLighting.setAttribute("id", "diffuseLighting");
+  diffuseLighting.setAttribute("in", "turbulence");
+  diffuseLighting.setAttribute("lighting-color", "white");
+  diffuseLighting.setAttribute("surfaceScale", "0.25");  // 2
+
+  let distantLight = document.createElementNS("http://www.w3.org/2000/svg", "feDistantLight");
+  distantLight.setAttribute("id", "distantLight");
+  distantLight.setAttribute("azimuth", "45");
+  distantLight.setAttribute("elevation", "60");
+
+  filterPaper.appendChild(turbulence);
+  diffuseLighting.appendChild(distantLight);
+  filterPaper.appendChild(diffuseLighting);
+
+  // defs.appendChild(turbulence);
+  defs.appendChild(filterPaper);
+}
