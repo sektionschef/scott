@@ -190,13 +190,29 @@ function main() {
   // shapy.setAttributeNS(null, "stroke-width", 2);
   // svgNode.appendChild(shapy);
 
-  // GRID
-  let grid = new Grid({
+  // GRID 2
+  let grid2 = new Grid({
+    stepCount: 100,
+    strokeColor: "#222222ff",
+    strokeWidth: 2,
     shortBoxCount: RESOLUTIONBOXCOUNT,
     longSide: LONGSIDE,
     shortSide: SHORTSIDE,
     landscape: LANDSCAPE,
   });
+
+  // GRID
+  let grid = new Grid({
+    stepCount: 300,
+    // strokeColor: "#222222ff",
+    strokeColor: "#777777ff",
+    strokeWidth: 1,
+    shortBoxCount: RESOLUTIONBOXCOUNT,
+    longSide: LONGSIDE,
+    shortSide: SHORTSIDE,
+    landscape: LANDSCAPE,
+  });
+
 
   // TEST CASE
   // var singleStroke = new strokePath({

@@ -5,9 +5,9 @@ class strokePath {
         this.posStdCon = 1; // 0.4;  // control points
         this.posStdShiftX = 0; // add variance to x so no total overlap
         this.minLength = 0; // 5;  // a line should have a length of at least
-        this.strokeWidth = 1;
         this.path = false;
 
+        this.strokeWidth = data.strokeWidth;
         this.center = data.center;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
