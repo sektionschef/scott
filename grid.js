@@ -348,7 +348,7 @@ class Grid {
                 colorAction: this.strokeColor,
             },
             shapeShadB: {  // shadow beneath
-                shapeLoop: 4,
+                shapeLoop: 2,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
             },
@@ -518,8 +518,11 @@ class Grid {
         var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
         shapsn.setAttributeNS(null, 'points', this.allShapes.shapeMain.pointList);
         shapsn.setAttributeNS(null, 'fill', "none");
-        shapsn.setAttributeNS(null, 'stroke', colory);
         shapsn.setAttributeNS(null, "stroke-width", 1);
+        shapsn.setAttributeNS(null, 'stroke', colory);
+
+        // shapsn.setAttributeNS(null, 'stroke', "none");
+        // shapsn.setAttributeNS(null, 'fill', "#c2c2c281");
 
         svgNode.appendChild(shapsn);
 

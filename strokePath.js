@@ -189,6 +189,9 @@ class strokePath {
 
     showContinuousPath() {
 
+        // const svgNode = document.getElementById('svgNode');
+        // const layerA = document.getElementById('layerA');
+
         // for inside or for the first loop
         if (
             // strokes in white area
@@ -210,14 +213,15 @@ class strokePath {
             this.newPath.setAttributeNS(null, "opacity", 1);
             this.newPath.setAttributeNS(null, "fill", "none");
 
-            const svgNode = document.getElementById('svgNode');
-            svgNode.appendChild(this.newPath);
+            // svgNode.appendChild(this.newPath);
+            layerA.appendChild(this.newPath);
         }
     }
 
     showSplitPath() {
 
-        const svgNode = document.getElementById('svgNode');
+        // const svgNode = document.getElementById('svgNode');
+        const layerA = document.getElementById('layerA');
 
         if (
             // (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
@@ -242,7 +246,8 @@ class strokePath {
             this.newPathStart.setAttributeNS(null, "opacity", 1);
             this.newPathStart.setAttributeNS(null, "fill", "none");
 
-            svgNode.appendChild(this.newPathStart);
+            // svgNode.appendChild(this.newPathStart);
+            layerA.appendChild(this.newPathStart);
         }
 
         if (
@@ -267,14 +272,16 @@ class strokePath {
             this.newPathEnd.setAttributeNS(null, "opacity", 1);
             this.newPathEnd.setAttributeNS(null, "fill", "none");
 
-            svgNode.appendChild(this.newPathEnd);
+            // svgNode.appendChild(this.newPathEnd);
+            layerA.appendChild(this.newPathEnd);
         }
     }
 
     drawPath(start, cA, cB, end) {
         var path = document.createElementNS('http://www.w3.org/2000/svg', "path");
         path.setAttributeNS(null, "id", "pathIdD");
-        path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // path.setAttributeNS(null, "filter", "url(#fueta)");
         path.setAttributeNS(null, "d", `M 
         ${start.x} 
         ${start.y} 
@@ -293,7 +300,8 @@ class strokePath {
     drawLine(start, end) {
         var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
         line.setAttributeNS(null, "id", "lineIdD");
-        line.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // line.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // line.setAttributeNS(null, "filter", "url(#fueta)");
         line.setAttributeNS(null, "x1", start.x);
         line.setAttributeNS(null, "y1", start.y);
         line.setAttributeNS(null, "x2", end.x);

@@ -174,8 +174,10 @@ function main() {
 
 
   createBackground();
+  createLayerA();
   createPaperFilter();
   // createPencilNoiseFilter();
+  // createOtherNoiseLayer();
 
   // DUMMY SHAPE
   // var pointString = ""
@@ -203,9 +205,9 @@ function main() {
 
   // GRID
   let grid = new Grid({
-    stepCount: 300,
+    stepCount: 400,
     // strokeColor: "#222222ff",
-    strokeColor: "#777777ff",
+    strokeColor: "#4e4e4eff",
     strokeWidth: 1,
     shortBoxCount: RESOLUTIONBOXCOUNT,
     longSide: LONGSIDE,
@@ -213,6 +215,8 @@ function main() {
     landscape: LANDSCAPE,
   });
 
+  // showOtherNoise();
+  showLayerA();
 
   // TEST CASE
   // var singleStroke = new strokePath({
@@ -227,7 +231,6 @@ function main() {
   //   shape: POLYGONPOINTS,
   // });
   // singleStroke.showPath();
-
 
 
   setTagsHTML({
@@ -302,6 +305,26 @@ function createBackground() {
   svgNode.appendChild(backgroundRect);
 }
 
+function createLayerA() {
+  // create background
+  var layerA = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  layerA.setAttribute("id", "layerA");
+  layerA.setAttribute("x", "0");
+  layerA.setAttribute("y", "0");
+  layerA.setAttribute("width", "100%");
+  layerA.setAttribute("height", "100%");
+  layerA.setAttribute("fill", "none");
+  // layerA.setAttribute("opacity", "0.5");
+  // svgNode.appendChild(layerA);
+  defs.appendChild(layerA);
+}
+
+function showLayerA() {
+  const svgNode = document.getElementById('svgNode');
+  const layerA = document.getElementById('layerA');
+  svgNode.appendChild(layerA);
+}
+
 function createPencilNoiseFilter() {
   var filterPencil = document.createElementNS("http://www.w3.org/2000/svg", "filter");
   filterPencil.setAttribute("id", "filterPencil");
@@ -316,8 +339,8 @@ function createPencilNoiseFilter() {
   turbulence.setAttribute("id", "turbulence");
   // turbulence.setAttribute("in", "filterObjA");
   turbulence.setAttribute("type", "fractalNoise");
-  turbulence.setAttribute("baseFrequency", "0.21");
-  turbulence.setAttribute("numOctaves", "20");
+  turbulence.setAttribute("baseFrequency", "0.4");
+  turbulence.setAttribute("numOctaves", "1");
   // turbulence.setAttribute("seed", "15");
   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
   turbulence.setAttribute("stitchTiles", "stitch");
@@ -329,7 +352,7 @@ function createPencilNoiseFilter() {
 
   var displacement = document.createElementNS("http://www.w3.org/2000/svg", "feDisplacementMap");
   displacement.setAttribute("id", "displacement");
-  displacement.setAttribute("scale", "1");
+  displacement.setAttribute("scale", "2");
   displacement.setAttribute("in", "SourceGraphic");
 
   filterPencil.appendChild(turbulence);
@@ -384,4 +407,72 @@ function createPaperFilter() {
 
   // defs.appendChild(turbulence);
   defs.appendChild(filterPaper);
+}
+
+function createOtherNoiseLayer() {
+  // https://codepen.io/lagats/pen/QpOOVB
+  const svgNode = document.getElementById('svgNode');
+  const defs = document.getElementById('defs');
+
+  var fuetaObj = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  fuetaObj.setAttribute("id", "fuetaObj");
+  fuetaObj.setAttribute("width", "100%");
+  fuetaObj.setAttribute("height", "100%");
+  fuetaObj.setAttribute("opacity", "1");
+  // fuetaObj.setAttribute("opacity", "0.5");
+
+  var fueta = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+  fueta.setAttribute("id", "fueta");
+
+  var turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
+  turbulence.setAttribute("id", "turbulence");
+  turbulence.setAttribute("type", "fractalNoise");
+  turbulence.setAttribute("baseFrequency", "10");
+  turbulence.setAttribute("numOctaves", "6");
+  turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
+  turbulence.setAttribute("stitchTiles", "stitch");
+  turbulence.setAttribute("x", "0%");
+  turbulence.setAttribute("y", "0%");
+  turbulence.setAttribute("width", "100%");
+  turbulence.setAttribute("height", "100%");
+  turbulence.setAttribute("result", "turbulence");
+
+  var deSaturate = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+  deSaturate.setAttribute("type", "saturate");
+  deSaturate.setAttribute("values", "0");
+  deSaturate.setAttribute("x", "0%");
+  deSaturate.setAttribute("y", "0%");
+  deSaturate.setAttribute("width", "100%");
+  deSaturate.setAttribute("height", "100%");
+  deSaturate.setAttribute("in", "sourceGraphic");
+  deSaturate.setAttribute("result", "deSaturate");
+
+  // https://stackoverflow.com/questions/64946883/apply-noise-to-image-with-transparency-by-use-of-svg-filters
+  var composite = document.createElementNS("http://www.w3.org/2000/svg", "feComposite");
+  composite.setAttribute("operator", "in");
+  composite.setAttribute("in2", "sourceGraphic");
+  composite.setAttribute("result", "composite");
+
+  var blend = document.createElementNS("http://www.w3.org/2000/svg", "feBlend");
+  blend.setAttribute("in", "sourceGraphic");
+  // blend.setAttribute("in2", "deSaturate");
+  blend.setAttribute("in2", "composite");
+  blend.setAttribute("mode", "overlay");
+  // blend.setAttribute("mode", "multiply");
+
+  fueta.appendChild(turbulence);
+  fueta.appendChild(deSaturate);
+  fueta.appendChild(composite);
+  fueta.appendChild(blend);
+
+  fuetaObj.setAttribute("filter", "url(#fueta)");
+  defs.appendChild(fueta);
+  defs.appendChild(fuetaObj);
+
+}
+
+function showOtherNoise() {
+  var fuetaObj = document.getElementById('fuetaObj');
+
+  svgNode.appendChild(fuetaObj);
 }
