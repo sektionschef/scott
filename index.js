@@ -174,10 +174,11 @@ function main() {
 
 
   createBackground();
-  createLayerA();
+  creategroupA();
   createPaperFilter();
   // createPencilNoiseFilter();
-  // createOtherNoiseLayer();
+  createOtherNoiseLayer();
+  createBlur();
 
   // DUMMY SHAPE
   // var pointString = ""
@@ -215,8 +216,9 @@ function main() {
     landscape: LANDSCAPE,
   });
 
+  showGroupA();
   // showOtherNoise();
-  showLayerA();
+  showBlur();
 
   // TEST CASE
   // var singleStroke = new strokePath({
@@ -305,24 +307,26 @@ function createBackground() {
   svgNode.appendChild(backgroundRect);
 }
 
-function createLayerA() {
+function creategroupA() {
   // create background
-  var layerA = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  layerA.setAttribute("id", "layerA");
-  layerA.setAttribute("x", "0");
-  layerA.setAttribute("y", "0");
-  layerA.setAttribute("width", "100%");
-  layerA.setAttribute("height", "100%");
-  layerA.setAttribute("fill", "none");
-  // layerA.setAttribute("opacity", "0.5");
-  // svgNode.appendChild(layerA);
-  defs.appendChild(layerA);
+  var groupA = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  groupA.setAttribute("id", "groupA");
+  groupA.setAttribute("x", "0");
+  groupA.setAttribute("y", "0");
+  groupA.setAttribute("width", "100%");
+  groupA.setAttribute("height", "100%");
+  groupA.setAttribute("fill", "none");
+
+  // svgNode.appendChild(groupA);
+  defs.appendChild(groupA);
 }
 
-function showLayerA() {
+function showGroupA() {
   const svgNode = document.getElementById('svgNode');
-  const layerA = document.getElementById('layerA');
-  svgNode.appendChild(layerA);
+  const groupA = document.getElementById('groupA');
+  // groupA.setAttribute("filter", "url(#fueta)");
+
+  svgNode.appendChild(groupA);
 }
 
 function createPencilNoiseFilter() {
@@ -419,7 +423,7 @@ function createOtherNoiseLayer() {
   fuetaObj.setAttribute("width", "100%");
   fuetaObj.setAttribute("height", "100%");
   fuetaObj.setAttribute("opacity", "1");
-  // fuetaObj.setAttribute("opacity", "0.5");
+  // fuetaObj.setAttribute("opacity", "0.3");
 
   var fueta = document.createElementNS("http://www.w3.org/2000/svg", "filter");
   fueta.setAttribute("id", "fueta");
@@ -462,8 +466,8 @@ function createOtherNoiseLayer() {
 
   fueta.appendChild(turbulence);
   fueta.appendChild(deSaturate);
-  fueta.appendChild(composite);
-  fueta.appendChild(blend);
+  // fueta.appendChild(composite);
+  // fueta.appendChild(blend);
 
   fuetaObj.setAttribute("filter", "url(#fueta)");
   defs.appendChild(fueta);
@@ -472,7 +476,30 @@ function createOtherNoiseLayer() {
 }
 
 function showOtherNoise() {
+  const svgNode = document.getElementById('svgNode');
   var fuetaObj = document.getElementById('fuetaObj');
 
   svgNode.appendChild(fuetaObj);
+}
+
+
+function createBlur() {
+  const defs = document.getElementById('defs');
+
+  var blurFilter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+  blurFilter.setAttribute("id", "blurFilter");
+
+  var blur = document.createElementNS("http://www.w3.org/2000/svg", "feGaussianBlur");
+  blur.setAttribute("id", "blur");
+  blur.setAttribute("in", "SourceGraphic");
+  blur.setAttribute("stdDeviation", "2");
+
+  blurFilter.appendChild(blur);
+  defs.appendChild(blurFilter);
+}
+
+function showBlur() {
+  const svgNode = document.getElementById('svgNode');
+  const groupA = document.getElementById('groupA');
+  groupA.setAttribute("filter", "url(#blurFilter)");
 }

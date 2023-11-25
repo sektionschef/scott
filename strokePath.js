@@ -5,7 +5,7 @@ class strokePath {
         this.posStdCon = 1; // 0.4;  // control points
         this.posStdShiftX = 0; // add variance to x so no total overlap
         this.minLength = 0; // 5;  // a line should have a length of at least
-        this.path = false;
+        this.path = true;
 
         this.strokeWidth = data.strokeWidth;
         this.center = data.center;
@@ -190,7 +190,7 @@ class strokePath {
     showContinuousPath() {
 
         // const svgNode = document.getElementById('svgNode');
-        // const layerA = document.getElementById('layerA');
+        const groupA = document.getElementById('groupA');
 
         // for inside or for the first loop
         if (
@@ -214,14 +214,14 @@ class strokePath {
             this.newPath.setAttributeNS(null, "fill", "none");
 
             // svgNode.appendChild(this.newPath);
-            layerA.appendChild(this.newPath);
+            groupA.appendChild(this.newPath);
         }
     }
 
     showSplitPath() {
 
         // const svgNode = document.getElementById('svgNode');
-        const layerA = document.getElementById('layerA');
+        const groupA = document.getElementById('groupA');
 
         if (
             // (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
@@ -247,7 +247,7 @@ class strokePath {
             this.newPathStart.setAttributeNS(null, "fill", "none");
 
             // svgNode.appendChild(this.newPathStart);
-            layerA.appendChild(this.newPathStart);
+            groupA.appendChild(this.newPathStart);
         }
 
         if (
@@ -273,7 +273,7 @@ class strokePath {
             this.newPathEnd.setAttributeNS(null, "fill", "none");
 
             // svgNode.appendChild(this.newPathEnd);
-            layerA.appendChild(this.newPathEnd);
+            groupA.appendChild(this.newPathEnd);
         }
     }
 
