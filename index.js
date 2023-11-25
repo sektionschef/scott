@@ -216,9 +216,24 @@ function main() {
     landscape: LANDSCAPE,
   });
 
-  showGroupA();
+  // showGroupA();
   // showOtherNoise();
+
+  // instead of show groupA
+  var groupAUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  groupAUse.setAttribute("id", "groupAUse");
+  groupAUse.setAttribute("href", "#groupA");
+
+  svgNode.appendChild(groupAUse);
+
   showBlur();
+
+  // <use href="#myCircle" x="10" fill="blue" />
+  var groupB = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  groupB.setAttribute("id", "groupB");
+  groupB.setAttribute("href", "#groupA");
+
+  svgNode.appendChild(groupB);
 
   // TEST CASE
   // var singleStroke = new strokePath({
@@ -500,6 +515,6 @@ function createBlur() {
 
 function showBlur() {
   const svgNode = document.getElementById('svgNode');
-  const groupA = document.getElementById('groupA');
-  groupA.setAttribute("filter", "url(#blurFilter)");
+  const groupAUse = document.getElementById('groupAUse');
+  groupAUse.setAttribute("filter", "url(#blurFilter)");
 }
