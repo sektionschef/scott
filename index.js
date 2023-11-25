@@ -179,6 +179,7 @@ function main() {
   // createPencilNoiseFilter();
   createOtherNoiseLayer();
   createBlur();
+  createBrightness();
 
   // DUMMY SHAPE
   // var pointString = ""
@@ -216,24 +217,12 @@ function main() {
     landscape: LANDSCAPE,
   });
 
-  // showGroupA();
+  showGroupA();
   // showOtherNoise();
-
-  // instead of show groupA
-  var groupAUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
-  groupAUse.setAttribute("id", "groupAUse");
-  groupAUse.setAttribute("href", "#groupA");
-
-  svgNode.appendChild(groupAUse);
 
   showBlur();
 
-  // <use href="#myCircle" x="10" fill="blue" />
-  var groupB = document.createElementNS("http://www.w3.org/2000/svg", "use");
-  groupB.setAttribute("id", "groupB");
-  groupB.setAttribute("href", "#groupA");
-
-  svgNode.appendChild(groupB);
+  showGroupB();
 
   // TEST CASE
   // var singleStroke = new strokePath({
@@ -307,7 +296,6 @@ function createDrawingGroup() {
   defs.appendChild(groupDrawing);
 }
 
-
 function createBackground() {
   // create background
   var backgroundRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -338,10 +326,13 @@ function creategroupA() {
 
 function showGroupA() {
   const svgNode = document.getElementById('svgNode');
-  const groupA = document.getElementById('groupA');
-  // groupA.setAttribute("filter", "url(#fueta)");
 
-  svgNode.appendChild(groupA);
+  // instead of show groupA
+  var groupAUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  groupAUse.setAttribute("id", "groupAUse");
+  groupAUse.setAttribute("href", "#groupA");
+
+  svgNode.appendChild(groupAUse);
 }
 
 function createPencilNoiseFilter() {
@@ -499,6 +490,8 @@ function showOtherNoise() {
 
 
 function createBlur() {
+  var blurFact = 5;
+
   const defs = document.getElementById('defs');
 
   var blurFilter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
@@ -507,14 +500,46 @@ function createBlur() {
   var blur = document.createElementNS("http://www.w3.org/2000/svg", "feGaussianBlur");
   blur.setAttribute("id", "blur");
   blur.setAttribute("in", "SourceGraphic");
-  blur.setAttribute("stdDeviation", "2");
+  blur.setAttribute("stdDeviation", blurFact);
 
   blurFilter.appendChild(blur);
   defs.appendChild(blurFilter);
+}
+
+function createBrightness() {
+  var noiseler = 0.2;
+  const blurFilter = document.getElementById('blurFilter');
+
+  // https://fecolormatrix.com/ 
+  var brightnessMatrix = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+  brightnessMatrix.setAttribute("id", "brightnessMatrix");
+  brightnessMatrix.setAttribute("type", "matrix");
+  brightnessMatrix.setAttribute("values", `\
+     1 0 0 0 ${noiseler} \
+     0 1 0 0 ${noiseler} \
+     0 0 1 0 ${noiseler} \
+     0 0 0 1 0`);
+  brightnessMatrix.setAttribute("x", "0%");
+  brightnessMatrix.setAttribute("y", "0%");
+  brightnessMatrix.setAttribute("width", "100%");
+  brightnessMatrix.setAttribute("height", "100%");
+  // brightnessMatrix.setAttribute("in", "specularLightB");
+  brightnessMatrix.setAttribute("in", "sourceGraphic");
+  brightnessMatrix.setAttribute("result", "brightnessMatrix");
+
+  blurFilter.appendChild(brightnessMatrix);
 }
 
 function showBlur() {
   const svgNode = document.getElementById('svgNode');
   const groupAUse = document.getElementById('groupAUse');
   groupAUse.setAttribute("filter", "url(#blurFilter)");
+}
+
+function showGroupB() {
+  var groupB = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  groupB.setAttribute("id", "groupB");
+  groupB.setAttribute("href", "#groupA");
+
+  svgNode.appendChild(groupB);
 }
