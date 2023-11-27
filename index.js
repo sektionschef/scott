@@ -1,3 +1,7 @@
+// https://codepen.io/yoksel/pen/QVLxpg 
+// https://codepen.io/sektionschef/pen/yLZqBbw
+
+
 // ########################################
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
@@ -173,13 +177,15 @@ function main() {
   svgNode.appendChild(defs);
 
 
-  createBackground();
-  creategroupA();
+  createPencilNoiseFilter();
   createPaperFilter();
-  // createPencilNoiseFilter();
-  createOtherNoiseLayer();
+  // createOtherNoiseLayer();
   createBlur();
   createBrightness();
+
+  createBackground();
+  createGroupA();
+  createGroupB();
 
   // DUMMY SHAPE
   // var pointString = ""
@@ -194,15 +200,21 @@ function main() {
   // shapy.setAttributeNS(null, "stroke-width", 2);
   // svgNode.appendChild(shapy);
 
+
   // GRID 2
   let grid2 = new Grid({
     stepCount: 100,
-    strokeColor: "#222222ff",
-    strokeWidth: 2,
+    // strokeColor: "#222222ff",
+    strokeColor: "#8f8f8fff",
+    strokeWidth: 1,
+    angleRadiansStart: Math.PI / 2,
+    // angleRadiansGain: Math.PI / 5,
+    angleRadiansGain: 0,
     shortBoxCount: RESOLUTIONBOXCOUNT,
     longSide: LONGSIDE,
     shortSide: SHORTSIDE,
     landscape: LANDSCAPE,
+    group: "groupA",
   });
 
   // GRID
@@ -211,18 +223,22 @@ function main() {
     // strokeColor: "#222222ff",
     strokeColor: "#4e4e4eff",
     strokeWidth: 1,
+    angleRadiansStart: Math.PI / 2,
+    angleRadiansGain: Math.PI / 5,
+    // angleRadiansGain: 0,
     shortBoxCount: RESOLUTIONBOXCOUNT,
     longSide: LONGSIDE,
     shortSide: SHORTSIDE,
     landscape: LANDSCAPE,
+    group: "groupB",
   });
 
-  showGroupA();
   // showOtherNoise();
-
-  showBlur();
-
+  showGroupA();
   showGroupB();
+
+  // showBlur();
+
 
   // TEST CASE
   // var singleStroke = new strokePath({
@@ -310,7 +326,7 @@ function createBackground() {
   svgNode.appendChild(backgroundRect);
 }
 
-function creategroupA() {
+function createGroupA() {
   // create background
   var groupA = document.createElementNS("http://www.w3.org/2000/svg", "g");
   groupA.setAttribute("id", "groupA");
@@ -341,17 +357,15 @@ function createPencilNoiseFilter() {
   filterPencil.setAttribute("x", "0");
   filterPencil.setAttribute("y", "0");
   // added
-  filterPencil.setAttribute("filterUnits", "objectBoundingBox");
-  filterPencil.setAttribute("primitiveUnits", "userSpaceOnUse");
-  filterPencil.setAttribute("color-interpolation-filters", "linearRGB");
+  // filterPencil.setAttribute("filterUnits", "objectBoundingBox");
+  // filterPencil.setAttribute("primitiveUnits", "userSpaceOnUse");
+  // filterPencil.setAttribute("color-interpolation-filters", "linearRGB");
 
   let turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
   turbulence.setAttribute("id", "turbulence");
-  // turbulence.setAttribute("in", "filterObjA");
   turbulence.setAttribute("type", "fractalNoise");
-  turbulence.setAttribute("baseFrequency", "0.4");
+  turbulence.setAttribute("baseFrequency", "1.5");
   turbulence.setAttribute("numOctaves", "1");
-  // turbulence.setAttribute("seed", "15");
   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
   turbulence.setAttribute("stitchTiles", "stitch");
   turbulence.setAttribute("x", "0%");
@@ -366,7 +380,7 @@ function createPencilNoiseFilter() {
   displacement.setAttribute("in", "SourceGraphic");
 
   filterPencil.appendChild(turbulence);
-  filterPencil.appendChild(displacement);
+  filterPencil.appendChild(displacement);  // comment for debug
   defs.appendChild(filterPencil);
 }
 
@@ -472,7 +486,7 @@ function createOtherNoiseLayer() {
 
   fueta.appendChild(turbulence);
   fueta.appendChild(deSaturate);
-  // fueta.appendChild(composite);
+  fueta.appendChild(composite);
   // fueta.appendChild(blend);
 
   fuetaObj.setAttribute("filter", "url(#fueta)");
@@ -490,7 +504,7 @@ function showOtherNoise() {
 
 
 function createBlur() {
-  var blurFact = 5;
+  var blurFact = 2;
 
   const defs = document.getElementById('defs');
 
@@ -536,10 +550,24 @@ function showBlur() {
   groupAUse.setAttribute("filter", "url(#blurFilter)");
 }
 
+function createGroupB() {
+  // create background
+  var groupB = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  groupB.setAttribute("id", "groupB");
+  groupB.setAttribute("x", "0");
+  groupB.setAttribute("y", "0");
+  groupB.setAttribute("width", "100%");
+  groupB.setAttribute("height", "100%");
+  groupB.setAttribute("fill", "none");
+
+  // svgNode.appendChild(groupB);
+  defs.appendChild(groupB);
+}
+
 function showGroupB() {
   var groupB = document.createElementNS("http://www.w3.org/2000/svg", "use");
   groupB.setAttribute("id", "groupB");
-  groupB.setAttribute("href", "#groupA");
+  groupB.setAttribute("href", "#groupB");
 
   svgNode.appendChild(groupB);
 }

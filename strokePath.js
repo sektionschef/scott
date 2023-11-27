@@ -14,6 +14,7 @@ class strokePath {
         this.strokeColor = data.strokeColor;
         this.allShapes = data.allShapes;
         this.loop = data.loop;
+        this.group = data.group;
 
         // dummies
         this.up = { x: 0, y: 0 };
@@ -190,7 +191,8 @@ class strokePath {
     showContinuousPath() {
 
         // const svgNode = document.getElementById('svgNode');
-        const groupA = document.getElementById('groupA');
+        // const groupA = document.getElementById('groupA');
+        const group = document.getElementById(this.group);
 
         // for inside or for the first loop
         if (
@@ -214,14 +216,15 @@ class strokePath {
             this.newPath.setAttributeNS(null, "fill", "none");
 
             // svgNode.appendChild(this.newPath);
-            groupA.appendChild(this.newPath);
+            group.appendChild(this.newPath);
         }
     }
 
     showSplitPath() {
 
         // const svgNode = document.getElementById('svgNode');
-        const groupA = document.getElementById('groupA');
+        // const groupA = document.getElementById('groupA');
+        const group = document.getElementById(this.group);
 
         if (
             // (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
@@ -247,7 +250,7 @@ class strokePath {
             this.newPathStart.setAttributeNS(null, "fill", "none");
 
             // svgNode.appendChild(this.newPathStart);
-            groupA.appendChild(this.newPathStart);
+            group.appendChild(this.newPathStart);
         }
 
         if (
@@ -273,14 +276,14 @@ class strokePath {
             this.newPathEnd.setAttributeNS(null, "fill", "none");
 
             // svgNode.appendChild(this.newPathEnd);
-            groupA.appendChild(this.newPathEnd);
+            group.appendChild(this.newPathEnd);
         }
     }
 
     drawPath(start, cA, cB, end) {
         var path = document.createElementNS('http://www.w3.org/2000/svg', "path");
         path.setAttributeNS(null, "id", "pathIdD");
-        // path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        path.setAttributeNS(null, "filter", "url(#filterPencil)");
         // path.setAttributeNS(null, "filter", "url(#fueta)");
         path.setAttributeNS(null, "d", `M 
         ${start.x} 
@@ -300,7 +303,7 @@ class strokePath {
     drawLine(start, end) {
         var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
         line.setAttributeNS(null, "id", "lineIdD");
-        // line.setAttributeNS(null, "filter", "url(#filterPencil)");
+        line.setAttributeNS(null, "filter", "url(#filterPencil)");
         // line.setAttributeNS(null, "filter", "url(#fueta)");
         line.setAttributeNS(null, "x1", start.x);
         line.setAttributeNS(null, "y1", start.y);

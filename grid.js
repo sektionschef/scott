@@ -1,17 +1,19 @@
 class Grid {
     constructor(data) {
-        this.stepCount = data.stepCount; // 350 // how many strokePaths per stripe
-        this.angleRadiansStart = - Math.PI / 2 + 0.3;  // starting angle
         this.stripeHeight = 2;
         this.marginRelative = 0.09;
-        this.strokeColor = data.strokeColor;
         this.vectorMagnitude = 25;
 
+        this.stepCount = data.stepCount; // 350 // how many strokePaths per stripe
+        this.angleRadiansStart = data.angleRadiansStart;  // starting angle
+        this.angleRadiansGain = data.angleRadiansGain;  // adding/reducing each line
+        this.strokeColor = data.strokeColor;
         this.strokeWidth = data.strokeWidth;
         this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
         this.longSide = data.longSide;
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
+        this.group = data.group;
 
         this.marginBoxCount = Math.round(this.shortBoxCount * this.marginRelative);
         this.boxSize = this.shortSide / this.shortBoxCount;
@@ -47,6 +49,8 @@ class Grid {
         // this.loopdebugCategory();
         // this.debugShowShape();
         // this.showDebugBoxes();
+
+        this.fillShape();
 
         this.createStrokePath();
 
@@ -340,22 +344,26 @@ class Grid {
                 // colorAction: "#5c5c5c",
                 // colorAction: "red",
                 colorAction: this.strokeColor,
+                fillColor: "#afafaf",
             },
             shapeShadA: {  // shadow beneath
                 shapeLoop: 2,
                 // colorAction: "green",
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
+                fillColor: "#999999",
             },
             shapeShadB: {  // shadow beneath
                 shapeLoop: 2,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
+                fillColor: "#a3a3a3",
             },
             shapeShadow: {  // shadow
                 shapeLoop: 1,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
+                fillColor: "#aaaaaa",
             }
         }
 
@@ -559,15 +567,15 @@ class Grid {
         // loop through the lines
         for (const [key, value] of Object.entries(this.lineVectors)) {
 
-            // var angleRadians = this.angleRadiansStart;
-            var angleRadiansStart = Math.PI / 2;
+            var angleRadians = this.angleRadiansStart;
+            // var angleRadiansStart = Math.PI / 2;
             var angleRadians = 0;
 
             // change per line
             if (value.even == true) {
-                angleRadians = angleRadiansStart + Math.PI / 5;
+                angleRadians = this.angleRadiansStart + this.angleRadiansGain;//+ Math.PI / 5;
             } else {
-                angleRadians = angleRadiansStart - Math.PI / 5;
+                angleRadians = this.angleRadiansStart - this.angleRadiansGain;//- Math.PI / 5;
             }
 
             // skip empty entries, margin
@@ -591,9 +599,11 @@ class Grid {
                         if (v == 0) {
                             var angleRadiansLooped = angleRadians;
                         } else if (v % 2 == 1 && value.even == true) {
-                            var angleRadiansLooped = angleRadians - 2 * Math.PI / 5;
+                            // var angleRadiansLooped = angleRadians - 2 * Math.PI / 5;
+                            var angleRadiansLooped = angleRadians - 2 * this.angleRadiansGain;
                         } else if (v % 2 == 1 && value.even == false) {
-                            var angleRadiansLooped = angleRadians + 2 * Math.PI / 5;
+                            // var angleRadiansLooped = angleRadians + 2 * Math.PI / 5;
+                            var angleRadiansLooped = angleRadians + 2 * this.angleRadiansGain;
                         } else if (v % 2 == 0 && value.even == true) {
                             var angleRadiansLooped = angleRadians;
                         } else if (v % 2 == 0 && value.even == false) {
@@ -611,12 +621,34 @@ class Grid {
                             strokeWidth: this.strokeWidth,
                             allShapes: this.allShapes,
                             loop: v,
+                            group: this.group,
                         });
 
                         singleStroke.showPath();
                     }
                 }
             }
+        }
+    }
+
+    fillShape() {
+
+        for (const [key, value] of Object.entries(this.allShapes)) {
+
+            // console.log(value);
+            const svgNode = document.getElementById('svgNode');
+
+            var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            shapsn.setAttributeNS(null, 'points', value.pointList);
+            shapsn.setAttributeNS(null, 'points', value.pointList);
+            // shapsn.setAttributeNS(null, 'fill', "none");
+            // shapsn.setAttributeNS(null, "stroke-width", 1);
+            // shapsn.setAttributeNS(null, 'stroke', colory);
+
+            shapsn.setAttributeNS(null, 'stroke', "none");
+            shapsn.setAttributeNS(null, 'fill', value.fillColor);
+
+            svgNode.appendChild(shapsn);
         }
     }
 }
