@@ -1,0 +1,69 @@
+<html>
+<svg width="1000" height="1000">
+    <filter id="filter" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox"
+        primitiveUnits="userSpaceOnUse">
+
+        <!-- extra turb -->
+        <feTurbulence type="fractalNoise" baseFrequency="2.9" numOctaves="4" result="turbulence1" />
+
+        <feColorMatrix in="turbulence1" type="saturate" values="0" result="turbulence1_sat" />
+
+        <feTurbulence type="turbulence" baseFrequency="0.007 0.006" numOctaves="1" seed="1" stitchTiles="stitch"
+            result="turbulenceA" />
+
+        <feSpecularLighting surfaceScale="-9" specularConstant="1.25" specularExponent="15" kernelUnitLength="0 0"
+            lighting-color="#bac7d4" in="turbulenceA" result="specularLightingA">
+            <fePointLight x="-220" y="-300" z="400" />
+        </feSpecularLighting>
+
+        <feTurbulence type="turbulence" baseFrequency="0.003 0.004" numOctaves="1" seed="3" stitchTiles="stitch"
+            result="turbulenceB" />
+
+        <feSpecularLighting surfaceScale="-19" specularConstant="0.75" specularExponent="15" kernelUnitLength="0 0"
+            lighting-color="#b6c1d1" in="turbulenceB" result="specularLightingB">
+            <fePointLight x="520" y="500" z="400" />
+        </feSpecularLighting>
+
+        <feFlood flood-color="#677fa3" flood-opacity="1" result="flood1" />
+
+        <!-- <feMerge result="mergeBeforeNoise"> -->
+        <!-- <feMergeNode in="flood1" /> -->
+        <!-- <feMergeNode in="specularLightingA" /> -->
+        <!-- <feMergeNode in="specularLightingB" /> -->
+        <!-- </feMerge> -->
+
+        <!-- supernoise -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.084" numOctaves="4" seed="15" stitchTiles="stitch" x="0%"
+            y="0%" width="100%" height="100%" result="turbulenceE"></feTurbulence>
+        <feSpecularLighting surfaceScale="12" specularConstant="0.8" specularExponent="20" lighting-color="#ff0000"
+            x="0%" y="0%" width="100%" height="100%" in="turbulenceE" result="specularLightingE">
+            <feDistantLight azimuth="3" elevation="52"></feDistantLight>
+        </feSpecularLighting>
+
+        <feColorMatrix type="saturate" values="0" x="0%" y="0%" width="100%" height="100%" in="specularLightingE"
+            result="specularLightingE"></feColorMatrix>
+
+        <!-- <feGaussianBlur in="mergeBeforeNoise" result="mergeBlur" stdDeviation="3" /> -->
+
+        <!-- A -->
+        <feBlend in="specularLightingA" in2="sourceGraphic" mode="overlay" />
+        <!-- B -->
+        <feBlend in="specularLightingB" in2="sourceGraphic" mode="overlay" />
+
+        <!-- <feGaussianBlur in="soureGraphic" result="mergeBlur" stdDeviation="4" /> -->
+        <feGaussianBlur in="soureGraphic" result="mergeBlur" stdDeviation="3" />
+
+
+        <feBlend in="specularLightingE" in2="sourceGraphic" mode="overlay" />
+        <!-- add mini noise -->
+        <feBlend in="turbulence1_sat" in2="sourceGraphic" mode="overlay" />
+        <feBlend in="flood1" in2="sourceGraphic" mode="overlay" />
+
+
+
+    </filter>
+    <!-- <rect width="1600" height="1600" filter="url(#filter)" /> -->
+    <rect width="1600" height="1600" filter="url(#filter)" />
+</svg>
+
+</html>

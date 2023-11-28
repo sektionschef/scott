@@ -50,7 +50,7 @@ class Grid {
         // this.debugShowShape();
         // this.showDebugBoxes();
 
-        this.fillShape();
+        // this.fillShape();
 
         this.createStrokePath();
 
