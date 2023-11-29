@@ -3,16 +3,35 @@
     <filter id="filter" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox"
         primitiveUnits="userSpaceOnUse">
 
-        <!-- extra turb -->
-        <feTurbulence type="fractalNoise" baseFrequency="2.9" numOctaves="4" result="turbulence1" />
+
+        <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="4" result="turbulence1" />
+        <feTurbulence type="fractalNoise" baseFrequency="0.1" numOctaves="3" result="turbulence2" />
 
         <feColorMatrix in="turbulence1" type="saturate" values="0" result="turbulence1_sat" />
+        <feColorMatrix in="turbulence2" type="saturate" values="0" result="turbulence2_sat" />
 
+        <feBlend in="turbulence2_sat" in2="turbulence1_sat" mode="overlay" result="oida" />
+
+        <feTurbulence type="turbulence" baseFrequency="0.7 0.6" numOctaves="9" seed="1" stitchTiles="stitch"
+            result="turbulence3" />
+
+        <feBlend in="oida" in2="turbulence3" mode="overlay" />
+
+        <feSpecularLighting surfaceScale="-6" specularConstant="1.25" specularExponent="10" kernelUnitLength="0 0"
+            lighting-color="#ac7f7f" in="sourceGraphic" result="specularLightingOIDA">
+            <fePointLight x="-200" y="-300" z="800" />
+        </feSpecularLighting>
+
+        <feBlend in="specularLightingOIDA" in2="sourceGraphic" mode="overlay" />
+
+        <!-- <feComposite in="sourceGraphic" in2="specularLightingOIDA" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" /> -->
+
+        <!-- 
         <feTurbulence type="turbulence" baseFrequency="0.007 0.006" numOctaves="1" seed="1" stitchTiles="stitch"
             result="turbulenceA" />
 
         <feSpecularLighting surfaceScale="-9" specularConstant="1.25" specularExponent="15" kernelUnitLength="0 0"
-            lighting-color="#bac7d4" in="turbulenceA" result="specularLightingA">
+            lighting-color="#ffffff" in="turbulenceA" result="specularLightingA">
             <fePointLight x="-220" y="-300" z="400" />
         </feSpecularLighting>
 
@@ -20,11 +39,11 @@
             result="turbulenceB" />
 
         <feSpecularLighting surfaceScale="-19" specularConstant="0.75" specularExponent="15" kernelUnitLength="0 0"
-            lighting-color="#b6c1d1" in="turbulenceB" result="specularLightingB">
+            lighting-color="#ffffff" in="turbulenceB" result="specularLightingB">
             <fePointLight x="520" y="500" z="400" />
-        </feSpecularLighting>
+        </feSpecularLighting> -->
 
-        <feFlood flood-color="#677fa3" flood-opacity="1" result="flood1" />
+        <!-- <feFlood flood-color="#677fa3" flood-opacity="1" result="flood1" /> -->
 
         <!-- <feMerge result="mergeBeforeNoise"> -->
         <!-- <feMergeNode in="flood1" /> -->
@@ -33,33 +52,32 @@
         <!-- </feMerge> -->
 
         <!-- supernoise -->
-        <feTurbulence type="fractalNoise" baseFrequency="0.084" numOctaves="4" seed="15" stitchTiles="stitch" x="0%"
+        <!-- <feTurbulence type="fractalNoise" baseFrequency="0.084" numOctaves="4" seed="15" stitchTiles="stitch" x="0%"
             y="0%" width="100%" height="100%" result="turbulenceE"></feTurbulence>
         <feSpecularLighting surfaceScale="12" specularConstant="0.8" specularExponent="20" lighting-color="#ff0000"
             x="0%" y="0%" width="100%" height="100%" in="turbulenceE" result="specularLightingE">
             <feDistantLight azimuth="3" elevation="52"></feDistantLight>
-        </feSpecularLighting>
+        </feSpecularLighting> -->
 
-        <feColorMatrix type="saturate" values="0" x="0%" y="0%" width="100%" height="100%" in="specularLightingE"
-            result="specularLightingE"></feColorMatrix>
+        <!-- <feColorMatrix type="saturate" values="0" x="0%" y="0%" width="100%" height="100%" in="specularLightingE"
+            result="specularLightingE"></feColorMatrix> -->
 
         <!-- <feGaussianBlur in="mergeBeforeNoise" result="mergeBlur" stdDeviation="3" /> -->
 
         <!-- A -->
-        <feBlend in="specularLightingA" in2="sourceGraphic" mode="overlay" />
+        <!-- <feBlend in="specularLightingA" in2="sourceGraphic" mode="overlay" /> -->
         <!-- B -->
-        <feBlend in="specularLightingB" in2="sourceGraphic" mode="overlay" />
+        <!-- <feBlend in="specularLightingB" in2="sourceGraphic" mode="overlay" /> -->
 
         <!-- <feGaussianBlur in="soureGraphic" result="mergeBlur" stdDeviation="4" /> -->
-        <feGaussianBlur in="soureGraphic" result="mergeBlur" stdDeviation="3" />
+        <!-- <feGaussianBlur in="soureGraphic" result="mergeBlur" stdDeviation="3" /> -->
 
-
-        <feBlend in="specularLightingE" in2="sourceGraphic" mode="overlay" />
+        <!-- <feBlend in="specularLightingE" in2="sourceGraphic" mode="overlay" /> -->
         <!-- add mini noise -->
-        <feBlend in="turbulence1_sat" in2="sourceGraphic" mode="overlay" />
-        <feBlend in="flood1" in2="sourceGraphic" mode="overlay" />
+        <!-- <feBlend in="turbulence1_sat" in2="sourceGraphic" mode="overlay" /> -->
+        <!-- <feBlend in="turbulence2_sat" in2="sourceGraphic" mode="overlay" /> -->
 
-
+        <!-- <feBlend in="flood1" in2="sourceGraphic" mode="overlay" /> -->
 
     </filter>
     <!-- <rect width="1600" height="1600" filter="url(#filter)" /> -->
