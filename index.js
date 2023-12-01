@@ -177,82 +177,84 @@ function main() {
   svgNode.appendChild(defs);
 
 
-  createPencilNoiseFilter();
+  // createPencilNoiseFilter();
   createPaperFilter();
   // createOtherNoiseLayer();
-  createBlur();
-  createBrightness();
+
+  // createBlur();
+  // createBrightness();
 
   createBackground();
-  createGroupA();
-  createGroupB();
-
-  // DUMMY SHAPE
-  // var pointString = ""
-  // for (var i = 0; i < POLYGONPOINTS.length; i++) {
-  //   pointString = pointString + POLYGONPOINTS[i][0] + "," + POLYGONPOINTS[i][1] + " ";
-  // }
-  // var shapy = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-  // // shapy.setAttributeNS(null, 'points', "200,10 250,190 160,210");
-  // shapy.setAttributeNS(null, 'points', pointString);
-  // shapy.setAttributeNS(null, 'fill', "none");
-  // shapy.setAttributeNS(null, 'stroke', "black");
-  // shapy.setAttributeNS(null, "stroke-width", 2);
-  // svgNode.appendChild(shapy);
+  // createGroupA();
+  // createGroupB();
+  createGroupC();
 
 
   // GRID 2
-  let grid2 = new Grid({
-    stepCount: 100,
-    // strokeColor: "#222222ff",
-    strokeColor: "#8f8f8fff",
-    strokeWidth: 1,
-    angleRadiansStart: Math.PI / 2,
-    // angleRadiansGain: Math.PI / 5,
-    angleRadiansGain: 0,
-    shortBoxCount: RESOLUTIONBOXCOUNT,
-    longSide: LONGSIDE,
-    shortSide: SHORTSIDE,
-    landscape: LANDSCAPE,
-    group: "groupA",
-  });
+  // let grid2 = new Grid({
+  //   stepCount: 100,
+  //   // strokeColor: "#222222ff",
+  //   strokeColor: "#8f8f8fff",
+  //   strokeWidth: 1,
+  //   angleRadiansStart: Math.PI / 2,
+  //   // angleRadiansGain: Math.PI / 5,
+  //   angleRadiansGain: 0,
+  //   shortBoxCount: RESOLUTIONBOXCOUNT,
+  //   longSide: LONGSIDE,
+  //   shortSide: SHORTSIDE,
+  //   landscape: LANDSCAPE,
+  //   group: "groupA",
+  // });
 
-  // GRID
-  let grid = new Grid({
-    stepCount: 400,
-    // strokeColor: "#222222ff",
-    strokeColor: "#4e4e4eff",
-    strokeWidth: 1,
-    angleRadiansStart: Math.PI / 2,
-    angleRadiansGain: Math.PI / 5,
-    // angleRadiansGain: 0,
-    shortBoxCount: RESOLUTIONBOXCOUNT,
-    longSide: LONGSIDE,
-    shortSide: SHORTSIDE,
-    landscape: LANDSCAPE,
-    group: "groupB",
-  });
+  // // GRID
+  // let grid = new Grid({
+  //   stepCount: 400,
+  //   // strokeColor: "#222222ff",
+  //   strokeColor: "#4e4e4eff",
+  //   strokeWidth: 1,
+  //   angleRadiansStart: Math.PI / 2,
+  //   angleRadiansGain: Math.PI / 5,
+  //   // angleRadiansGain: 0,
+  //   shortBoxCount: RESOLUTIONBOXCOUNT,
+  //   longSide: LONGSIDE,
+  //   shortSide: SHORTSIDE,
+  //   landscape: LANDSCAPE,
+  //   group: "groupB",
+  // });
 
   // showOtherNoise();
-  showGroupA();
-  showGroupB();
+
+  // SHOW THE GRIDS
+  // showGroupA();
+  // showGroupB();
+  showGroupC();
 
   // showBlur();
 
 
+
   // TEST CASE
-  // var singleStroke = new strokePath({
-  //   "start": {
-  //     x: 120,
-  //     y: 180
-  //   },
-  //   vectorMagnitude: 225,
-  //   angleRadians: Math.PI / 4, // 0.2,
-  //   strokeColor: "black",
-  //   strokeColorAction: "red",
-  //   shape: POLYGONPOINTS,
-  // });
-  // singleStroke.showPath();
+  var singleStroke = new strokePath2({
+    "center": {
+      x: 150,
+      y: 150
+    },
+    vectorMagnitude: 225,
+    angleRadians: Math.PI / 4, // 0.2,
+    strokeColor: "black",
+    strokeWidth: 3,
+    allShapes: {
+      shapeMain: {
+        shapeLoop: 1,
+        colorAction: this.strokeColor,
+        fillColor: "#afafaf",
+        pointList: [],
+      },
+    },
+    loop: 0,
+    group: "groupC"
+  });
+  singleStroke.showPath();
 
 
   setTagsHTML({
@@ -571,4 +573,26 @@ function showGroupB() {
   groupB.setAttribute("href", "#groupB");
 
   svgNode.appendChild(groupB);
+}
+
+function createGroupC() {
+  // create background
+  var groupC = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  groupC.setAttribute("id", "groupC");
+  groupC.setAttribute("x", "0");
+  groupC.setAttribute("y", "0");
+  groupC.setAttribute("width", "100%");
+  groupC.setAttribute("height", "100%");
+  groupC.setAttribute("fill", "none");
+
+  // svgNode.appendChild(groupC); 
+  defs.appendChild(groupC);
+}
+
+function showGroupC() {
+  var groupC = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  groupC.setAttribute("id", "groupC");
+  groupC.setAttribute("href", "#groupC");
+
+  svgNode.appendChild(groupC);
 }

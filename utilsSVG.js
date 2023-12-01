@@ -362,6 +362,7 @@ function isOnLine(xp, yp, x1, y1, x2, y2, maxDistance) {
  * https://www.algorithms-and-technologies.com/point_in_polygon/javascript
  */
 const pointInPolygon = function (polygon, point) {
+
     //A point is in a polygon if a line from the point to infinity crosses the polygon an odd number of times
     let odd = false;
     //For each edge (In this case for each point of the polygon and the previous one)
