@@ -60,21 +60,53 @@ class strokePath2 {
 
     drawPath(start, cA, cB, end) {
 
-        var start = {
-            x: 130,
+        var A = {
+            x: 100,
             y: 130
         }
-        var cA = {
-            x: 150,
-            y: 150,
+        var cAB = {
+            x: 200,
+            y: 110,
         }
-        var cB = {
-            x: 250,
-            y: 250,
+        var cBA = {
+            x: 300,
+            y: 120,
         }
-        var end = {
+        var B = {
             x: 400,
-            y: 400
+            y: 130
+        }
+        var cBC = {
+            x: 400,
+            y: 160
+        }
+        var cCB = {
+            x: 400,
+            y: 190
+        }
+        var C = {
+            x: 400,
+            y: 200
+        }
+        var cCD = {
+            x: 300,
+            y: 160
+        }
+        var cDC = {
+            x: 200,
+            y: 190
+        }
+        var D = {
+            x: 100,
+            y: 200
+        }
+        var cDA = {
+            x: 80,
+            y: 170
+        }
+        var cAD = {
+            x: 90,
+            y: 150
         }
 
         this.path = document.createElementNS('http://www.w3.org/2000/svg', "path");
@@ -82,36 +114,25 @@ class strokePath2 {
         // path.setAttributeNS(null, "filter", "url(#filterPencil)");
 
         this.path.setAttributeNS(null, "d", `M 
-        ${start.x} ${start.y}, 
+        ${A.x} ${A.y}, 
         C 
-        ${cA.x} ${cA.y},
-        ${cB.x} ${cB.y}, 
-        ${end.x} ${end.y},
+        ${cAB.x} ${cAB.y},
+        ${cBA.x} ${cBA.y}, 
+        ${B.x} ${B.y},
         C
-        ${cB.x + 30} ${cB.y}, 
-        ${cA.x + 30} ${cA.y},
-        ${start.x} ${start.y}
-        Z
+        ${cBC.x} ${cBC.y}, 
+        ${cBC.x} ${cCB.y},
+        ${C.x} ${C.y}
+        C
+        ${cCD.x} ${cCD.y}, 
+        ${cDC.x} ${cDC.y},
+        ${D.x} ${D.y}
+        C
+        ${cDA.x} ${cDA.y}, 
+        ${cAD.x} ${cAD.y},
+        ${A.x} ${A.y}
+        
         `);
-
-
-        // this.path.setAttributeNS(null, "d", `
-        // M 2.1950094,2.4470797
-        // C 4.1605731,5.1270092 6.9678594,6.8380931 9.4315371,8.94468 7.2551203,6.6051867 5.3895656,4.0646461 2.7492049,2.0252042 1.956075,1.6680844 1.8271991,1.8544067 2.1950094,2.4470797
-        // Z
-        // `);
-
-        // M 2.1950094, 2.4470797
-        // C 4.1605731, 5.1270092 
-        // 6.9678594, 6.8380931 
-        // 9.4315371, 8.94468 
-        // 7.2551203, 6.6051867 
-        // 5.3895656, 4.0646461 
-        // 2.7492049, 2.0252042 
-        // 1.956075, 1.6680844 
-        // 1.8271991, 1.8544067 
-        // 2.1950094, 2.4470797
-        // Z
     }
 
     showPath() {
@@ -121,9 +142,10 @@ class strokePath2 {
         const group = document.getElementById(this.group);
 
         this.path.setAttributeNS(null, "stroke", this.strokeColor);
-        this.path.setAttributeNS(null, "stroke-width", this.strokeWidth);
+        // this.path.setAttributeNS(null, "stroke-width", this.strokeWidth);
+        this.path.setAttributeNS(null, "stroke", "none");
         this.path.setAttributeNS(null, "opacity", 1);
-        this.path.setAttributeNS(null, "fill", "none");
+        this.path.setAttributeNS(null, "fill", "black");
 
         // svgNode.appendChild(this.newPath);
         group.appendChild(this.path);
