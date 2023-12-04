@@ -48,65 +48,97 @@ class strokePath2 {
             y: this.center.y + (this.vectorMagnitude / 2 * Math.sin(this.angleRadians - Math.PI))
         }
 
+        this.ATheo = {
+            x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
+            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2))
+        }
+
+        this.BTheo = {
+            x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
+            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2))
+        }
+
+        this.CTheo = {
+            x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
+            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2))
+        }
+
+        this.DTheo = {
+            x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
+            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2))
+        }
+
+
         var shiftX = gaussianRandAdj(0, this.posStdShiftX);
         // start and end distortion
-        this.start.x = this.start.x + gaussianRandAdj(0, this.posStd) + shiftX;
-        this.end.x = this.end.x + gaussianRandAdj(0, this.posStd) + shiftX;
-        this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
-        this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
+        // this.start.x = this.start.x + gaussianRandAdj(0, this.posStd) + shiftX;
+        // this.end.x = this.end.x + gaussianRandAdj(0, this.posStd) + shiftX;
+        // this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
+        // this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
 
     }
 
 
     drawPath(start, cA, cB, end) {
 
-        var A = {
-            x: 100,
-            y: 130
+        // var start = {
+        //     x: 100,
+        //     y: 133
+        // };
+        // var end = {
+        //     x: 400,
+        //     y: 133
+        // }
+
+        var weight = 2;
+
+        this.A = {
+            x: this.ATheo.x,
+            y: this.ATheo.y
         }
-        var cAB = {
+        this.cAB = {
             x: 200,
-            y: 110,
-        }
-        var cBA = {
-            x: 300,
             y: 120,
         }
-        var B = {
-            x: 400,
-            y: 130
-        }
-        var cBC = {
-            x: 400,
-            y: 160
-        }
-        var cCB = {
-            x: 400,
-            y: 190
-        }
-        var C = {
-            x: 400,
-            y: 200
-        }
-        var cCD = {
+        this.cBA = {
             x: 300,
-            y: 160
+            y: 125,
         }
-        var cDC = {
+        this.B = {
+            x: this.BTheo.x,
+            y: this.BTheo.y
+        }
+        this.cBC = {
+            x: 420,
+            y: 131
+        }
+        this.cCB = {
+            x: 410,
+            y: 133
+        }
+        this.C = {
+            x: this.CTheo.x,
+            y: this.CTheo.y
+        }
+        this.cCD = {
+            x: 300,
+            y: 135
+        }
+        this.cDC = {
             x: 200,
-            y: 190
+            y: 135
         }
-        var D = {
-            x: 100,
-            y: 200
+        this.D = {
+            x: this.DTheo.x,
+            y: this.DTheo.y
         }
-        var cDA = {
+        this.cDA = {
             x: 80,
-            y: 170
+            y: 135
         }
-        var cAD = {
+        this.cAD = {
             x: 90,
-            y: 150
+            y: 130
         }
 
         this.path = document.createElementNS('http://www.w3.org/2000/svg', "path");
@@ -114,23 +146,23 @@ class strokePath2 {
         // path.setAttributeNS(null, "filter", "url(#filterPencil)");
 
         this.path.setAttributeNS(null, "d", `M 
-        ${A.x} ${A.y}, 
+        ${this.A.x} ${this.A.y}, 
         C 
-        ${cAB.x} ${cAB.y},
-        ${cBA.x} ${cBA.y}, 
-        ${B.x} ${B.y},
+        ${this.cAB.x} ${this.cAB.y},
+        ${this.cBA.x} ${this.cBA.y}, 
+        ${this.B.x} ${this.B.y},
         C
-        ${cBC.x} ${cBC.y}, 
-        ${cBC.x} ${cCB.y},
-        ${C.x} ${C.y}
+        ${this.cBC.x} ${this.cBC.y}, 
+        ${this.cBC.x} ${this.cCB.y},
+        ${this.C.x} ${this.C.y}
         C
-        ${cCD.x} ${cCD.y}, 
-        ${cDC.x} ${cDC.y},
-        ${D.x} ${D.y}
+        ${this.cCD.x} ${this.cCD.y}, 
+        ${this.cDC.x} ${this.cDC.y},
+        ${this.D.x} ${this.D.y}
         C
-        ${cDA.x} ${cDA.y}, 
-        ${cAD.x} ${cAD.y},
-        ${A.x} ${A.y}
+        ${this.cDA.x} ${this.cDA.y}, 
+        ${this.cAD.x} ${this.cAD.y},
+        ${this.A.x} ${this.A.y}
         
         `);
     }
@@ -149,6 +181,79 @@ class strokePath2 {
 
         // svgNode.appendChild(this.newPath);
         group.appendChild(this.path);
+    }
+
+    showDebugPoint(x, y, colory) {
+        this.debugPoint = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugPoint.setAttributeNS(null, "id", "");
+        this.debugPoint.setAttributeNS(null, "cx", x);
+        this.debugPoint.setAttributeNS(null, "cy", y);
+        this.debugPoint.setAttributeNS(null, "r", "2");
+        this.debugPoint.setAttributeNS(null, "stroke", "none");
+        this.debugPoint.setAttributeNS(null, "fill", colory);
+        this.debugPoint.setAttributeNS(null, "stroke-width", 0.1);
+        this.debugPoint.setAttributeNS(null, "opacity", 1);
+
+        const svgNode = document.getElementById('svgNode');
+        svgNode.appendChild(this.debugPoint);
+    }
+
+    showDebugStroke() {
+        // if (this.splitSwitch) {
+        //     // svgNode.appendChild(this.debugCenter);
+        //     // svgNode.appendChild(this.debugStart);
+        //     // svgNode.appendChild(this.debugEnd);
+        //     // svgNode.appendChild(this.debugInterPoint);
+        //     // svgNode.appendChild(this.debugControlStartA);
+        //     // svgNode.appendChild(this.debugControlStartB);
+        //     // svgNode.appendChild(this.debugControlEndA);
+        //     // svgNode.appendChild(this.debugControlEndB);
+        //     // svgNode.appendChild(this.debugUp);
+        //     // svgNode.appendChild(this.debugDown);
+        //     svgNode.appendChild(this.debugmidPointStartInt);
+        //     svgNode.appendChild(this.debugmidPointEndInt);
+        // } else {
+        //     // svgNode.appendChild(this.debugCenter);
+        //     // svgNode.appendChild(this.debugStart);
+        //     // svgNode.appendChild(this.debugEnd);
+        //     // svgNode.appendChild(this.debugControlA);
+        //     // svgNode.appendChild(this.debugControlB);
+        // }
+        var pointListDebug = {
+            "red": [
+                this.A,
+                this.B,
+                this.C,
+                this.D,
+            ],
+            "blue": [
+                this.cAB,
+                this.cBA,
+                this.cBC,
+                this.cCB,
+                this.cCD,
+                this.cDC,
+                this.cDA,
+                this.cAD,
+            ],
+            "purple": [
+                this.center,
+                this.start,
+                this.end,
+            ],
+            "orange": [
+                this.ATheo,
+                this.BTheo,
+                this.CTheo,
+                this.DTheo,
+            ]
+        }
+
+        for (const [colory, pointList] of Object.entries(pointListDebug)) {
+            for (var i = 0; i < pointList.length; i++) {
+                this.showDebugPoint(pointList[i].x, pointList[i].y, colory);
+            }
+        }
     }
 
     showDebug() {

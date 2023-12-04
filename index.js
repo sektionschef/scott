@@ -236,13 +236,13 @@ function main() {
   // TEST CASE
   var singleStroke = new strokePath2({
     "center": {
-      x: 150,
-      y: 150
+      x: 250,
+      y: 133
     },
-    vectorMagnitude: 225,
-    angleRadians: Math.PI / 4, // 0.2,
+    vectorMagnitude: 300,
+    angleRadians: Math.PI, // 0.2,
     strokeColor: "black",
-    strokeWidth: 3,
+    strokeWidth: 20,
     allShapes: {
       shapeMain: {
         shapeLoop: 1,
@@ -255,6 +255,7 @@ function main() {
     group: "groupC"
   });
   singleStroke.showPath();
+  singleStroke.showDebugStroke();
 
 
   setTagsHTML({
