@@ -69,6 +69,45 @@ class strokePath2 {
         }
 
 
+        this.cAB = {
+            x: this.ATheo.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
+            y: this.ATheo.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+        }
+
+        this.cBA = {
+            x: this.BTheo.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
+            y: this.BTheo.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+        }
+
+        this.cCD = {
+            x: this.DTheo.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
+            y: this.DTheo.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+        }
+
+        this.cDC = {
+            x: this.CTheo.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
+            y: this.CTheo.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+        }
+
+        this.cBC = {
+            x: this.BTheo.x + (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
+            y: this.BTheo.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+        }
+
+        this.cCB = {
+            x: this.CTheo.x - (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
+            y: this.CTheo.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+        }
+
+        this.cDA = {
+            x: this.ATheo.x + (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
+            y: this.ATheo.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+        }
+        this.cAD = {
+            x: this.DTheo.x - (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
+            y: this.DTheo.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+        }
+
         var shiftX = gaussianRandAdj(0, this.posStdShiftX);
         // start and end distortion
         // this.start.x = this.start.x + gaussianRandAdj(0, this.posStd) + shiftX;
@@ -81,65 +120,54 @@ class strokePath2 {
 
     drawPath(start, cA, cB, end) {
 
-        // var start = {
-        //     x: 100,
-        //     y: 133
-        // };
-        // var end = {
-        //     x: 400,
-        //     y: 133
-        // }
-
-        var weight = 2;
-
         this.A = {
             x: this.ATheo.x,
             y: this.ATheo.y
         }
-        this.cAB = {
-            x: 200,
-            y: 120,
-        }
-        this.cBA = {
-            x: 300,
-            y: 125,
-        }
+        // this.cAB = {
+        //     x: 200,
+        //     y: 120,
+        // }
+        // this.cBA = {
+        //     x: 300,
+        //     y: 125,
+        // }
         this.B = {
             x: this.BTheo.x,
             y: this.BTheo.y
         }
-        this.cBC = {
-            x: 420,
-            y: 131
-        }
-        this.cCB = {
-            x: 410,
-            y: 133
-        }
+        // this.cBC = {
+        //     x: 420,
+        //     y: 131
+        // }
+        // this.cCB = {
+        //     x: 410,
+        //     y: 133
+        // }
         this.C = {
             x: this.CTheo.x,
             y: this.CTheo.y
         }
-        this.cCD = {
-            x: 300,
-            y: 135
-        }
-        this.cDC = {
-            x: 200,
-            y: 135
-        }
+        // this.cCD = {
+        //     x: 300,
+        //     y: 135
+        // }
+        // this.cDC = {
+        //     x: 200,
+        //     y: 135
+        // }
         this.D = {
             x: this.DTheo.x,
             y: this.DTheo.y
         }
-        this.cDA = {
-            x: 80,
-            y: 135
-        }
-        this.cAD = {
-            x: 90,
-            y: 130
-        }
+        // this.cDA = {
+        //     x: 80,
+        //     y: 135
+        // }
+        // this.cAD = {
+        //     x: 90,
+        //     y: 130
+        // }
 
         this.path = document.createElementNS('http://www.w3.org/2000/svg', "path");
         this.path.setAttributeNS(null, "id", "pathIdD");
@@ -225,6 +253,8 @@ class strokePath2 {
                 this.B,
                 this.C,
                 this.D,
+            ],
+            "green": [
             ],
             "blue": [
                 this.cAB,

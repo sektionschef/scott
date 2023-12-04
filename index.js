@@ -240,7 +240,7 @@ function main() {
       y: 133
     },
     vectorMagnitude: 300,
-    angleRadians: Math.PI, // 0.2,
+    angleRadians: Math.PI / 8, // 0.2,
     strokeColor: "black",
     strokeWidth: 20,
     allShapes: {
