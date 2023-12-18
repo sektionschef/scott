@@ -610,7 +610,8 @@ class Grid {
                             var angleRadiansLooped = angleRadians;
                         }
 
-                        var singleStroke = new strokePath({
+                        // var singleStroke = new strokePath({
+                        var singleStroke = new strokeSystem({
                             "center": {
                                 x: positionX,
                                 y: positionMiddleLineY

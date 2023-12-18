@@ -185,48 +185,48 @@ function main() {
   // createBrightness();
 
   createBackground();
-  // createGroupA();
-  // createGroupB();
+  createGroupA();
+  createGroupB();
   createGroupC();
 
 
   // GRID 2
-  // let grid2 = new Grid({
-  //   stepCount: 100,
-  //   // strokeColor: "#222222ff",
-  //   strokeColor: "#8f8f8fff",
-  //   strokeWidth: 1,
-  //   angleRadiansStart: Math.PI / 2,
-  //   // angleRadiansGain: Math.PI / 5,
-  //   angleRadiansGain: 0,
-  //   shortBoxCount: RESOLUTIONBOXCOUNT,
-  //   longSide: LONGSIDE,
-  //   shortSide: SHORTSIDE,
-  //   landscape: LANDSCAPE,
-  //   group: "groupA",
-  // });
+  let grid2 = new Grid({
+    stepCount: 100,
+    // strokeColor: "#222222ff",
+    strokeColor: "#8f8f8fff",
+    strokeWidth: 1,
+    angleRadiansStart: Math.PI / 2,
+    // angleRadiansGain: Math.PI / 5,
+    angleRadiansGain: 0,
+    shortBoxCount: RESOLUTIONBOXCOUNT,
+    longSide: LONGSIDE,
+    shortSide: SHORTSIDE,
+    landscape: LANDSCAPE,
+    group: "groupA",
+  });
 
   // // GRID
-  // let grid = new Grid({
-  //   stepCount: 400,
-  //   // strokeColor: "#222222ff",
-  //   strokeColor: "#4e4e4eff",
-  //   strokeWidth: 1,
-  //   angleRadiansStart: Math.PI / 2,
-  //   angleRadiansGain: Math.PI / 5,
-  //   // angleRadiansGain: 0,
-  //   shortBoxCount: RESOLUTIONBOXCOUNT,
-  //   longSide: LONGSIDE,
-  //   shortSide: SHORTSIDE,
-  //   landscape: LANDSCAPE,
-  //   group: "groupB",
-  // });
+  let grid = new Grid({
+    stepCount: 400,
+    // strokeColor: "#222222ff",
+    strokeColor: "#4e4e4eff",
+    strokeWidth: 1,
+    angleRadiansStart: Math.PI / 2,
+    angleRadiansGain: Math.PI / 5,
+    // angleRadiansGain: 0,
+    shortBoxCount: RESOLUTIONBOXCOUNT,
+    longSide: LONGSIDE,
+    shortSide: SHORTSIDE,
+    landscape: LANDSCAPE,
+    group: "groupB",
+  });
 
   // showOtherNoise();
 
   // SHOW THE GRIDS
-  // showGroupA();
-  // showGroupB();
+  showGroupA();
+  showGroupB();
   showGroupC();
 
   // showBlur();
@@ -234,28 +234,28 @@ function main() {
 
 
   // TEST CASE
-  var singleStroke = new strokePath2({
-    "center": {
-      x: 250,
-      y: 133
-    },
-    vectorMagnitude: 300,
-    angleRadians: Math.PI / 8, // 0.2,
-    strokeColor: "black",
-    strokeWidth: 20,
-    allShapes: {
-      shapeMain: {
-        shapeLoop: 1,
-        colorAction: this.strokeColor,
-        fillColor: "#afafaf",
-        pointList: [],
-      },
-    },
-    loop: 0,
-    group: "groupC"
-  });
-  singleStroke.showPath();
-  singleStroke.showDebugStroke();
+  // var singleStroke = new strokePath2({
+  //   "center": {
+  //     x: 250,
+  //     y: 133
+  //   },
+  //   vectorMagnitude: 400,
+  //   angleRadians: Math.PI / 8, // 0.2,
+  //   strokeColor: "black",
+  //   strokeWidth: 10,
+  //   allShapes: {
+  //     shapeMain: {
+  //       shapeLoop: 1,
+  //       colorAction: this.strokeColor,
+  //       fillColor: "#afafaf",
+  //       pointList: [],
+  //     },
+  //   },
+  //   loop: 0,
+  //   group: "groupC"
+  // });
+  // singleStroke.showPath();
+  // singleStroke.showDebugStroke();
 
 
   setTagsHTML({
