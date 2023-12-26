@@ -338,28 +338,33 @@ class Grid {
 
     createShapes() {
 
+        var shapeA = {
+            "id": "Shape A",
+
+        }
+
         this.allShapes = {
-            shapeMain: {
+            front: {
                 shapeLoop: 1,
                 // colorAction: "#5c5c5c",
                 // colorAction: "red",
                 colorAction: this.strokeColor,
                 fillColor: "#afafaf",
             },
-            shapeShadA: {  // shadow beneath
+            down: {  // shadow beneath
                 shapeLoop: 2,
                 // colorAction: "green",
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#999999",
             },
-            shapeShadB: {  // shadow beneath
+            right: {  // shadow beneath
                 shapeLoop: 2,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#a3a3a3",
             },
-            shapeShadow: {  // shadow
+            shadow: {  // shadow
                 shapeLoop: 1,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
@@ -369,7 +374,7 @@ class Grid {
 
         var mainBoxPos = {  // where to start to draw in box count
             x: 34,
-            y: 25
+            y: 13
         }
         var MainHeightLine = 2; // height of main shape in lineheights
         var MainWidth = 70;  // width of the shape in boxes
@@ -379,147 +384,146 @@ class Grid {
         var superShadowHeightMax = 25; // heigt in boxes on y axis
 
         var shapeMainHeight = this.stripeHeight * MainHeightLine - 1;  // height of main shape in boxes
-        var shadAheight = this.stripeHeight * shadHeightLine - 1;
+        var shadAheight = this.stripeHeight * shadHeightLine - 1;  //
         var shadAshift = this.stripeHeight * shadHeightLine - 1;
-
-        var MainCX = mainBoxPos.x + MainWidth;
-        var MainCY = mainBoxPos.y + shapeMainHeight;
-        var ShadAAY = mainBoxPos.y + shapeMainHeight + 1;
+        var mainWidthCX = mainBoxPos.x + MainWidth;
+        var mainWidthCY = mainBoxPos.y + shapeMainHeight;
+        var ShadAAY = mainWidthCY + 1;
 
         for (var i = 0; i < this.boxes.length; i++) {
             if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainBoxPos.y) {
-                this.allShapes.shapeMain.A = this.boxes[i].A;
+                this.allShapes.front.A = this.boxes[i].A;
             }
 
-            if (this.boxes[i].width == MainCX && this.boxes[i].height == mainBoxPos.y) {
-                this.allShapes.shapeMain.B = this.boxes[i].B;
+            if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainBoxPos.y) {
+                this.allShapes.front.B = this.boxes[i].B;
             }
 
-            if (this.boxes[i].width == MainCX && this.boxes[i].height == MainCY) {
-                this.allShapes.shapeMain.C = this.boxes[i].C;
+            if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainWidthCY) {
+                this.allShapes.front.C = this.boxes[i].C;
             }
 
-            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == MainCY) {
-                this.allShapes.shapeMain.D = this.boxes[i].D;
+            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainWidthCY) {
+                this.allShapes.front.D = this.boxes[i].D;
             }
         }
 
         for (var i = 0; i < this.boxes.length; i++) {
             if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == ShadAAY) {
-                this.allShapes.shapeShadA.A = this.boxes[i].A;
+                this.allShapes.down.A = this.boxes[i].A;
             }
 
-            if (this.boxes[i].width == MainCX && this.boxes[i].height == ShadAAY) {
-                this.allShapes.shapeShadA.B = this.boxes[i].B;
+            if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == ShadAAY) {
+                this.allShapes.down.B = this.boxes[i].B;
             }
 
-            if (this.boxes[i].width == (MainCX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.shapeShadA.C = this.boxes[i].C;
+            if (this.boxes[i].width == (mainWidthCX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                this.allShapes.down.C = this.boxes[i].C;
             }
 
             if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.shapeShadA.D = this.boxes[i].D;
+                this.allShapes.down.D = this.boxes[i].D;
             }
         }
 
         for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == (MainCX + 1) && this.boxes[i].height == mainBoxPos.y) {
-                this.allShapes.shapeShadB.A = this.boxes[i].A;
+            if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainBoxPos.y) {
+                this.allShapes.right.A = this.boxes[i].A;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == mainBoxPos.y + shadAheight) {
-                this.allShapes.shapeShadB.B = this.boxes[i].D;
+            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == mainBoxPos.y + shadAheight) {
+                this.allShapes.right.B = this.boxes[i].D;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.shapeShadB.C = this.boxes[i].D;
+            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                this.allShapes.right.C = this.boxes[i].D;
             }
 
-            if (this.boxes[i].width == (MainCX + 1) && this.boxes[i].height == MainCY) {
-                this.allShapes.shapeShadB.D = this.boxes[i].D;
+            if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainWidthCY) {
+                this.allShapes.right.D = this.boxes[i].D;
             }
         }
 
         for (var i = 0; i < this.boxes.length; i++) {
             if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight + 1)) {
-                this.allShapes.shapeShadow.A = this.boxes[i].A;
+                this.allShapes.shadow.A = this.boxes[i].A;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.shapeShadow.B = this.boxes[i].D;
+            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                this.allShapes.shadow.B = this.boxes[i].D;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (mainBoxPos.y + shadAheight)) {
-                this.allShapes.shapeShadow.C = this.boxes[i].D;
+            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (mainBoxPos.y + shadAheight)) {
+                this.allShapes.shadow.C = this.boxes[i].D;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == MainCY + superShadowShiftY) {
-                this.allShapes.shapeShadow.D = this.boxes[i].B;
+            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY) {
+                this.allShapes.shadow.D = this.boxes[i].B;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == MainCY + superShadowShiftY + superShadowHeightMax) {
-                this.allShapes.shapeShadow.E = this.boxes[i].C;
+            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY + superShadowHeightMax) {
+                this.allShapes.shadow.E = this.boxes[i].C;
             }
         }
 
-        this.allShapes.shapeMain.pointString = `
-        ${this.allShapes.shapeMain.A.x}, ${this.allShapes.shapeMain.A.y}
-        ${this.allShapes.shapeMain.B.x}, ${this.allShapes.shapeMain.B.y}
-        ${this.allShapes.shapeMain.C.x}, ${this.allShapes.shapeMain.C.y}
-        ${this.allShapes.shapeMain.D.x}, ${this.allShapes.shapeMain.D.y}
+        this.allShapes.front.pointString = `
+        ${this.allShapes.front.A.x}, ${this.allShapes.front.A.y}
+        ${this.allShapes.front.B.x}, ${this.allShapes.front.B.y}
+        ${this.allShapes.front.C.x}, ${this.allShapes.front.C.y}
+        ${this.allShapes.front.D.x}, ${this.allShapes.front.D.y}
         `;
-        this.allShapes.shapeShadA.pointString = `
-        ${this.allShapes.shapeShadA.A.x}, ${this.allShapes.shapeShadA.A.y}
-        ${this.allShapes.shapeShadA.B.x}, ${this.allShapes.shapeShadA.B.y}
-        ${this.allShapes.shapeShadA.C.x}, ${this.allShapes.shapeShadA.C.y}
-        ${this.allShapes.shapeShadA.D.x}, ${this.allShapes.shapeShadA.D.y}
+        this.allShapes.down.pointString = `
+        ${this.allShapes.down.A.x}, ${this.allShapes.down.A.y}
+        ${this.allShapes.down.B.x}, ${this.allShapes.down.B.y}
+        ${this.allShapes.down.C.x}, ${this.allShapes.down.C.y}
+        ${this.allShapes.down.D.x}, ${this.allShapes.down.D.y}
         `;
-        this.allShapes.shapeShadB.pointString = `
-        ${this.allShapes.shapeShadB.A.x}, ${this.allShapes.shapeShadB.A.y}
-        ${this.allShapes.shapeShadB.B.x}, ${this.allShapes.shapeShadB.B.y}
-        ${this.allShapes.shapeShadB.C.x}, ${this.allShapes.shapeShadB.C.y}
-        ${this.allShapes.shapeShadB.D.x}, ${this.allShapes.shapeShadB.D.y}
+        this.allShapes.right.pointString = `
+        ${this.allShapes.right.A.x}, ${this.allShapes.right.A.y}
+        ${this.allShapes.right.B.x}, ${this.allShapes.right.B.y}
+        ${this.allShapes.right.C.x}, ${this.allShapes.right.C.y}
+        ${this.allShapes.right.D.x}, ${this.allShapes.right.D.y}
         `;
-        this.allShapes.shapeShadow.pointString = `
-        ${this.allShapes.shapeShadow.A.x}, ${this.allShapes.shapeShadow.A.y}
-        ${this.allShapes.shapeShadow.B.x}, ${this.allShapes.shapeShadow.B.y}
-        ${this.allShapes.shapeShadow.C.x}, ${this.allShapes.shapeShadow.C.y}
-        ${this.allShapes.shapeShadow.D.x}, ${this.allShapes.shapeShadow.D.y}
-        ${this.allShapes.shapeShadow.E.x}, ${this.allShapes.shapeShadow.E.y}
+        this.allShapes.shadow.pointString = `
+        ${this.allShapes.shadow.A.x}, ${this.allShapes.shadow.A.y}
+        ${this.allShapes.shadow.B.x}, ${this.allShapes.shadow.B.y}
+        ${this.allShapes.shadow.C.x}, ${this.allShapes.shadow.C.y}
+        ${this.allShapes.shadow.D.x}, ${this.allShapes.shadow.D.y}
+        ${this.allShapes.shadow.E.x}, ${this.allShapes.shadow.E.y}
         `;
 
 
-        this.allShapes.shapeMain.pointList = [
-            [this.allShapes.shapeMain.A.x, this.allShapes.shapeMain.A.y],
-            [this.allShapes.shapeMain.B.x, this.allShapes.shapeMain.B.y],
-            [this.allShapes.shapeMain.C.x, this.allShapes.shapeMain.C.y],
-            [this.allShapes.shapeMain.D.x, this.allShapes.shapeMain.D.y]
+        this.allShapes.front.pointList = [
+            [this.allShapes.front.A.x, this.allShapes.front.A.y],
+            [this.allShapes.front.B.x, this.allShapes.front.B.y],
+            [this.allShapes.front.C.x, this.allShapes.front.C.y],
+            [this.allShapes.front.D.x, this.allShapes.front.D.y]
         ];
-        this.allShapes.shapeShadA.pointList = [
-            [this.allShapes.shapeShadA.A.x, this.allShapes.shapeShadA.A.y],
-            [this.allShapes.shapeShadA.B.x, this.allShapes.shapeShadA.B.y],
-            [this.allShapes.shapeShadA.C.x, this.allShapes.shapeShadA.C.y],
-            [this.allShapes.shapeShadA.D.x, this.allShapes.shapeShadA.D.y]
+        this.allShapes.down.pointList = [
+            [this.allShapes.down.A.x, this.allShapes.down.A.y],
+            [this.allShapes.down.B.x, this.allShapes.down.B.y],
+            [this.allShapes.down.C.x, this.allShapes.down.C.y],
+            [this.allShapes.down.D.x, this.allShapes.down.D.y]
         ];
-        this.allShapes.shapeShadB.pointList = [
-            [this.allShapes.shapeShadB.A.x, this.allShapes.shapeShadB.A.y],
-            [this.allShapes.shapeShadB.B.x, this.allShapes.shapeShadB.B.y],
-            [this.allShapes.shapeShadB.C.x, this.allShapes.shapeShadB.C.y],
-            [this.allShapes.shapeShadB.D.x, this.allShapes.shapeShadB.D.y]
+        this.allShapes.right.pointList = [
+            [this.allShapes.right.A.x, this.allShapes.right.A.y],
+            [this.allShapes.right.B.x, this.allShapes.right.B.y],
+            [this.allShapes.right.C.x, this.allShapes.right.C.y],
+            [this.allShapes.right.D.x, this.allShapes.right.D.y]
         ];
-        this.allShapes.shapeShadow.pointList = [
-            [this.allShapes.shapeShadow.A.x, this.allShapes.shapeShadow.A.y],
-            [this.allShapes.shapeShadow.B.x, this.allShapes.shapeShadow.B.y],
-            [this.allShapes.shapeShadow.C.x, this.allShapes.shapeShadow.C.y],
-            [this.allShapes.shapeShadow.D.x, this.allShapes.shapeShadow.D.y],
-            [this.allShapes.shapeShadow.E.x, this.allShapes.shapeShadow.E.y]
+        this.allShapes.shadow.pointList = [
+            [this.allShapes.shadow.A.x, this.allShapes.shadow.A.y],
+            [this.allShapes.shadow.B.x, this.allShapes.shadow.B.y],
+            [this.allShapes.shadow.C.x, this.allShapes.shadow.C.y],
+            [this.allShapes.shadow.D.x, this.allShapes.shadow.D.y],
+            [this.allShapes.shadow.E.x, this.allShapes.shadow.E.y]
         ];
 
         // this.shapes = [
-        //     this.shapeMain.pointList,
-        //     this.shapeShadA.pointList,
-        //     this.shapeShadB.pointList,
-        //     this.shapeShadow.pointList,
+        //     this.front.pointList,
+        //     this.down.pointList,
+        //     this.right.pointList,
+        //     this.shadow.pointList,
         // ]
     }
 
@@ -529,7 +533,7 @@ class Grid {
         const svgNode = document.getElementById('svgNode');
 
         var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shapsn.setAttributeNS(null, 'points', this.allShapes.shapeMain.pointList);
+        shapsn.setAttributeNS(null, 'points', this.allShapes.front.pointList);
         shapsn.setAttributeNS(null, 'fill', "none");
         shapsn.setAttributeNS(null, "stroke-width", 1);
         shapsn.setAttributeNS(null, 'stroke', colory);
@@ -540,7 +544,7 @@ class Grid {
         svgNode.appendChild(shapsn);
 
         var shadnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shadnA.setAttributeNS(null, 'points', this.allShapes.shapeShadA.pointList);
+        shadnA.setAttributeNS(null, 'points', this.allShapes.down.pointList);
         shadnA.setAttributeNS(null, 'fill', "none");
         shadnA.setAttributeNS(null, 'stroke', colory);
         shadnA.setAttributeNS(null, "stroke-width", 1);
@@ -548,7 +552,7 @@ class Grid {
         svgNode.appendChild(shadnA);
 
         var shadnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shadnB.setAttributeNS(null, 'points', this.allShapes.shapeShadB.pointList);
+        shadnB.setAttributeNS(null, 'points', this.allShapes.right.pointList);
         shadnB.setAttributeNS(null, 'fill', "none");
         shadnB.setAttributeNS(null, 'stroke', colory);
         shadnB.setAttributeNS(null, "stroke-width", 1);
@@ -556,7 +560,7 @@ class Grid {
         svgNode.appendChild(shadnB);
 
         var superShadow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        superShadow.setAttributeNS(null, 'points', this.allShapes.shapeShadow.pointList);
+        superShadow.setAttributeNS(null, 'points', this.allShapes.shadow.pointList);
         superShadow.setAttributeNS(null, 'fill', "none");
         superShadow.setAttributeNS(null, 'stroke', colory);
         superShadow.setAttributeNS(null, "stroke-width", 1);
