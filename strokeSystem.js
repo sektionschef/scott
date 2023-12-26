@@ -57,7 +57,8 @@ class strokeSystem {
         for (const shape of this.allShapes) {
             for (const [key, value] of Object.entries(shape)) {
 
-                if (["front", "down", "right", "shadow"].includes(key)) {
+                if (["front", "down", "right",].includes(key)) {
+                    // if (["front", "down", "right", "shadow"].includes(key)) {
                     if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
 
                     } else {
