@@ -340,6 +340,56 @@ class Grid {
 
         var shapeA = {
             id: "Shape A",
+            mainBoxPos: {  // where to start to draw in box count
+                x: 34,
+                y: 9
+            },
+            MainHeightLine: 2, // height of main shape in lineheights
+            MainWidth: 70,  // width of the shape in boxes
+            shadHeightLine: 2,  // height of main shape in lineheights
+            superShadowShiftX: 10,  //  shift in boxes on x axis
+            superShadowShiftY: 5,  // shift in boxes on y axis
+            superShadowHeightMax: 25, // heigt in boxes on y axis
+            front: {
+                shapeLoop: 1,
+                // colorAction: "#5c5c5c",
+                // colorAction: "red",
+                colorAction: this.strokeColor,
+                fillColor: "#afafaf",
+            },
+            down: {  // shadow beneath
+                shapeLoop: 2,
+                // colorAction: "green",
+                // colorAction: "#5c5c5c",
+                colorAction: this.strokeColor,
+                fillColor: "#999999",
+            },
+            right: {  // shadow beneath
+                shapeLoop: 2,
+                // colorAction: "#5c5c5c",
+                colorAction: this.strokeColor,
+                fillColor: "#a3a3a3",
+            },
+            shadow: {  // shadow
+                shapeLoop: 1,
+                // colorAction: "#5c5c5c",
+                colorAction: this.strokeColor,
+                fillColor: "#aaaaaa",
+            }
+        }
+
+        var shapeB = {
+            id: "Shape A",
+            mainBoxPos: {  // where to start to draw in box count
+                x: 34,
+                y: 33
+            },
+            MainHeightLine: 2, // height of main shape in lineheights
+            MainWidth: 70,  // width of the shape in boxes
+            shadHeightLine: 2,  // height of main shape in lineheights
+            superShadowShiftX: 10,  //  shift in boxes on x axis
+            superShadowShiftY: 5,  // shift in boxes on y axis
+            superShadowHeightMax: 25, // heigt in boxes on y axis
             front: {
                 shapeLoop: 1,
                 // colorAction: "#5c5c5c",
@@ -370,103 +420,98 @@ class Grid {
 
         this.allShapes = [
             shapeA,
+            shapeB,
         ]
 
-        var mainBoxPos = {  // where to start to draw in box count
-            x: 34,
-            y: 13
-        }
-        var MainHeightLine = 2; // height of main shape in lineheights
-        var MainWidth = 70;  // width of the shape in boxes
-        var shadHeightLine = 2;  // height of main shape in lineheights
-        var superShadowShiftX = 10;  //  shift in boxes on x axis
-        var superShadowShiftY = 5;  // shift in boxes on y axis
-        var superShadowHeightMax = 25; // heigt in boxes on y axis
-
-        var shapeMainHeight = this.stripeHeight * MainHeightLine - 1;  // height of main shape in boxes
-        var shadAheight = this.stripeHeight * shadHeightLine - 1;  //
-        var shadAshift = this.stripeHeight * shadHeightLine - 1;
-        var mainWidthCX = mainBoxPos.x + MainWidth;
-        var mainWidthCY = mainBoxPos.y + shapeMainHeight;
-        var ShadAAY = mainWidthCY + 1;
-
         for (const shape of this.allShapes) {
-            for (var i = 0; i < this.boxes.length; i++) {
-                if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainBoxPos.y) {
-                    shape.front.A = this.boxes[i].A;
-                }
+            shape.shapeMainHeight = this.stripeHeight * shape.MainHeightLine - 1;  // height of main shape in boxes
+            shape.shadAheight = this.stripeHeight * shape.shadHeightLine - 1;  //
+            shape.shadAshift = this.stripeHeight * shape.shadHeightLine - 1;
+            shape.mainWidthCX = shape.mainBoxPos.x + shape.MainWidth;
+            shape.mainWidthCY = shape.mainBoxPos.y + shape.shapeMainHeight;
+            shape.ShadAAY = shape.mainWidthCY + 1;
+        }
 
-                if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainBoxPos.y) {
-                    shape.front.B = this.boxes[i].B;
-                }
+        for (var i = 0; i < this.boxes.length; i++) {
+            for (const shape of this.allShapes) {
 
-                if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainWidthCY) {
-                    shape.front.C = this.boxes[i].C;
-                }
-
-                if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainWidthCY) {
-                    shape.front.D = this.boxes[i].D;
-                }
-            }
-
-            for (var i = 0; i < this.boxes.length; i++) {
-                if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == ShadAAY) {
-                    shape.down.A = this.boxes[i].A;
-                }
-
-                if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == ShadAAY) {
-                    shape.down.B = this.boxes[i].B;
-                }
-
-                if (this.boxes[i].width == (mainWidthCX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                    shape.down.C = this.boxes[i].C;
-                }
-
-                if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                    shape.down.D = this.boxes[i].D;
-                }
-            }
-
-            for (var i = 0; i < this.boxes.length; i++) {
-                if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainBoxPos.y) {
-                    shape.right.A = this.boxes[i].A;
-                }
-
-                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == mainBoxPos.y + shadAheight) {
-                    shape.right.B = this.boxes[i].D;
-                }
-
-                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                    shape.right.C = this.boxes[i].D;
-                }
-
-                if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainWidthCY) {
-                    shape.right.D = this.boxes[i].D;
-                }
-            }
-
-            for (var i = 0; i < this.boxes.length; i++) {
-                if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight + 1)) {
+                // shadow
+                if (this.boxes[i].width == (shape.mainBoxPos.x + shape.shadAshift) && this.boxes[i].height == (shape.ShadAAY + shape.shadAheight + 1)) {
                     shape.shadow.A = this.boxes[i].A;
                 }
 
-                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                if (this.boxes[i].width == (shape.mainWidthCX + 1 + shape.shadAshift) && this.boxes[i].height == (shape.ShadAAY + shape.shadAheight)) {
                     shape.shadow.B = this.boxes[i].D;
                 }
 
-                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (mainBoxPos.y + shadAheight)) {
+                if (this.boxes[i].width == (shape.mainWidthCX + 1 + shape.shadAshift) && this.boxes[i].height == (shape.mainBoxPos.y + shape.shadAheight)) {
                     shape.shadow.C = this.boxes[i].D;
                 }
 
-                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY) {
+                if (this.boxes[i].width == (shape.mainWidthCX + 1 + shape.shadAshift + shape.superShadowShiftX) && this.boxes[i].height == shape.mainWidthCY + shape.superShadowShiftY) {
                     shape.shadow.D = this.boxes[i].B;
                 }
 
-                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY + superShadowHeightMax) {
+                if (this.boxes[i].width == (shape.mainWidthCX + 1 + shape.shadAshift + shape.superShadowShiftX) && this.boxes[i].height == shape.mainWidthCY + shape.superShadowShiftY + shape.superShadowHeightMax) {
                     shape.shadow.E = this.boxes[i].C;
                 }
-            }
 
+
+                // down
+                if (this.boxes[i].width == shape.mainBoxPos.x && this.boxes[i].height == shape.ShadAAY) {
+                    shape.down.A = this.boxes[i].A;
+                }
+
+                if (this.boxes[i].width == shape.mainWidthCX && this.boxes[i].height == shape.ShadAAY) {
+                    shape.down.B = this.boxes[i].B;
+                }
+
+                if (this.boxes[i].width == (shape.mainWidthCX + shape.shadAshift) && this.boxes[i].height == (shape.ShadAAY + shape.shadAheight)) {
+                    shape.down.C = this.boxes[i].C;
+                }
+
+                if (this.boxes[i].width == (shape.mainBoxPos.x + shape.shadAshift) && this.boxes[i].height == (shape.ShadAAY + shape.shadAheight)) {
+                    shape.down.D = this.boxes[i].D;
+                }
+
+
+                // right
+                if (this.boxes[i].width == (shape.mainWidthCX + 1) && this.boxes[i].height == shape.mainBoxPos.y) {
+                    shape.right.A = this.boxes[i].A;
+                }
+
+                if (this.boxes[i].width == (shape.mainWidthCX + 1 + shape.shadAshift) && this.boxes[i].height == shape.mainBoxPos.y + shape.shadAheight) {
+                    shape.right.B = this.boxes[i].D;
+                }
+
+                if (this.boxes[i].width == (shape.mainWidthCX + 1 + shape.shadAshift) && this.boxes[i].height == (shape.ShadAAY + shape.shadAheight)) {
+                    shape.right.C = this.boxes[i].D;
+                }
+
+                if (this.boxes[i].width == (shape.mainWidthCX + 1) && this.boxes[i].height == shape.mainWidthCY) {
+                    shape.right.D = this.boxes[i].D;
+                }
+
+                // front
+                if (this.boxes[i].width == shape.mainBoxPos.x && this.boxes[i].height == shape.mainBoxPos.y) {
+                    shape.front.A = this.boxes[i].A;
+                }
+
+                if (this.boxes[i].width == shape.mainWidthCX && this.boxes[i].height == shape.mainBoxPos.y) {
+                    shape.front.B = this.boxes[i].B;
+                }
+
+                if (this.boxes[i].width == shape.mainWidthCX && this.boxes[i].height == shape.mainWidthCY) {
+                    shape.front.C = this.boxes[i].C;
+                }
+
+                if (this.boxes[i].width == shape.mainBoxPos.x && this.boxes[i].height == shape.mainWidthCY) {
+                    shape.front.D = this.boxes[i].D;
+                }
+            }
+        }
+
+        for (const shape of this.allShapes) {
 
             shape.front.pointString = `
         ${shape.front.A.x}, ${shape.front.A.y}
