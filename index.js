@@ -191,24 +191,30 @@ function main() {
 
 
   // GRID 2
-  let grid2 = new Grid({
-    stepCount: 100,
-    // strokeColor: "#222222ff",
-    strokeColor: "#8f8f8fff",
-    strokeWidth: 1,
-    angleRadiansStart: Math.PI / 2,
-    // angleRadiansGain: Math.PI / 5,
-    angleRadiansGain: 0,
-    shortBoxCount: RESOLUTIONBOXCOUNT,
-    longSide: LONGSIDE,
-    shortSide: SHORTSIDE,
-    landscape: LANDSCAPE,
-    group: "groupA",
-  });
+  // let grid2 = new Grid({
+  //   stepCount: 100,
+  // stripeHeight: 4,
+  // vectorMagnitude: 50,
+  // marginRelative: 0.09,
+  //   // strokeColor: "#222222ff",
+  //   strokeColor: "#8f8f8fff",
+  //   strokeWidth: 1,
+  //   angleRadiansStart: Math.PI / 2,
+  //   // angleRadiansGain: Math.PI / 5,
+  //   angleRadiansGain: 0,
+  //   shortBoxCount: RESOLUTIONBOXCOUNT,
+  //   longSide: LONGSIDE,
+  //   shortSide: SHORTSIDE,
+  //   landscape: LANDSCAPE,
+  //   group: "groupA",
+  // });
 
   // // GRID
   let grid = new Grid({
-    stepCount: 400,
+    stepCount: 200,  // 400
+    stripeHeight: 4,  // 2
+    vectorMagnitude: 50,  // 50
+    marginRelative: 0.09,
     // strokeColor: "#222222ff",
     strokeColor: "#4e4e4eff",
     strokeWidth: 1,

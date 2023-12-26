@@ -1,8 +1,8 @@
 class Grid {
     constructor(data) {
-        this.stripeHeight = 2;
-        this.marginRelative = 0.09;
-        this.vectorMagnitude = 25;
+        this.stripeHeight = data.stripeHeight;
+        this.vectorMagnitude = data.vectorMagnitude;
+        this.marginRelative = data.marginRelative;
 
         this.stepCount = data.stepCount; // 350 // how many strokePaths per stripe
         this.angleRadiansStart = data.angleRadiansStart;  // starting angle
@@ -47,7 +47,7 @@ class Grid {
         this.loopCategorize();
         this.createShapes();
         // this.loopdebugCategory();
-        // this.debugShowShape();
+        this.debugShowShape();
         // this.showDebugBoxes();
 
         // this.fillShape();
