@@ -48,7 +48,7 @@ class Grid {
         this.createShapes();
         // this.loopdebugCategory();
         this.debugShowShape();
-        // this.showDebugBoxes();
+        this.showDebugBoxes();
 
         // this.fillShape();
 
@@ -367,26 +367,31 @@ class Grid {
             }
         }
 
-        var MainAX = 35;
-        var shapeMainHeight = 7;
-        var shadAheight = 5;
-        var shadAshift = 7;
-        var superShadowShift = 25;  // maybe last box
-        var superShadowHeight = 16;
-        var superShadowHeightMax = 20;
+        var mainBoxPos = {  // where to start to draw in box count
+            x: 34,
+            y: 25
+        }
+        var MainHeightLine = 2; // height of main shape in lineheights
+        var MainWidth = 70;  // width of the shape in boxes
+        var shadHeightLine = 2;  // height of main shape in lineheights
+        var superShadowShiftX = 10;  //  shift in boxes on x axis
+        var superShadowShiftY = 5;  // shift in boxes on y axis
+        var superShadowHeightMax = 25; // heigt in boxes on y axis
 
-        var MainAY = 7 * this.stripeHeight + 1;
-        var MainCX = this.longBoxCount - MainAX;
-        var MainCY = MainAY + shapeMainHeight;
+        var shapeMainHeight = this.stripeHeight * MainHeightLine - 1;  // height of main shape in boxes
+        var shadAheight = this.stripeHeight * shadHeightLine - 1;
+        var shadAshift = this.stripeHeight * shadHeightLine - 1;
 
-        var ShadAAY = MainAY + shapeMainHeight + 1;
+        var MainCX = mainBoxPos.x + MainWidth;
+        var MainCY = mainBoxPos.y + shapeMainHeight;
+        var ShadAAY = mainBoxPos.y + shapeMainHeight + 1;
 
         for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == MainAX && this.boxes[i].height == MainAY) {
+            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainBoxPos.y) {
                 this.allShapes.shapeMain.A = this.boxes[i].A;
             }
 
-            if (this.boxes[i].width == MainCX && this.boxes[i].height == MainAY) {
+            if (this.boxes[i].width == MainCX && this.boxes[i].height == mainBoxPos.y) {
                 this.allShapes.shapeMain.B = this.boxes[i].B;
             }
 
@@ -394,13 +399,13 @@ class Grid {
                 this.allShapes.shapeMain.C = this.boxes[i].C;
             }
 
-            if (this.boxes[i].width == MainAX && this.boxes[i].height == MainCY) {
+            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == MainCY) {
                 this.allShapes.shapeMain.D = this.boxes[i].D;
             }
         }
 
         for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == MainAX && this.boxes[i].height == ShadAAY) {
+            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == ShadAAY) {
                 this.allShapes.shapeShadA.A = this.boxes[i].A;
             }
 
@@ -412,17 +417,17 @@ class Grid {
                 this.allShapes.shapeShadA.C = this.boxes[i].C;
             }
 
-            if (this.boxes[i].width == (MainAX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+            if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
                 this.allShapes.shapeShadA.D = this.boxes[i].D;
             }
         }
 
         for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == (MainCX + 1) && this.boxes[i].height == MainAY) {
+            if (this.boxes[i].width == (MainCX + 1) && this.boxes[i].height == mainBoxPos.y) {
                 this.allShapes.shapeShadB.A = this.boxes[i].A;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == MainAY + shadAheight) {
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == mainBoxPos.y + shadAheight) {
                 this.allShapes.shapeShadB.B = this.boxes[i].D;
             }
 
@@ -436,7 +441,7 @@ class Grid {
         }
 
         for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == (MainAX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight + 1)) {
+            if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight + 1)) {
                 this.allShapes.shapeShadow.A = this.boxes[i].A;
             }
 
@@ -444,15 +449,15 @@ class Grid {
                 this.allShapes.shapeShadow.B = this.boxes[i].D;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (MainAY + shadAheight)) {
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift) && this.boxes[i].height == (mainBoxPos.y + shadAheight)) {
                 this.allShapes.shapeShadow.C = this.boxes[i].D;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShift) && this.boxes[i].height == MainCY + superShadowHeight) {
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == MainCY + superShadowShiftY) {
                 this.allShapes.shapeShadow.D = this.boxes[i].B;
             }
 
-            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShift) && this.boxes[i].height == MainCY + superShadowHeight + superShadowHeightMax) {
+            if (this.boxes[i].width == (MainCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == MainCY + superShadowShiftY + superShadowHeightMax) {
                 this.allShapes.shapeShadow.E = this.boxes[i].C;
             }
         }
