@@ -339,11 +339,7 @@ class Grid {
     createShapes() {
 
         var shapeA = {
-            "id": "Shape A",
-
-        }
-
-        this.allShapes = {
+            id: "Shape A",
             front: {
                 shapeLoop: 1,
                 // colorAction: "#5c5c5c",
@@ -372,6 +368,10 @@ class Grid {
             }
         }
 
+        this.allShapes = [
+            shapeA,
+        ]
+
         var mainBoxPos = {  // where to start to draw in box count
             x: 34,
             y: 13
@@ -390,141 +390,138 @@ class Grid {
         var mainWidthCY = mainBoxPos.y + shapeMainHeight;
         var ShadAAY = mainWidthCY + 1;
 
-        for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainBoxPos.y) {
-                this.allShapes.front.A = this.boxes[i].A;
+        for (const shape of this.allShapes) {
+            for (var i = 0; i < this.boxes.length; i++) {
+                if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainBoxPos.y) {
+                    shape.front.A = this.boxes[i].A;
+                }
+
+                if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainBoxPos.y) {
+                    shape.front.B = this.boxes[i].B;
+                }
+
+                if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainWidthCY) {
+                    shape.front.C = this.boxes[i].C;
+                }
+
+                if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainWidthCY) {
+                    shape.front.D = this.boxes[i].D;
+                }
             }
 
-            if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainBoxPos.y) {
-                this.allShapes.front.B = this.boxes[i].B;
+            for (var i = 0; i < this.boxes.length; i++) {
+                if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == ShadAAY) {
+                    shape.down.A = this.boxes[i].A;
+                }
+
+                if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == ShadAAY) {
+                    shape.down.B = this.boxes[i].B;
+                }
+
+                if (this.boxes[i].width == (mainWidthCX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                    shape.down.C = this.boxes[i].C;
+                }
+
+                if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                    shape.down.D = this.boxes[i].D;
+                }
             }
 
-            if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == mainWidthCY) {
-                this.allShapes.front.C = this.boxes[i].C;
+            for (var i = 0; i < this.boxes.length; i++) {
+                if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainBoxPos.y) {
+                    shape.right.A = this.boxes[i].A;
+                }
+
+                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == mainBoxPos.y + shadAheight) {
+                    shape.right.B = this.boxes[i].D;
+                }
+
+                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                    shape.right.C = this.boxes[i].D;
+                }
+
+                if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainWidthCY) {
+                    shape.right.D = this.boxes[i].D;
+                }
             }
 
-            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == mainWidthCY) {
-                this.allShapes.front.D = this.boxes[i].D;
-            }
-        }
+            for (var i = 0; i < this.boxes.length; i++) {
+                if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight + 1)) {
+                    shape.shadow.A = this.boxes[i].A;
+                }
 
-        for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == mainBoxPos.x && this.boxes[i].height == ShadAAY) {
-                this.allShapes.down.A = this.boxes[i].A;
-            }
+                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
+                    shape.shadow.B = this.boxes[i].D;
+                }
 
-            if (this.boxes[i].width == mainWidthCX && this.boxes[i].height == ShadAAY) {
-                this.allShapes.down.B = this.boxes[i].B;
-            }
+                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (mainBoxPos.y + shadAheight)) {
+                    shape.shadow.C = this.boxes[i].D;
+                }
 
-            if (this.boxes[i].width == (mainWidthCX + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.down.C = this.boxes[i].C;
-            }
+                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY) {
+                    shape.shadow.D = this.boxes[i].B;
+                }
 
-            if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.down.D = this.boxes[i].D;
-            }
-        }
-
-        for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainBoxPos.y) {
-                this.allShapes.right.A = this.boxes[i].A;
+                if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY + superShadowHeightMax) {
+                    shape.shadow.E = this.boxes[i].C;
+                }
             }
 
-            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == mainBoxPos.y + shadAheight) {
-                this.allShapes.right.B = this.boxes[i].D;
-            }
 
-            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.right.C = this.boxes[i].D;
-            }
-
-            if (this.boxes[i].width == (mainWidthCX + 1) && this.boxes[i].height == mainWidthCY) {
-                this.allShapes.right.D = this.boxes[i].D;
-            }
-        }
-
-        for (var i = 0; i < this.boxes.length; i++) {
-            if (this.boxes[i].width == (mainBoxPos.x + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight + 1)) {
-                this.allShapes.shadow.A = this.boxes[i].A;
-            }
-
-            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (ShadAAY + shadAheight)) {
-                this.allShapes.shadow.B = this.boxes[i].D;
-            }
-
-            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift) && this.boxes[i].height == (mainBoxPos.y + shadAheight)) {
-                this.allShapes.shadow.C = this.boxes[i].D;
-            }
-
-            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY) {
-                this.allShapes.shadow.D = this.boxes[i].B;
-            }
-
-            if (this.boxes[i].width == (mainWidthCX + 1 + shadAshift + superShadowShiftX) && this.boxes[i].height == mainWidthCY + superShadowShiftY + superShadowHeightMax) {
-                this.allShapes.shadow.E = this.boxes[i].C;
-            }
-        }
-
-        this.allShapes.front.pointString = `
-        ${this.allShapes.front.A.x}, ${this.allShapes.front.A.y}
-        ${this.allShapes.front.B.x}, ${this.allShapes.front.B.y}
-        ${this.allShapes.front.C.x}, ${this.allShapes.front.C.y}
-        ${this.allShapes.front.D.x}, ${this.allShapes.front.D.y}
+            shape.front.pointString = `
+        ${shape.front.A.x}, ${shape.front.A.y}
+        ${shape.front.B.x}, ${shape.front.B.y}
+        ${shape.front.C.x}, ${shape.front.C.y}
+        ${shape.front.D.x}, ${shape.front.D.y}
         `;
-        this.allShapes.down.pointString = `
-        ${this.allShapes.down.A.x}, ${this.allShapes.down.A.y}
-        ${this.allShapes.down.B.x}, ${this.allShapes.down.B.y}
-        ${this.allShapes.down.C.x}, ${this.allShapes.down.C.y}
-        ${this.allShapes.down.D.x}, ${this.allShapes.down.D.y}
+            shape.down.pointString = `
+        ${shape.down.A.x}, ${shape.down.A.y}
+        ${shape.down.B.x}, ${shape.down.B.y}
+        ${shape.down.C.x}, ${shape.down.C.y}
+        ${shape.down.D.x}, ${shape.down.D.y}
         `;
-        this.allShapes.right.pointString = `
-        ${this.allShapes.right.A.x}, ${this.allShapes.right.A.y}
-        ${this.allShapes.right.B.x}, ${this.allShapes.right.B.y}
-        ${this.allShapes.right.C.x}, ${this.allShapes.right.C.y}
-        ${this.allShapes.right.D.x}, ${this.allShapes.right.D.y}
+            shape.right.pointString = `
+        ${shape.right.A.x}, ${shape.right.A.y}
+        ${shape.right.B.x}, ${shape.right.B.y}
+        ${shape.right.C.x}, ${shape.right.C.y}
+        ${shape.right.D.x}, ${shape.right.D.y}
         `;
-        this.allShapes.shadow.pointString = `
-        ${this.allShapes.shadow.A.x}, ${this.allShapes.shadow.A.y}
-        ${this.allShapes.shadow.B.x}, ${this.allShapes.shadow.B.y}
-        ${this.allShapes.shadow.C.x}, ${this.allShapes.shadow.C.y}
-        ${this.allShapes.shadow.D.x}, ${this.allShapes.shadow.D.y}
-        ${this.allShapes.shadow.E.x}, ${this.allShapes.shadow.E.y}
+            shape.shadow.pointString = `
+        ${shape.shadow.A.x}, ${shape.shadow.A.y}
+        ${shape.shadow.B.x}, ${shape.shadow.B.y}
+        ${shape.shadow.C.x}, ${shape.shadow.C.y}
+        ${shape.shadow.D.x}, ${shape.shadow.D.y}
+        ${shape.shadow.E.x}, ${shape.shadow.E.y}
         `;
 
 
-        this.allShapes.front.pointList = [
-            [this.allShapes.front.A.x, this.allShapes.front.A.y],
-            [this.allShapes.front.B.x, this.allShapes.front.B.y],
-            [this.allShapes.front.C.x, this.allShapes.front.C.y],
-            [this.allShapes.front.D.x, this.allShapes.front.D.y]
-        ];
-        this.allShapes.down.pointList = [
-            [this.allShapes.down.A.x, this.allShapes.down.A.y],
-            [this.allShapes.down.B.x, this.allShapes.down.B.y],
-            [this.allShapes.down.C.x, this.allShapes.down.C.y],
-            [this.allShapes.down.D.x, this.allShapes.down.D.y]
-        ];
-        this.allShapes.right.pointList = [
-            [this.allShapes.right.A.x, this.allShapes.right.A.y],
-            [this.allShapes.right.B.x, this.allShapes.right.B.y],
-            [this.allShapes.right.C.x, this.allShapes.right.C.y],
-            [this.allShapes.right.D.x, this.allShapes.right.D.y]
-        ];
-        this.allShapes.shadow.pointList = [
-            [this.allShapes.shadow.A.x, this.allShapes.shadow.A.y],
-            [this.allShapes.shadow.B.x, this.allShapes.shadow.B.y],
-            [this.allShapes.shadow.C.x, this.allShapes.shadow.C.y],
-            [this.allShapes.shadow.D.x, this.allShapes.shadow.D.y],
-            [this.allShapes.shadow.E.x, this.allShapes.shadow.E.y]
-        ];
+            shape.front.pointList = [
+                [shape.front.A.x, shape.front.A.y],
+                [shape.front.B.x, shape.front.B.y],
+                [shape.front.C.x, shape.front.C.y],
+                [shape.front.D.x, shape.front.D.y]
+            ];
+            shape.down.pointList = [
+                [shape.down.A.x, shape.down.A.y],
+                [shape.down.B.x, shape.down.B.y],
+                [shape.down.C.x, shape.down.C.y],
+                [shape.down.D.x, shape.down.D.y]
+            ];
+            shape.right.pointList = [
+                [shape.right.A.x, shape.right.A.y],
+                [shape.right.B.x, shape.right.B.y],
+                [shape.right.C.x, shape.right.C.y],
+                [shape.right.D.x, shape.right.D.y]
+            ];
+            shape.shadow.pointList = [
+                [shape.shadow.A.x, shape.shadow.A.y],
+                [shape.shadow.B.x, shape.shadow.B.y],
+                [shape.shadow.C.x, shape.shadow.C.y],
+                [shape.shadow.D.x, shape.shadow.D.y],
+                [shape.shadow.E.x, shape.shadow.E.y]
+            ];
 
-        // this.shapes = [
-        //     this.front.pointList,
-        //     this.down.pointList,
-        //     this.right.pointList,
-        //     this.shadow.pointList,
-        // ]
+        }
     }
 
     debugShowShape() {
@@ -532,40 +529,43 @@ class Grid {
         var colory = "orange";
         const svgNode = document.getElementById('svgNode');
 
-        var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shapsn.setAttributeNS(null, 'points', this.allShapes.front.pointList);
-        shapsn.setAttributeNS(null, 'fill', "none");
-        shapsn.setAttributeNS(null, "stroke-width", 1);
-        shapsn.setAttributeNS(null, 'stroke', colory);
+        for (const shape of this.allShapes) {
 
-        // shapsn.setAttributeNS(null, 'stroke', "none");
-        // shapsn.setAttributeNS(null, 'fill', "#c2c2c281");
+            var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            shapsn.setAttributeNS(null, 'points', shape.front.pointList);
+            shapsn.setAttributeNS(null, 'fill', "none");
+            shapsn.setAttributeNS(null, "stroke-width", 1);
+            shapsn.setAttributeNS(null, 'stroke', colory);
 
-        svgNode.appendChild(shapsn);
+            // shapsn.setAttributeNS(null, 'stroke', "none");
+            // shapsn.setAttributeNS(null, 'fill', "#c2c2c281");
 
-        var shadnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shadnA.setAttributeNS(null, 'points', this.allShapes.down.pointList);
-        shadnA.setAttributeNS(null, 'fill', "none");
-        shadnA.setAttributeNS(null, 'stroke', colory);
-        shadnA.setAttributeNS(null, "stroke-width", 1);
+            svgNode.appendChild(shapsn);
 
-        svgNode.appendChild(shadnA);
+            var shadnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            shadnA.setAttributeNS(null, 'points', shape.down.pointList);
+            shadnA.setAttributeNS(null, 'fill', "none");
+            shadnA.setAttributeNS(null, 'stroke', colory);
+            shadnA.setAttributeNS(null, "stroke-width", 1);
 
-        var shadnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        shadnB.setAttributeNS(null, 'points', this.allShapes.right.pointList);
-        shadnB.setAttributeNS(null, 'fill', "none");
-        shadnB.setAttributeNS(null, 'stroke', colory);
-        shadnB.setAttributeNS(null, "stroke-width", 1);
+            svgNode.appendChild(shadnA);
 
-        svgNode.appendChild(shadnB);
+            var shadnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            shadnB.setAttributeNS(null, 'points', shape.right.pointList);
+            shadnB.setAttributeNS(null, 'fill', "none");
+            shadnB.setAttributeNS(null, 'stroke', colory);
+            shadnB.setAttributeNS(null, "stroke-width", 1);
 
-        var superShadow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-        superShadow.setAttributeNS(null, 'points', this.allShapes.shadow.pointList);
-        superShadow.setAttributeNS(null, 'fill', "none");
-        superShadow.setAttributeNS(null, 'stroke', colory);
-        superShadow.setAttributeNS(null, "stroke-width", 1);
+            svgNode.appendChild(shadnB);
 
-        svgNode.appendChild(superShadow);
+            var superShadow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            superShadow.setAttributeNS(null, 'points', shape.shadow.pointList);
+            superShadow.setAttributeNS(null, 'fill', "none");
+            superShadow.setAttributeNS(null, 'stroke', colory);
+            superShadow.setAttributeNS(null, "stroke-width", 1);
+
+            svgNode.appendChild(superShadow);
+        }
 
     }
 
