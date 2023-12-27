@@ -195,7 +195,7 @@ function main() {
   //   stepCount: 100,
   // stripeHeight: 4,
   // vectorMagnitude: 50,
-  // marginRelative: 0.09,
+  // marginRelative: 2,
   //   // strokeColor: "#222222ff",
   //   strokeColor: "#8f8f8fff",
   //   strokeWidth: 1,
@@ -214,7 +214,7 @@ function main() {
     stepCount: 200,  // 400
     stripeHeight: 4,  // 2
     vectorMagnitude: 50,  // 50
-    marginRelative: 0.09,
+    marginRelative: 1,
     // strokeColor: "#222222ff",
     strokeColor: "#4e4e4eff",
     strokeWidth: 1,

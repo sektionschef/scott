@@ -15,7 +15,7 @@ class Grid {
         this.landscape = data.landscape;
         this.group = data.group;
 
-        this.marginBoxCount = Math.round(this.shortBoxCount * this.marginRelative);
+        this.marginBoxCount = Math.round(this.stripeHeight * this.marginRelative);
         this.boxSize = this.shortSide / this.shortBoxCount;
         this.longBoxCount = Math.floor(this.longSide / this.boxSize);
 
@@ -46,7 +46,7 @@ class Grid {
         this.createBoxes();
         this.loopCategorize();
         this.createShapes();
-        // this.loopdebugCategory();
+        this.loopdebugCategory();
         this.debugShowShape();
         this.showDebugBoxes();
 
@@ -187,7 +187,7 @@ class Grid {
             if (i > 0 && this.boxes[i].stripeIndex != this.boxes[i - 1].stripeIndex) {
 
                 var even = false;
-                if (this.boxes[i].stripeIndex % this.stripeHeight == 0) {
+                if (this.boxes[i].stripeIndex % 2 == 0) {
                     even = true;
                 }
 
@@ -267,7 +267,7 @@ class Grid {
 
         for (var v = 0; v < this.boxes.length; v++) {
 
-            if (this.boxes[v].stripeIndex % this.stripeHeight == 0 && this.boxes[v].inactive == false) {
+            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v].inactive == false) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
                 rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
@@ -391,7 +391,7 @@ class Grid {
             superShadowShiftY: 5,  // shift in boxes on y axis
             superShadowHeightMax: 25, // heigt in boxes on y axis
             front: {
-                shapeLoop: 1,
+                shapeLoop: 3,
                 // colorAction: "#5c5c5c",
                 // colorAction: "red",
                 colorAction: this.strokeColor,
