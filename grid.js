@@ -46,7 +46,7 @@ class Grid {
         this.createBoxes();
         this.loopCategorize();
         this.createShapes();
-        this.loopdebugCategory();
+        // this.loopdebugCategory();
         this.debugShowShape();
         this.showDebugBoxes();
 
@@ -358,20 +358,20 @@ class Grid {
                 fillColor: "#afafaf",
             },
             down: {  // shadow beneath
-                shapeLoop: 2,
+                shapeLoop: 0,
                 // colorAction: "green",
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#999999",
             },
             right: {  // shadow beneath
-                shapeLoop: 2,
+                shapeLoop: 0,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#a3a3a3",
             },
             shadow: {  // shadow
-                shapeLoop: 1,
+                shapeLoop: 0,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#aaaaaa",
@@ -391,27 +391,27 @@ class Grid {
             superShadowShiftY: 5,  // shift in boxes on y axis
             superShadowHeightMax: 25, // heigt in boxes on y axis
             front: {
-                shapeLoop: 3,
+                shapeLoop: 1,
                 // colorAction: "#5c5c5c",
                 // colorAction: "red",
                 colorAction: this.strokeColor,
                 fillColor: "#afafaf",
             },
             down: {  // shadow beneath
-                shapeLoop: 2,
+                shapeLoop: 0,
                 // colorAction: "green",
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#999999",
             },
             right: {  // shadow beneath
-                shapeLoop: 2,
+                shapeLoop: 0,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#a3a3a3",
             },
             shadow: {  // shadow
-                shapeLoop: 1,
+                shapeLoop: 0,
                 // colorAction: "#5c5c5c",
                 colorAction: this.strokeColor,
                 fillColor: "#aaaaaa",

@@ -5,7 +5,7 @@ class strokeSystem {
         this.posStdCon = 1; // 0.4;  // control points
         this.posStdShiftX = 0; // add variance to x so no total overlap
         this.minLength = 0; // 5;  // a line should have a length of at least
-        this.filledPath = true;
+        this.filledPath = false;
 
         this.strokeWidth = data.strokeWidth;
         this.center = data.center;
@@ -57,19 +57,20 @@ class strokeSystem {
         for (const shape of this.allShapes) {
             for (const [key, value] of Object.entries(shape)) {
 
-                // if (["front", "down", "right",].includes(key)) {
-                if (["front", "down", "right", "shadow"].includes(key)) {
+                if (["front"].includes(key)) {
+                    // if (["front", "down", "right",].includes(key)) {
+                    // if (["front", "down", "right", "shadow"].includes(key)) {
                     if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
 
                         // layers - front is  above everything
                         if (key == "front") {
                             this.shapeSide = key;
-                        } else if (key != "shadow" && this.shapeSide != "front") {
-                            this.shapeSide = key;
-                        } else if ((key == "shadow" && this.shapeSide == "")) {
-                            this.shapeSide = key;
-                        } else {
+                        } else if (this.shapeSide == "front") {
                             continue;
+                        } else if (key == "shadow" && this.shapeSide != "") {
+                            continue;
+                        } else {
+                            // continue;
                         }
                     } else {
                         continue;
@@ -173,6 +174,8 @@ class strokeSystem {
             if (this.filledPath) {
                 // this.newPath = this.drawPath(this.start, this.controlA, this.controlB, this.end);
                 // this.newPath = this.drawPath(this.start, this.controlA, this.controlB, this.end);
+
+
                 new filledPath({
                     start: this.start,
                     end: this.end,
@@ -182,7 +185,8 @@ class strokeSystem {
                 });
 
             } else {
-                this.newPath = this.drawSimpleLine(this.start, this.end);
+
+                this.newPath = this.drawDebugLine(this.start, this.end);
             }
 
 
@@ -214,7 +218,7 @@ class strokeSystem {
                 });
             } else {
                 // this.newPathStart = 
-                this.drawSimpleLine(this.start, this.interPoint);
+                this.drawDebugLine(this.start, this.interPoint);
             }
         }
 
@@ -240,12 +244,12 @@ class strokeSystem {
                 });
             } else {
                 // this.newPathEnd = 
-                this.drawSimpleLine(this.interPoint, this.end);
+                this.drawDebugLine(this.interPoint, this.end);
             }
         }
     }
 
-    drawSimpleLine(start, end) {
+    drawDebugLine(start, end) {
         // const svgNode = document.getElementById('svgNode');
         // const groupA = document.getElementById('groupA');
         const group = document.getElementById(this.group);
