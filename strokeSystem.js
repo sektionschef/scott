@@ -12,6 +12,8 @@ class strokeSystem {
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
         this.strokeColor = data.strokeColor;
+        this.strokeColorStart = this.strokeColor;
+        this.strokeColorEnd = this.strokeColor;
         this.allShapes = data.allShapes;
         this.loop = data.loop;
         this.group = data.group;
@@ -31,8 +33,6 @@ class strokeSystem {
         this.controlStartB = { x: 0, y: 0 };
         this.controlEndA = { x: 0, y: 0 };
         this.controlEndB = { x: 0, y: 0 };
-        // this.strokeColorStart = this.strokeColor;
-        // this.strokeColorEnd = this.strokeColor;
         this.fullInside = "";
         this.startInside = "";
         this.endInside = "";
@@ -57,50 +57,74 @@ class strokeSystem {
         for (const shape of this.allShapes) {
             for (const [key, value] of Object.entries(shape)) {
 
-                if (key == "front") {
-                    // if (["front", "down", "right",].includes(key)) {
-                    // if (["front", "down", "right", "shadow"].includes(key)) {
 
-                    if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
-                        this.shapeSide = key;
-                        this.interactSingleShape(key, value);
-                    } else {
-                        continue;
+                if (key == "front") {
+
+                    if (this.divideFullVsSplit(key, value) == false) {
+                        continue
                     }
 
                 } else if ((key == "down" || key == "right") && this.shapeSide != "front") {
 
-                    if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
-                        this.shapeSide = key;
-                        this.interactSingleShape(key, value);
-                    } else {
-                        continue;
+                    if (this.divideFullVsSplit(key, value) == false) {
+                        continue
                     }
 
-                    // } else if (key == "shadow" && !["front", "down", "right",].includes(this.shapeSide)) {
                 } else if (key == "shadow" && this.shapeSide == "") {
 
-                    if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
-                        this.shapeSide = key;
-                        this.interactSingleShape(key, value);
-                    } else {
-                        continue;
+                    if (this.divideFullVsSplit(key, value) == false) {
+                        continue
                     }
+
                 } else {
                     this.shapeSide = "";
                 }
-
             }
         }
     }
 
-    interactSingleShape(key, value) {
+    divideFullVsSplit(key, value) {
+        if (this.check3PointsIn(value.pointList)) {
+            this.shapeSide = key;
+            this.fullInside = key;
+            this.splitSwitch = false;  // reset
+            this.strokeColor = value.colorAction;
+            this.shapeLoop = value.shapeLoop;
+            return true;
+        } else if (this.check1PointIn(value.pointList)) {
+            this.shapeSide = key;
+            this.intersectSingleShape(key, value);
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-        this.splitSwitch = false;  // reset
+    // at least one point of start, center, end in one shape?
+    check1PointIn(pointList) {
+        return (
+            pointInPolygon(pointList, [this.start.x, this.start.y]) ||
+            pointInPolygon(pointList, [this.center.x, this.center.y]) ||
+            pointInPolygon(pointList, [this.end.x, this.end.y])
+        )
+    }
+
+    // start, center, end are all in one shape?
+    check3PointsIn(pointList) {
+        return (
+            pointInPolygon(pointList, [this.start.x, this.start.y]) &&
+            pointInPolygon(pointList, [this.center.x, this.center.y]) &&
+            pointInPolygon(pointList, [this.end.x, this.end.y])
+        )
+    }
+
+    intersectSingleShape(key, value) {
 
         // if there is an intersection point with any shape, closest selected
         // get the sides
         for (var i = 0; i < value.pointList.length; i++) {
+
+            // get all sides
             if (i != (value.pointList.length - 1)) {
                 this.shapeA = { x: value.pointList[i][0], y: value.pointList[i][1] };
                 this.shapeB = { x: value.pointList[i + 1][0], y: value.pointList[i + 1][1] }
@@ -110,6 +134,7 @@ class strokeSystem {
                 this.shapeB = { x: value.pointList[i][0], y: value.pointList[i][1] };
             }
 
+            // find intersection point for the loop
             this.interPointCandidate = intersect(this.shapeA.x, this.shapeA.y, this.shapeB.x, this.shapeB.y, this.start.x, this.start.y, this.end.x, this.end.y);
             if (this.interPointCandidate === undefined) {
                 continue;
@@ -117,7 +142,7 @@ class strokeSystem {
 
             // if the intersection point lies between the points of the line and the shape's side.
             var shapeLineLength = vectorLength(vectorSub(this.shapeA, this.shapeB));
-            this.splitSwitchCandidate = (
+            this.checkIntersectionShapePath = (
                 shapeLineLength > vectorLength(vectorSub(this.shapeA, this.interPointCandidate))
             ) && (
                     shapeLineLength > vectorLength(vectorSub(this.interPointCandidate, this.shapeB))
@@ -127,41 +152,37 @@ class strokeSystem {
                     this.vectorMagnitude > vectorLength(vectorSub(this.interPointCandidate, this.end))
                 );
 
-            // SIMPLIFY - if split 
-            if (this.splitSwitchCandidate) {
-
-                // select the shortest distance to center, here the intersectionPoint and the shape is selected
+            // get the intersection point with the shortest distance to center, here the intersectionPoint and the shape is selected
+            if (this.checkIntersectionShapePath) {
                 if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(this.interPoint, this.center)))) {
                     this.interPoint = this.interPointCandidate;
                 };
-
-                this.midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
-                this.midPointEndInt = getMiddlePpoint(this.interPoint, this.end);
-
-                if (pointInPolygon(value.pointList, [this.midPointStartInt.x, this.midPointStartInt.y])) {
-                    // if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-                    this.splitSwitch = true;
-                    this.startInside = key;  // is this part in the polygon
-                    this.strokeColorStart = value.colorAction;
-                    this.shapeLoopStart = value.shapeLoop;
-                }
-                if (pointInPolygon(value.pointList, [this.midPointEndInt.x, this.midPointEndInt.y])) {
-                    // } else if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-                    this.splitSwitch = true;
-                    this.endInside = key;  // is this part in the polygon
-                    this.strokeColorEnd = value.colorAction;
-                    this.shapeLoopEnd = value.shapeLoop;
-                }
-            } else {
-
-                // CHECK IF CENTER IN SHAPE
-                if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-                    // this.inside = key;
-                    this.fullInside = key;
-                    this.strokeColor = value.colorAction;
-                    this.shapeLoop = value.shapeLoop;
-                }
             }
+        }
+
+
+        this.definePartInside(key, value);
+    }
+
+
+    definePartInside(key, value) {
+        // which part is in, which one is out?
+        this.midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
+        this.midPointEndInt = getMiddlePpoint(this.interPoint, this.end);
+
+        if (pointInPolygon(value.pointList, [this.midPointStartInt.x, this.midPointStartInt.y])) {
+            // if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
+            this.splitSwitch = true;
+            this.startInside = key;  // is this part in the polygon
+            this.strokeColorStart = value.colorAction;
+            this.shapeLoopStart = value.shapeLoop;
+        }
+        if (pointInPolygon(value.pointList, [this.midPointEndInt.x, this.midPointEndInt.y])) {
+            // } else if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
+            this.splitSwitch = true;
+            this.endInside = key;  // is this part in the polygon
+            this.strokeColorEnd = value.colorAction;
+            this.shapeLoopEnd = value.shapeLoop;
         }
     }
 
@@ -203,8 +224,7 @@ class strokeSystem {
                 });
 
             } else {
-
-                this.newPath = this.drawDebugLine(this.start, this.end);
+                this.newPath = this.drawDebugLine(this.start, this.end, this.strokeColor, 1);
             }
 
 
@@ -221,7 +241,7 @@ class strokeSystem {
             // no strokes in whitespace
             (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
             (this.startInside !== "") &&
-            (this.loop < this.shapeLoop)
+            (this.loop < this.shapeLoopStart)
         ) {
 
             if (this.filledPath) {
@@ -236,7 +256,7 @@ class strokeSystem {
                 });
             } else {
                 // this.newPathStart = 
-                this.drawDebugLine(this.start, this.interPoint);
+                this.drawDebugLine(this.start, this.interPoint, this.strokeColorStart, 1);
             }
         }
 
@@ -248,7 +268,7 @@ class strokeSystem {
             // no strokes in whitespace
             vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
             (this.endInside != "") &&
-            (this.loop < this.shapeLoop)
+            (this.loop < this.shapeLoopEnd)
         ) {
             if (this.filledPath) {
                 // this.newPathEnd = this.drawPath(this.interPoint, this.controlEndA, this.controlEndB, this.end);
@@ -262,12 +282,12 @@ class strokeSystem {
                 });
             } else {
                 // this.newPathEnd = 
-                this.drawDebugLine(this.interPoint, this.end);
+                this.drawDebugLine(this.interPoint, this.end, this.strokeColorEnd, 1);
             }
         }
     }
 
-    drawDebugLine(start, end) {
+    drawDebugLine(start, end, strokeColor, strokeWidth) {
         // const svgNode = document.getElementById('svgNode');
         // const groupA = document.getElementById('groupA');
         const group = document.getElementById(this.group);
@@ -281,8 +301,8 @@ class strokeSystem {
         line.setAttributeNS(null, "x2", end.x);
         line.setAttributeNS(null, "y2", end.y);
 
-        line.setAttributeNS(null, "stroke", this.strokeColor);
-        line.setAttributeNS(null, "stroke-width", this.strokeWidth);
+        line.setAttributeNS(null, "stroke", strokeColor);
+        line.setAttributeNS(null, "stroke-width", strokeWidth);
         line.setAttributeNS(null, "opacity", 1);
         line.setAttributeNS(null, "fill", "none");
 
