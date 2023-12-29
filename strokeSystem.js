@@ -31,8 +31,8 @@ class strokeSystem {
         this.controlStartB = { x: 0, y: 0 };
         this.controlEndA = { x: 0, y: 0 };
         this.controlEndB = { x: 0, y: 0 };
-        this.strokeColorStart = this.strokeColor;
-        this.strokeColorEnd = this.strokeColor;
+        // this.strokeColorStart = this.strokeColor;
+        // this.strokeColorEnd = this.strokeColor;
         this.fullInside = "";
         this.startInside = "";
         this.endInside = "";
@@ -57,91 +57,109 @@ class strokeSystem {
         for (const shape of this.allShapes) {
             for (const [key, value] of Object.entries(shape)) {
 
-                if (["front"].includes(key)) {
+                if (key == "front") {
                     // if (["front", "down", "right",].includes(key)) {
                     // if (["front", "down", "right", "shadow"].includes(key)) {
-                    if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
 
-                        // layers - front is  above everything
-                        if (key == "front") {
-                            this.shapeSide = key;
-                        } else if (this.shapeSide == "front") {
-                            continue;
-                        } else if (key == "shadow" && this.shapeSide != "") {
-                            continue;
-                        } else {
-                            // continue;
-                        }
+                    if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
+                        this.shapeSide = key;
+                        this.interactSingleShape(key, value);
                     } else {
                         continue;
                     }
 
-                    this.shapeCandidate = value.pointList;
+                } else if ((key == "down" || key == "right") && this.shapeSide != "front") {
 
-                    // if there is an intersection point with any shape, closest selected
-                    // get the sides
-                    for (var i = 0; i < this.shapeCandidate.length; i++) {
-                        if (i != (this.shapeCandidate.length - 1)) {
-                            this.shapeA = { x: this.shapeCandidate[i][0], y: this.shapeCandidate[i][1] };
-                            this.shapeB = { x: this.shapeCandidate[i + 1][0], y: this.shapeCandidate[i + 1][1] }
-                        } else {
-                            // closing the loop
-                            this.shapeA = { x: this.shapeCandidate[0][0], y: this.shapeCandidate[0][1] };
-                            this.shapeB = { x: this.shapeCandidate[i][0], y: this.shapeCandidate[i][1] };
-                        }
-
-                        this.interPointCandidate = intersect(this.shapeA.x, this.shapeA.y, this.shapeB.x, this.shapeB.y, this.start.x, this.start.y, this.end.x, this.end.y);
-                        if (this.interPointCandidate === undefined) {
-                            continue;
-                        }
-
-                        // if the intersection point lies between the points of the line and the shape's side.
-                        var shapeLineLength = vectorLength(vectorSub(this.shapeA, this.shapeB));
-                        this.splitSwitchCandidate = (
-                            shapeLineLength > vectorLength(vectorSub(this.shapeA, this.interPointCandidate))
-                        ) && (
-                                shapeLineLength > vectorLength(vectorSub(this.interPointCandidate, this.shapeB))
-                            ) && (
-                                this.vectorMagnitude > vectorLength(vectorSub(this.start, this.interPointCandidate))
-                            ) && (
-                                this.vectorMagnitude > vectorLength(vectorSub(this.interPointCandidate, this.end))
-                            );
-
-                        // SIMPLIFY - if split 
-                        if (this.splitSwitchCandidate) {
-                            this.splitSwitch = true;
-
-                            // select the shortest distance to center, here the intersectionPoint and the shape is selected
-                            if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(this.interPoint, this.center)))) {
-                                this.interPoint = this.interPointCandidate;
-                            };
-
-                            this.midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
-                            this.midPointEndInt = getMiddlePpoint(this.interPoint, this.end);
-
-                            if (pointInPolygon(value.pointList, [this.midPointStartInt.x, this.midPointStartInt.y])) {
-                                // if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-                                this.startInside = key;  // is this part in the polygon
-                                this.strokeColorStart = value.colorAction;
-                                this.shapeLoopStart = value.shapeLoop;
-                            }
-                            if (pointInPolygon(value.pointList, [this.midPointEndInt.x, this.midPointEndInt.y])) {
-                                // } else if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-                                this.endInside = key;  // is this part in the polygon
-                                this.strokeColorEnd = value.colorAction;
-                                this.shapeLoopEnd = value.shapeLoop;
-                            }
-                        } else {
-
-                            // CHECK IF CENTER IN SHAPE
-                            if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-                                // this.inside = key;
-                                this.fullInside = key;
-                                this.strokeColor = value.colorAction;
-                                this.shapeLoop = value.shapeLoop;
-                            }
-                        }
+                    if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
+                        this.shapeSide = key;
+                        this.interactSingleShape(key, value);
+                    } else {
+                        continue;
                     }
+
+                    // } else if (key == "shadow" && !["front", "down", "right",].includes(this.shapeSide)) {
+                } else if (key == "shadow" && this.shapeSide == "") {
+
+                    if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) || pointInPolygon(value.pointList, [this.center.x, this.center.y]) || pointInPolygon(value.pointList, [this.end.x, this.end.y])) {
+                        this.shapeSide = key;
+                        this.interactSingleShape(key, value);
+                    } else {
+                        continue;
+                    }
+                } else {
+                    this.shapeSide = "";
+                }
+
+            }
+        }
+    }
+
+    interactSingleShape(key, value) {
+
+        this.splitSwitch = false;  // reset
+
+        // if there is an intersection point with any shape, closest selected
+        // get the sides
+        for (var i = 0; i < value.pointList.length; i++) {
+            if (i != (value.pointList.length - 1)) {
+                this.shapeA = { x: value.pointList[i][0], y: value.pointList[i][1] };
+                this.shapeB = { x: value.pointList[i + 1][0], y: value.pointList[i + 1][1] }
+            } else {
+                // closing the loop
+                this.shapeA = { x: value.pointList[0][0], y: value.pointList[0][1] };
+                this.shapeB = { x: value.pointList[i][0], y: value.pointList[i][1] };
+            }
+
+            this.interPointCandidate = intersect(this.shapeA.x, this.shapeA.y, this.shapeB.x, this.shapeB.y, this.start.x, this.start.y, this.end.x, this.end.y);
+            if (this.interPointCandidate === undefined) {
+                continue;
+            }
+
+            // if the intersection point lies between the points of the line and the shape's side.
+            var shapeLineLength = vectorLength(vectorSub(this.shapeA, this.shapeB));
+            this.splitSwitchCandidate = (
+                shapeLineLength > vectorLength(vectorSub(this.shapeA, this.interPointCandidate))
+            ) && (
+                    shapeLineLength > vectorLength(vectorSub(this.interPointCandidate, this.shapeB))
+                ) && (
+                    this.vectorMagnitude > vectorLength(vectorSub(this.start, this.interPointCandidate))
+                ) && (
+                    this.vectorMagnitude > vectorLength(vectorSub(this.interPointCandidate, this.end))
+                );
+
+            // SIMPLIFY - if split 
+            if (this.splitSwitchCandidate) {
+
+                // select the shortest distance to center, here the intersectionPoint and the shape is selected
+                if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(this.interPoint, this.center)))) {
+                    this.interPoint = this.interPointCandidate;
+                };
+
+                this.midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
+                this.midPointEndInt = getMiddlePpoint(this.interPoint, this.end);
+
+                if (pointInPolygon(value.pointList, [this.midPointStartInt.x, this.midPointStartInt.y])) {
+                    // if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
+                    this.splitSwitch = true;
+                    this.startInside = key;  // is this part in the polygon
+                    this.strokeColorStart = value.colorAction;
+                    this.shapeLoopStart = value.shapeLoop;
+                }
+                if (pointInPolygon(value.pointList, [this.midPointEndInt.x, this.midPointEndInt.y])) {
+                    // } else if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
+                    this.splitSwitch = true;
+                    this.endInside = key;  // is this part in the polygon
+                    this.strokeColorEnd = value.colorAction;
+                    this.shapeLoopEnd = value.shapeLoop;
+                }
+            } else {
+
+                // CHECK IF CENTER IN SHAPE
+                if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
+                    // this.inside = key;
+                    this.fullInside = key;
+                    this.strokeColor = value.colorAction;
+                    this.shapeLoop = value.shapeLoop;
                 }
             }
         }
