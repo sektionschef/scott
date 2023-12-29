@@ -57,7 +57,6 @@ class strokeSystem {
         for (const shape of this.allShapes) {
             for (const [key, value] of Object.entries(shape)) {
 
-
                 if (key == "front") {
 
                     if (this.divideFullVsSplit(key, value) == false) {
@@ -160,7 +159,6 @@ class strokeSystem {
             }
         }
 
-
         this.definePartInside(key, value);
     }
 
@@ -194,7 +192,6 @@ class strokeSystem {
         } else {
             this.showContinuousPath();
         }
-        // this.showDebug()
     }
 
     showContinuousPath() {
@@ -258,6 +255,25 @@ class strokeSystem {
                 // this.newPathStart = 
                 this.drawDebugLine(this.start, this.interPoint, this.strokeColorStart, 1);
             }
+        } else if (
+            (vectorLength(vectorSub(this.start, this.interPoint)) > this.minLength) &&
+            (this.startInside == "") &&
+            (this.loop < this.shapeLoop) // SHOULD BE THE LOOP OF THE SHAPE
+        ) {
+
+            for (const shape of this.allShapes) {
+                for (const [key, value] of Object.entries(shape)) {
+                    if (["front", "down", "right", "shadow"].includes(key)) {
+
+                        if (pointInPolygon(value.pointList, [this.start.x, this.start.y]) &&
+                            pointInPolygon(value.pointList, [this.midPointStartInt.x, this.midPointStartInt.y]) &&
+                            pointInPolygon(value.pointList, [this.interPoint.x, this.interPoint.y])
+                        ) {
+                            this.drawDebugLine(this.start, this.interPoint, value.colorAction, 1);
+                        }
+                    }
+                }
+            }
         }
 
         if (
@@ -283,6 +299,25 @@ class strokeSystem {
             } else {
                 // this.newPathEnd = 
                 this.drawDebugLine(this.interPoint, this.end, this.strokeColorEnd, 1);
+            }
+        } else if (
+            vectorLength(vectorSub(this.interPoint, this.end)) > this.minLength &&
+            (this.endInside == "") &&
+            (this.loop < this.shapeLoop) // SHOULD BE THE LOOP OF THE SHAPE
+        ) {
+            for (const shape of this.allShapes) {
+                for (const [key, value] of Object.entries(shape)) {
+                    if (["front", "down", "right", "shadow"].includes(key)) {
+
+                        if (pointInPolygon(value.pointList, [this.end.x, this.end.y]) &&
+                            pointInPolygon(value.pointList, [this.midPointEndInt.x, this.midPointEndInt.y]) &&
+                            pointInPolygon(value.pointList, [this.interPoint.x, this.interPoint.y])
+                        ) {
+                            // console.log("oida");
+                            this.drawDebugLine(this.interPoint, this.end, value.colorAction, 1);
+                        }
+                    }
+                }
             }
         }
     }
