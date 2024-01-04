@@ -1,4 +1,4 @@
-class strokeSystem {
+class strokeSystem {  // ARCHIVE
     constructor(data) {
         // this.lineSegment = 4;  // where to place the control points
         this.posStd = 0.8; // 0.6;// 1  // misplacmente standard deviation
