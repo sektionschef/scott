@@ -49,7 +49,7 @@ class Grid {
         this.createShapes();
         // this.loopdebugCategory();
         this.debugShowShape();
-        this.showDebugBoxes();
+        // this.showDebugBoxes();
 
         // this.fillShape();
 
@@ -712,14 +712,23 @@ class Grid {
     retryStrokePath() {
         for (const element of this.pathCandidates) {
             if (element.toBeSplitted) {
-                // console.log(element.intersectionPoints.length);
-                // for (var i = 0; i < element.intersectionPoints.length; i++) {
-                // }
-                if (element.intersectionPoints.length == 1) {
-                    this.pathCandidates.push(
-                        strokeSplitter.createPathFromIntersections(element, this.allShapes)
-                    );
+                if (element.points.length > 2) {
+                    element.points = strokeSplitter.sortIntersectionPoints(element)
+                    // element.points = strokeSplitter.sortIntersectionPoints(element.start, element.intersectionPoints, element.intersectionOrders, element.intersectionShapes)
+                    this.pathCandidates = strokeSplitter.createPathFromIntersections(element, this.allShapes, this.pathCandidates)
                 }
+
+                // DEBUG
+                // if (element.intersectionPoints.length > 2) {
+                // showDebugPoint(element.intersectionPoints.x, element.intersectionPoints.y, "red");
+                // }
+
+                // ARCHIVE
+                // if (element.intersectionPoints.length == 1) {
+                //     this.pathCandidates.push(
+                //         strokeSplitter.createPathFromIntersections(element, this.allShapes)
+                //     );
+                // }
             }
         }
     }
