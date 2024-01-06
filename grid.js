@@ -714,21 +714,9 @@ class Grid {
             if (element.toBeSplitted) {
                 if (element.points.length > 2) {
                     element.points = strokeSplitter.sortIntersectionPoints(element)
-                    // element.points = strokeSplitter.sortIntersectionPoints(element.start, element.intersectionPoints, element.intersectionOrders, element.intersectionShapes)
                     this.pathCandidates = strokeSplitter.createPathFromIntersections(element, this.allShapes, this.pathCandidates)
                 }
 
-                // DEBUG
-                // if (element.intersectionPoints.length > 2) {
-                // showDebugPoint(element.intersectionPoints.x, element.intersectionPoints.y, "red");
-                // }
-
-                // ARCHIVE
-                // if (element.intersectionPoints.length == 1) {
-                //     this.pathCandidates.push(
-                //         strokeSplitter.createPathFromIntersections(element, this.allShapes)
-                //     );
-                // }
             }
         }
     }
@@ -758,7 +746,6 @@ class Grid {
 
         for (const element of this.pathCandidates) {
 
-            // if (element.readyToDraw == true && element.currentLoop <= element.shapeLoop) {
             if (element.readyToDraw == true && element.currentLoop <= (element.shapeLoop - 1)) {
                 this.drawDebugLine(element.start, element.end, element.strokeColor, 1);
             }
@@ -795,7 +782,6 @@ class Grid {
 
     drawDebugLine(start, end, strokeColor, strokeWidth) {
         // const svgNode = document.getElementById('svgNode');
-        // const groupA = document.getElementById('groupA');
         const group = document.getElementById(this.group);
 
         var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
@@ -814,7 +800,5 @@ class Grid {
 
         // svgNode.appendChild(this.newPath);
         group.appendChild(line);
-
-        // return line;
     }
 }

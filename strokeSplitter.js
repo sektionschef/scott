@@ -72,10 +72,7 @@ class strokeSplitter {
 
     interactWithShapes() {
 
-        // var loopMax = 2;
-        // for (var v = 0; v < loopMax; v++) {
         for (const shape of this.allShapes) {
-
             for (const [key, value] of Object.entries(shape)) {
 
                 if (key == "front") {
@@ -98,7 +95,6 @@ class strokeSplitter {
         // add the endpoint to the list
         this.path.points.push(this.end);
     }
-
 
     divideFullVsSplit(key, value, shapeId) {
         if (this.check3PointsIn(value.pointList)) {
@@ -193,30 +189,7 @@ class strokeSplitter {
         this.path.intersectionPoints.push(intersectionPoint);
         this.path.intersectionOrders.push(key);
         this.path.intersectionShapes.push(shapeId);
-
-        // this.definePartInside(key, value, shapeId);
     }
-
-    // definePartInside(key, value, shapeId) {
-    //     // which part is in, which one is out?
-    //     this.midPointStartInt = getMiddlePpoint(this.start, this.interPoint);
-    //     this.midPointEndInt = getMiddlePpoint(this.interPoint, this.end);
-
-    //     if (pointInPolygon(value.pointList, [this.midPointStartInt.x, this.midPointStartInt.y])) {
-    //         // if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-    //         // this.splitSwitch = true;
-    //         this.startInside = key;  // is this part in the polygon
-    //         this.strokeColorStart = value.colorAction;
-    //         this.shapeLoopStart = value.shapeLoop;
-    //     }
-    //     if (pointInPolygon(value.pointList, [this.midPointEndInt.x, this.midPointEndInt.y])) {
-    //         // } else if (pointInPolygon(value.pointList, [this.center.x, this.center.y])) {
-    //         // this.splitSwitch = true;
-    //         this.endInside = key;  // is this part in the polygon
-    //         this.strokeColorEnd = value.colorAction;
-    //         this.shapeLoopEnd = value.shapeLoop;
-    //     }
-    // }
 
     static sortIntersectionPoints(element) {
 
@@ -224,7 +197,7 @@ class strokeSplitter {
         // console.log(order);
         // console.log(shapes);
 
-        // CREATE OBJECTS FOR SORT
+        // CREATE OBJECTS FOR SORT - REMOVE THE DICT
         var pointObs = []
         for (var i = 0; i < element.points.length; i++) {
             pointObs.push({
