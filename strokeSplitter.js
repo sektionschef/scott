@@ -269,16 +269,11 @@ class strokeSplitter {
 
     static createPathFromIntersections(element, allShapes, pathCandidates) {
         var path = {};
-        // var shape;  // shape with all data
 
-        for (var i = 0; i < element.points.length; i++) {
-            if (element.points[i + 1] == undefined) {
-                break;
-            }
+        for (var i = 0; i < (element.points.length - 1); i++) {
 
             // which part is in, which one is out?
             var midPoint = getMiddlePpoint(element.points[i].point, element.points[i + 1].point);
-            // var midPointB = getMiddlePpoint(point[i].point, point[i + 1].point);
 
             // DEBUG
             // showDebugPoint(element.points[i].point.x, element.points[i].point.y, "green");
@@ -289,12 +284,8 @@ class strokeSplitter {
                 for (const [key, value] of Object.entries(shape)) {
 
                     if (key == "front") {
-                        // console.log(value.pointList);
 
                         if (
-                            // pointInPolygon(pointList, [this.start.x, this.start.y]) &&
-                            // pointInPolygon(pointList, [this.center.x, this.center.y]) &&
-                            // pointInPolygon(pointList, [this.end.x, this.end.y])
                             pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
                         ) {
 
@@ -303,199 +294,50 @@ class strokeSplitter {
 
                             path.order = "front"; //orderSelect;
                             path.strokeColor = value.colorAction;
-                            path.currentLoop = 1; // value.currentLoop;
+                            path.currentLoop = 0; // value.currentLoop;
                             path.shapeLoop = value.shapeLoop;
                             path.readyToDraw = true;
-                            path.shape = value.shapeId;
+                            path.shape = shape.id;
 
                         }
+                    } else if ((key == "down" || key == "right") && path.order != "front") {
+                        if (
+                            pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
+                        ) {
+                            path.start = element.points[i].point;
+                            path.end = element.points[i + 1].point;
+
+                            path.order = key; // "right"; //orderSelect;
+                            path.strokeColor = value.colorAction;
+                            path.currentLoop = 0; // value.currentLoop;
+                            path.shapeLoop = value.shapeLoop;
+                            path.readyToDraw = true;
+                            path.shape = shape.id;
+                            // console.log(path);
+                        }
+                    } else if (key == "shadow" && path.order == "") {
+                        if (
+                            pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
+                        ) {
+                            path.start = element.points[i].point;
+                            path.end = element.points[i + 1].point;
+
+                            path.order = key; // "right"; //orderSelect;
+                            path.strokeColor = value.colorAction;
+                            path.currentLoop = 0; // value.currentLoop;
+                            path.shapeLoop = value.shapeLoop;
+                            path.readyToDraw = true;
+                            path.shape = shape.id;
+                            // console.log(path);
+                        }
+                    } else {
+                        path.order = "";
                     }
-
-
-                    // if (key == "front") {
-                    //     if (this.divideFullVsSplit(key, value, shape.id) == false) {
-                    //         continue
-                    //     }
-                    // } else if ((key == "down" || key == "right") && this.path.order != "front") {
-                    //     if (this.divideFullVsSplit(key, value, shape.id) == false) {
-                    //         continue
-                    //     }
-                    // } else if (key == "shadow" && this.path.order == "") {
-                    //     if (this.divideFullVsSplit(key, value, shape.id) == false) {
-                    //         continue
-                    //     }
-                    // } else {
-                    //     this.path.order = "";
-                    // }
-
-
                 }
             }
-
-            // path.start = element.points[i].point;
-            // path.end = element.points[i + 1].point;
-
-            // path.order = "front"; //orderSelect;
-            // path.strokeColor = "blue"; //shape.colorAction;
-            // path.currentLoop = element.currentLoop;
-            // path.shapeLoop = 1;//shape.shapeLoop;
-            // path.readyToDraw = true;
-
             pathCandidates.push(path)
         }
 
-
-
-
-        // if (pointInPolygon(shape.pointList, [midPointA.x, midPointA.y])) {
-        //     path.start = element.start;
-        //     path.end = point[i].point;
-        //     // console.log(path.end);
-        // } else {
-        //     console.log("false1");
-        // }
-        // if (pointInPolygon(shape.pointList, [midPointB.x, midPointB.y])) {
-        //     path.start = point[i].point;
-        //     path.end = point[i + 1].point;
-        // } else {
-        //     console.log("false2");
-        // }
-        // console.log(orderSelect);
-        // console.log("\n");
-
-        // path.order = orderSelect;
-        // path.strokeColor = shape.colorAction;
-        // path.currentLoop = element.currentLoop;
-        // path.shapeLoop = shape.shapeLoop;
-        // path.readyToDraw = true;
-
-        // // console.log(path);
-        // // }
-
-
-        // // --------------------------------------------------
-
-        // // for (var point of element.intersectionPoints) {
-        // // for(var i = 0; i < element.intersectionPoints.length; i++) {
-
-        // var point = element.intersectionPoints;
-
-        // // combine to one dict----------------------------------------------------
-        // // console.log(point);
-        // var intersectionPoint = point[i].point;
-        // var orderSelect = point[i].order;
-        // var shapeSelect = point[i].shape;
-
-        // // console.log(element);
-        // // console.log(allShapes);
-
-        // // get the data of the shape according to the intersection point
-        // for (var s = 0; s < allShapes.length; s++) {
-        //     if (allShapes[s].id == shapeSelect) {
-        //         shape = allShapes[s][orderSelect];
-        //     }
-        // }
-
-        // if (i == 0) {
-        //     //BEGIN WITH START AND FIRST POINT
-        //     // if (point[i].point.x == element.start.x && point[i].point.y == element.start.y) {
-        //     var distance = Math.abs(vectorLength(vectorSub(element.start, point[i].point)))
-        //     // console.log(distance);
-        //     if (distance < 10) {
-        //         // continue;
-        //     }
-
-        //     // which part is in, which one is out?
-        //     var midPointA = getMiddlePpoint(element.start, point[i].point);
-        //     console.log(point[i + 1].point);
-        //     // if (point[i + 1].point)
-        //     var midPointB = getMiddlePpoint(point[i].point, point[i + 1].point);
-
-
-        //     showDebugPoint(element.start.x, element.start.y, "green");
-        //     showDebugPoint(midPointA.x, midPointA.y, "pink");
-        //     showDebugPoint(point[i].point.x, point[i].point.y, "red");
-        //     showDebugPoint(midPointB.x, midPointB.y, "black");
-        //     showDebugPoint(element.end.x, element.end.y, "blue");
-
-        //     if (pointInPolygon(shape.pointList, [midPointA.x, midPointA.y])) {
-        //         path.start = element.start;
-        //         path.end = point[i].point;
-        //         // console.log(path.end);
-        //     } else {
-        //         console.log("false1");
-        //     }
-        //     if (pointInPolygon(shape.pointList, [midPointB.x, midPointB.y])) {
-        //         path.start = point[i].point;
-        //         path.end = point[i + 1].point;
-        //     } else {
-        //         console.log("false2");
-        //     }
-        //     console.log(orderSelect);
-        //     console.log("\n");
-
-        //     path.order = orderSelect;
-        //     path.strokeColor = shape.colorAction;
-        //     path.currentLoop = element.currentLoop;
-        //     path.shapeLoop = shape.shapeLoop;
-        //     path.readyToDraw = true;
-
-        //     // console.log(path);
-
-        // } else if (i == (element.intersectionPoints.length - 1)) {
-        //     //END WITH ENDPPOINT AND LAST POINT
-
-        //     // which part is in, which one is out?
-        //     var midPointA = getMiddlePpoint(point[i - 1].point, point[i].point);
-        //     var midPointB = getMiddlePpoint(point[i].point, element.end);
-
-        //     if (pointInPolygon(shape.pointList, [midPointA.x, midPointA.y])) {
-        //         path.start = point[i - 1].point;
-        //         path.end = point[i].point;
-        //     }
-        //     if (pointInPolygon(shape.pointList, [midPointB.x, midPointB.y])) {
-        //         path.start = point[i].point;
-        //         path.end = element.end;
-        //     }
-
-        //     path.order = orderSelect;
-        //     path.strokeColor = shape.colorAction;
-        //     path.currentLoop = element.currentLoop;
-        //     path.shapeLoop = shape.shapeLoop;
-        //     // path.readyToDraw = true;
-
-        // } else {
-
-        //     // skip if same point
-        //     if (point[i].point.x == point[i - 1].point.x && point[i].point.y == point[i - 1].point.y) {
-        //         // continue;
-        //     }
-
-        //     // console.log(point[i - 1].point)
-        //     // console.log(point[i].point)
-        //     // console.log(point[i + 1].point)
-
-        //     // which part is in, which one is out?
-        //     var midPointA = getMiddlePpoint(point[i - 1].point, point[i].point);
-        //     var midPointB = getMiddlePpoint(point[i].point, point[i + 1].point);
-
-        //     if (pointInPolygon(shape.pointList, [midPointA.x, midPointA.y])) {
-        //         path.start = point[i - 1].point;
-        //         path.end = point[i].point;
-        //     }
-        //     if (pointInPolygon(shape.pointList, [midPointB.x, midPointB.y])) {
-        //         path.start = point[i].point;
-        //         path.end = point[i + 1].point;
-        //     }
-
-        //     path.order = orderSelect;
-        //     path.strokeColor = shape.colorAction;
-        //     path.currentLoop = element.currentLoop;
-        //     path.shapeLoop = shape.shapeLoop;
-        //     // path.readyToDraw = true;
-        // }
-
         return pathCandidates;
-
     }
 }
