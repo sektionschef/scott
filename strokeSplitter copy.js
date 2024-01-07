@@ -1,27 +1,43 @@
 class strokeSplitter {
     constructor(data) {
+        // RECHECK ALL VARIABLES
+
+        // this.lineSegment = 4;  // where to place the control points
         this.posStd = 0.8; // 0.6;// 1  // misplacmente standard deviation
         this.posStdCon = 1; // 0.4;  // control points
         this.posStdShiftX = 0; // add variance to x so no total overlap
-        this.minLength = 5; // 5;  // a line should have a length of at least
+        this.minLength = 0; // 5;  // a line should have a length of at least
         this.filledPath = false;
-        // this.shapeLoop = 1;  // limit for whitespace, 1 = general run
 
-        this.allShapes = data.allShapes;
-        // console.log(this.allShapes);
-
-        this.pathCandidates = [];
-    }
-
-    add(data) {
         this.strokeWidth = data.strokeWidth;
         this.center = data.center;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
         this.strokeColor = data.strokeColor;
+        this.strokeColorStart = this.strokeColor;
+        this.strokeColorEnd = this.strokeColor;
+        this.allShapes = data.allShapes;
         this.loop = data.loop;
         this.group = data.group;
 
+        // dummies
+        this.up = { x: 0, y: 0 };
+        this.down = { x: 0, y: 0 };
+        // this.order = "";
+        this.midPointEndInt = { x: 0, y: 0 };
+        this.midPointStartInt = { x: 0, y: 0 };
+        this.interPoint = { x: 0, y: 0 };
+        this.splitSwitch = false;
+        this.controlA = { x: 0, y: 0 };
+        this.controlB = { x: 0, y: 0 };
+        this.controlStartA = { x: 0, y: 0 };
+        this.controlStartB = { x: 0, y: 0 };
+        this.controlEndA = { x: 0, y: 0 };
+        this.controlEndB = { x: 0, y: 0 };
+        this.fullInside = "";
+        this.startInside = "";
+        this.endInside = "";
+        this.shapeLoop = 1;  // limit for whitespace, 1 = general run
 
         // X = Cx + (r * cosine(angle))
         // Y = Cy + (r * sine(angle))
@@ -34,56 +50,58 @@ class strokeSplitter {
             y: this.center.y + (this.vectorMagnitude / 2 * Math.sin(this.angleRadians - Math.PI))
         }
 
-        // this.path = {
-        //     "readyToDraw": false, // ready to draw,
-        //     "toBeSplitted": false,
-        //     start: this.start,
-        //     end: this.end,
-        //     order: "",
-        //     strokeColor: "pink",
-        //     currentLoop: this.loop,
-        //     shapeLoop: 0,
-        //     intersectionShapes: [],
-        //     intersectionOrders: [],
-        //     intersectionPoints: [],
-        //     points: [],
-        // }
+        this.path = {
+            "readyToDraw": false, // ready to draw,
+            "toBeSplitted": false,
+            start: this.start,
+            end: this.end,
+            order: "",
+            strokeColor: "pink",
+            currentLoop: this.loop,
+            shapeLoop: 0,
+            intersectionShapes: [],
+            intersectionOrders: [],
+            intersectionPoints: [],
+            points: [],
+        }
 
         this.interactWithShapes();
+
+        return this.path
     }
 
     interactWithShapes() {
 
-        for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
-            for (const [key, value] of Object.entries(this.allShapes)) {
+        for (const shape of this.allShapes) {
+            for (const [key, value] of Object.entries(shape)) {
 
                 if (key == "front") {
-                    if (this.divideFullVsSplit(key, value, shapeId) == false) {
+                    if (this.divideFullVsSplit(key, value, shape.id) == false) {
                         continue
                     }
                 } else if ((key == "down" || key == "right") && this.path.order != "front") {
-                    if (this.divideFullVsSplit(key, value, shapeId) == false) {
+                    if (this.divideFullVsSplit(key, value, shape.id) == false) {
                         continue
                     }
                 } else if (key == "shadow" && this.path.order == "") {
-                    if (this.divideFullVsSplit(key, value, shapeId) == false) {
+                    if (this.divideFullVsSplit(key, value, shape.id) == false) {
                         continue
                     }
                 } else {
                     this.path.order = "";
                 }
             }
-            // add the endpoint to the list
         }
+        // add the endpoint to the list
         this.path.points.push(this.end);
     }
-
 
     divideFullVsSplit(key, value, shapeId) {
         if (this.check3PointsIn(value.pointList)) {
             this.path.order = key;
             this.path.shape = shapeId;
             this.fullInside = key;
+            // this.splitSwitch = false;  // reset
             this.path.strokeColor = value.colorAction;
             this.path.shapeLoop = value.shapeLoop;
             this.path.readyToDraw = true;  // SWITCH
@@ -206,7 +224,7 @@ class strokeSplitter {
 
             //BEGIN WITH START AND FIRST POINT
             var distance = Math.abs(vectorLength(vectorSub(pointObs[i].point, pointObs[i + 1].point)))
-            if (distance < this.minLength) {
+            if (distance < 5) { // HARDCODED HARDCODED HARDCODED HARDCODED HARDCODED HARDCODED HARDCODED HARDCODED HARDCODED HARDCODED
                 removableIndexes.push(i + 1);
             }
 
@@ -252,7 +270,7 @@ class strokeSplitter {
                             path.currentLoop = 0; // value.currentLoop;
                             path.shapeLoop = value.shapeLoop;
                             path.readyToDraw = true;
-                            path.shape = shapeId;
+                            path.shape = shape.id;
 
                         }
                     } else if ((key == "down" || key == "right") && path.order != "front") {
@@ -267,7 +285,7 @@ class strokeSplitter {
                             path.currentLoop = 0; // value.currentLoop;
                             path.shapeLoop = value.shapeLoop;
                             path.readyToDraw = true;
-                            path.shape = shapeId;
+                            path.shape = shape.id;
                             // console.log(path);
                         }
                     } else if (key == "shadow" && path.order == "") {
@@ -282,7 +300,7 @@ class strokeSplitter {
                             path.currentLoop = 0; // value.currentLoop;
                             path.shapeLoop = value.shapeLoop;
                             path.readyToDraw = true;
-                            path.shape = shapeId;
+                            path.shape = shape.id;
                             // console.log(path);
                         }
                     } else {
