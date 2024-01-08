@@ -60,7 +60,7 @@ class Grid {
 
 
         this.createStrokePath();
-        this.strokesplitter.retryStrokePath();
+        // this.strokesplitter.retryStrokePath();
         this.strokesplitter.showPaths(this.group);
 
         // var posX = 610;
