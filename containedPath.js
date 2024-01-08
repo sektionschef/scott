@@ -1,18 +1,15 @@
 class containedPath {
-    constructor() {
+    constructor(data) {
 
-        this.readyToDraw = false; // ready to draw,
-        // this.toBeSplitted = false,
+        this.readyToDraw = data.readyToDraw; // ready to draw,
+        this.split = false; // one part is in a shape
+        this.full = false; // full in a shape
         this.start = data.start;
         this.end = data.end;
         this.order = data.order;
-        this.strokeColor = "pink";
+        this.strokeColor = data.strokeColor;
         this.currentLoop = data.currentLoop;
         this.shapeLoop = data.shapeLoop; // maximum loop
-        // this.intersectionShapes: [],
-        // intersectionOrders: [],
-        // intersectionPoints: [],
-        // points: [],
-
+        this.points = data.points;
     }
 }

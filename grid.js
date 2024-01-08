@@ -60,9 +60,8 @@ class Grid {
 
 
         this.createStrokePath();
-        this.retryStrokePath();
-
-        this.showPaths();
+        this.strokesplitter.retryStrokePath();
+        this.strokesplitter.showPaths(this.group);
 
         // var posX = 610;
         // var posY = 270;
@@ -396,37 +395,6 @@ class Grid {
                             var angleRadiansLooped = angleRadians;
                         }
 
-                        // var singleStroke = new strokeSystem({
-                        //     "center": {
-                        //         x: positionX,
-                        //         y: positionMiddleLineY
-                        //     },
-                        //     vectorMagnitude: this.vectorMagnitude,
-                        //     angleRadians: angleRadiansLooped, // 0.2,
-                        //     strokeColor: this.strokeColor,
-                        //     strokeWidth: this.strokeWidth,
-                        //     allShapes: this.allShapes,
-                        //     loop: v,
-                        //     group: this.group,
-                        // });
-
-                        // singleStroke.showPath();
-
-                        // OLD ZUGFAHRT
-                        // this.pathCandidates.push(new strokeSplitter({
-                        //     "center": {
-                        //         x: positionX,
-                        //         y: positionMiddleLineY
-                        //     },
-                        //     vectorMagnitude: this.vectorMagnitude,
-                        //     angleRadians: angleRadiansLooped, // 0.2,
-                        //     strokeColor: this.strokeColor,
-                        //     strokeWidth: this.strokeWidth,
-                        //     allShapes: this.allShapes,
-                        //     loop: v,
-                        //     group: this.group,
-                        // }));
-
                         this.strokesplitter.add({
                             "center": {
                                 x: positionX,
@@ -436,7 +404,7 @@ class Grid {
                             angleRadians: angleRadiansLooped, // 0.2,
                             strokeColor: this.strokeColor,
                             strokeWidth: this.strokeWidth,
-                            allShapes: this.allShapes,
+                            // allShapes: this.allShapes,
                             loop: v,
                             group: this.group,
                         })
@@ -444,78 +412,5 @@ class Grid {
                 }
             }
         }
-        // console.log(this.pathCandidates);
-    }
-
-    retryStrokePath() {
-        for (const element of this.pathCandidates) {
-            if (element.toBeSplitted) {
-                if (element.points.length > 2) {
-                    element.points = strokeSplitter.sortIntersectionPoints(element)
-                    this.pathCandidates = strokeSplitter.createPathFromIntersections(element, this.allShapes, this.pathCandidates)
-                }
-
-            }
-        }
-    }
-
-    showPaths() {
-
-        for (const element of this.pathCandidates) {
-
-            if (element.readyToDraw == true && element.currentLoop <= (element.shapeLoop - 1)) {
-                this.drawDebugLine(element.start, element.end, element.strokeColor, 1);
-            }
-
-            // // for inside or for the first loop
-            // if (
-            //     // strokes in white area
-            //     // (this.fullInside !== "" || this.loop == 0) &&
-            //     // (this.loop < this.shapeLoop)
-
-            //     // no strokes in whitespace
-            //     (this.fullInside !== "" && this.loop < this.shapeLoop)
-            // ) {
-
-            //     if (this.filledPath) {
-            //         // this.newPath = this.drawPath(this.start, this.controlA, this.controlB, this.end);
-            //         // this.newPath = this.drawPath(this.start, this.controlA, this.controlB, this.end);
-
-
-            //         new filledPath({
-            //             start: this.start,
-            //             end: this.end,
-            //             angleRadians: this.angleRadians,
-            //             strokeWidth: this.strokeWidth,
-            //             group: this.group,
-            //         });
-
-            //     } else {
-            //         this.newPath = this.drawDebugLine(this.start, this.end, this.strokeColor, 1);
-            //     }
-            // }
-        }
-    }
-
-    drawDebugLine(start, end, strokeColor, strokeWidth) {
-        // const svgNode = document.getElementById('svgNode');
-        const group = document.getElementById(this.group);
-
-        var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
-        line.setAttributeNS(null, "id", "lineIdD");
-        line.setAttributeNS(null, "filter", "url(#filterPencil)");
-        // line.setAttributeNS(null, "filter", "url(#fueta)");
-        line.setAttributeNS(null, "x1", start.x);
-        line.setAttributeNS(null, "y1", start.y);
-        line.setAttributeNS(null, "x2", end.x);
-        line.setAttributeNS(null, "y2", end.y);
-
-        line.setAttributeNS(null, "stroke", strokeColor);
-        line.setAttributeNS(null, "stroke-width", strokeWidth);
-        line.setAttributeNS(null, "opacity", 1);
-        line.setAttributeNS(null, "fill", "none");
-
-        // svgNode.appendChild(this.newPath);
-        group.appendChild(line);
     }
 }

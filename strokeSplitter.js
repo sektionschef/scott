@@ -10,15 +10,15 @@ class strokeSplitter {
         this.allShapes = data.allShapes;
         // console.log(this.allShapes);
 
-        this.pathCandidates = [];
+        this.paths = [];  // ehemals pathcandidates
     }
 
     add(data) {
-        this.strokeWidth = data.strokeWidth;
         this.center = data.center;
+        this.strokeWidth = data.strokeWidth;
+        this.strokeColor = data.strokeColor;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
-        this.strokeColor = data.strokeColor;
         this.loop = data.loop;
         this.group = data.group;
 
@@ -34,67 +34,67 @@ class strokeSplitter {
             y: this.center.y + (this.vectorMagnitude / 2 * Math.sin(this.angleRadians - Math.PI))
         }
 
-        // this.path = {
-        //     "readyToDraw": false, // ready to draw,
-        //     "toBeSplitted": false,
-        //     start: this.start,
-        //     end: this.end,
-        //     order: "",
-        //     strokeColor: "pink",
-        //     currentLoop: this.loop,
-        //     shapeLoop: 0,
-        //     intersectionShapes: [],
-        //     intersectionOrders: [],
-        //     intersectionPoints: [],
-        //     points: [],
-        // }
+        this.path = new containedPath({
+            "readyToDraw": false,
+            start: this.start,
+            end: this.end,
+            order: "",
+            strokeColor: "black",
+            currentLoop: this.loop,
+            shapeLoop: 0,
+            full: false,
+            split: false,
+            // intersectionShapes: [],
+            // intersectionOrders: [],
+            // intersectionPoints: [],
+            points: [],
+        })
+        // console.log(this.path);
 
+        // push to pathcandidates and when finished to 
         this.interactWithShapes();
+
+        this.paths.push(this.path);
     }
 
     interactWithShapes() {
 
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
-            for (const [key, value] of Object.entries(this.allShapes)) {
+            for (const [key, value] of Object.entries(shapeValues)) {
 
-                if (key == "front") {
-                    if (this.divideFullVsSplit(key, value, shapeId) == false) {
-                        continue
-                    }
-                } else if ((key == "down" || key == "right") && this.path.order != "front") {
-                    if (this.divideFullVsSplit(key, value, shapeId) == false) {
-                        continue
-                    }
-                } else if (key == "shadow" && this.path.order == "") {
-                    if (this.divideFullVsSplit(key, value, shapeId) == false) {
-                        continue
-                    }
-                } else {
-                    this.path.order = "";
+                // filter out other keys
+                if (["front", "down", "right", "shadow"].includes(key)) {
+                    this.divideFullVsSplit(key, value)
                 }
             }
-            // add the endpoint to the list
         }
+        // add the endpoint to the list
         this.path.points.push(this.end);
     }
 
 
-    divideFullVsSplit(key, value, shapeId) {
-        if (this.check3PointsIn(value.pointList)) {
+    divideFullVsSplit(key, value) {
+
+        // split or full in order
+        var full = this.check3PointsIn(value.pointList);
+        var split = this.check1PointIn(value.pointList);
+
+        // prioritize - prevent that front split is more important than shadow full.
+        if (key == "front" && full) {
+            this.updateFull(key, value);
+        } else if (key == "front" && split) {
             this.path.order = key;
-            this.path.shape = shapeId;
-            this.fullInside = key;
-            this.path.strokeColor = value.colorAction;
-            this.path.shapeLoop = value.shapeLoop;
-            this.path.readyToDraw = true;  // SWITCH
-            this.path.points = [this.start, this.end];
-            return true;
-        } else if (this.check1PointIn(value.pointList)) {
-            this.path.toBeSplitted = true;
-            this.intersectSingleShape(key, value, shapeId);
-            return true;
-        } else {
-            return false;
+            this.path.points = [this.start];
+            this.path.split = true;
+            this.intersectSingleShape(key, value)
+        } else if ((key == "down" || key == "right") && full && this.path.order != "front") {
+            this.updateFull(key, value);
+        } else if ((key == "down" || key == "right") && split && this.path.order != "front") {
+            this.path.split = true;
+        } else if (key == "shadow" && full && this.path.order == "") {
+            this.updateFull(key, value);
+        } else if (key == "shadow" && split && this.path.order == "") {
+            this.path.split = true;
         }
     }
 
@@ -116,9 +116,16 @@ class strokeSplitter {
         )
     }
 
-    intersectSingleShape(key, value, shapeId) {
+    updateFull(key, value) {
+        this.path.order = key;
+        this.path.full = true;
+        this.path.strokeColor = value.colorAction;
+        this.path.shapeLoop = value.shapeLoop;  // RENAME with MAX
+        this.path.points = [this.start, this.end];
+        this.path.readyToDraw = true;
+    }
 
-        this.path.points = [this.start];
+    intersectSingleShape(key, value) {
 
         // dummy point
         var intersectionPoint = {
@@ -160,7 +167,10 @@ class strokeSplitter {
 
             // get the intersection point with the shortest distance to center, here the intersectionPoint and the shape is selected
             if (this.checkIntersectionShapePath) {
-                if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(this.interPoint, this.center)))) {
+                // console.log(this.center);
+                // console.log(this.interPointCandidate);
+                // console.log(intersectionPoint);
+                if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(intersectionPoint, this.center)))) {
                     // per shape one intersection point, closest to center
                     intersectionPoint = this.interPointCandidate;
                 };
@@ -168,12 +178,12 @@ class strokeSplitter {
         }
 
         this.path.points.push(intersectionPoint);
-        this.path.intersectionPoints.push(intersectionPoint);
-        this.path.intersectionOrders.push(key);
-        this.path.intersectionShapes.push(shapeId);
+        // this.path.intersectionPoints.push(intersectionPoint);
+        // this.path.intersectionOrders.push(key);
+        // this.path.intersectionShapes.push(shapeId);
     }
 
-    static sortIntersectionPoints(element) {
+    sortIntersectionPoints(element) {
 
         // PROBABLY ORDER - BY SHAPE
         // console.log(order);
@@ -182,30 +192,22 @@ class strokeSplitter {
         // CREATE OBJECTS FOR SORT - REMOVE THE DICT
         var pointObs = []
         for (var i = 0; i < element.points.length; i++) {
-            pointObs.push({
-                point: element.points[i],
-                // order: element.orders[i],
-                // shape: element.shapes[i],
-            })
+            pointObs.push(element.points[i])
         }
 
         // sort by distance to start
-        pointObs.sort(function (a, b) { return vectorLength(vectorSub(element.start, a.point)) - vectorLength(vectorSub(element.start, b.point)) });
+        pointObs.sort(function (a, b) { return vectorLength(vectorSub(element.start, a)) - vectorLength(vectorSub(element.start, b)) });
         // console.log(pointObs);
 
         var removableIndexes = [];
         // REMOVE SHORT DISTANCE POINTS
-        for (var i = 0; i < pointObs.length; i++) {
-            if (pointObs[i + 1] == undefined) {
-                break;
-            }
+        for (var i = 0; i < (pointObs.length - 1); i++) {
 
-            // console.log(pointObs[i].point);
-            // console.log(pointObs[i + 1].point);
-
+            // console.log(pointObs[i]);
+            // console.log(pointObs[i + 1]);
 
             //BEGIN WITH START AND FIRST POINT
-            var distance = Math.abs(vectorLength(vectorSub(pointObs[i].point, pointObs[i + 1].point)))
+            var distance = Math.abs(vectorLength(vectorSub(pointObs[i], pointObs[i + 1])))
             if (distance < this.minLength) {
                 removableIndexes.push(i + 1);
             }
@@ -222,77 +224,180 @@ class strokeSplitter {
         return pointObs
     }
 
-    static createPathFromIntersections(element, allShapes, pathCandidates) {
-        var path = {};
+    createPathFromIntersections(element, allShapes) {
+        this.path = {};
 
         for (var i = 0; i < (element.points.length - 1); i++) {
 
             // which part is in, which one is out?
-            var midPoint = getMiddlePpoint(element.points[i].point, element.points[i + 1].point);
+            var midPoint = getMiddlePpoint(element.points[i], element.points[i + 1]);
 
             // DEBUG
             // showDebugPoint(element.points[i].point.x, element.points[i].point.y, "green");
             // showDebugPoint(midPoint.x, midPoint.y, "pink");
             // showDebugPoint(element.points[i + 1].point.x, element.points[i + 1].point.y, "red");
 
-            for (const shape of allShapes) {
+            for (const [shapeId, shape] of Object.entries(allShapes)) {
                 for (const [key, value] of Object.entries(shape)) {
 
+
                     if (key == "front") {
-
                         if (
                             pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
                         ) {
 
-                            path.start = element.points[i].point;
-                            path.end = element.points[i + 1].point;
+                            // path.start = element.points[i].point;
+                            // path.end = element.points[i + 1].point;
 
-                            path.order = "front"; //orderSelect;
-                            path.strokeColor = value.colorAction;
-                            path.currentLoop = 0; // value.currentLoop;
-                            path.shapeLoop = value.shapeLoop;
-                            path.readyToDraw = true;
-                            path.shape = shapeId;
+                            // path.order = "front"; //orderSelect;
+                            // path.strokeColor = value.colorAction;
+                            // path.currentLoop = 0; // value.currentLoop;
+                            // path.shapeLoop = value.shapeLoop;
+                            // path.readyToDraw = true;
+                            // path.shape = shapeId;
+
+                            var newPath = new containedPath({
+                                readyToDraw: true,
+                                start: element.points[i],
+                                end: element.points[i + 1],
+                                order: key,
+                                strokeColor: value.colorAction,
+                                currentLoop: this.loop,
+                                shapeLoop: 0,
+                                full: true,
+                                split: false,
+                                points: [],
+                            })
+                            // console.log(newPath);
+                            this.paths.push(newPath);
 
                         }
-                    } else if ((key == "down" || key == "right") && path.order != "front") {
+                    } else if ((key == "down" || key == "right") && this.path.order != "front") {
                         if (
                             pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
                         ) {
-                            path.start = element.points[i].point;
-                            path.end = element.points[i + 1].point;
+                            // path.start = element.points[i].point;
+                            // path.end = element.points[i + 1].point;
 
-                            path.order = key; // "right"; //orderSelect;
-                            path.strokeColor = value.colorAction;
-                            path.currentLoop = 0; // value.currentLoop;
-                            path.shapeLoop = value.shapeLoop;
-                            path.readyToDraw = true;
-                            path.shape = shapeId;
-                            // console.log(path);
+                            // path.order = key; // "right"; //orderSelect;
+                            // path.strokeColor = value.colorAction;
+                            // path.currentLoop = 0; // value.currentLoop;
+                            // path.shapeLoop = value.shapeLoop;
+                            // path.readyToDraw = true;
+                            // path.shape = shapeId;
+                            // // console.log(path);
+
+                            var newPath = new containedPath({
+                                readyToDraw: true,
+                                start: element.points[i],
+                                end: element.points[i + 1],
+                                order: key,
+                                strokeColor: value.colorAction,
+                                currentLoop: this.loop,
+                                shapeLoop: 3,
+                                full: true,
+                                split: false,
+                                points: [],
+                            })
+                            this.paths.push(newPath);
                         }
-                    } else if (key == "shadow" && path.order == "") {
+                    } else if (key == "shadow" && this.path.order == "") {
                         if (
                             pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
                         ) {
-                            path.start = element.points[i].point;
-                            path.end = element.points[i + 1].point;
+                            // path.start = element.points[i].point;
+                            // path.end = element.points[i + 1].point;
 
-                            path.order = key; // "right"; //orderSelect;
-                            path.strokeColor = value.colorAction;
-                            path.currentLoop = 0; // value.currentLoop;
-                            path.shapeLoop = value.shapeLoop;
-                            path.readyToDraw = true;
-                            path.shape = shapeId;
-                            // console.log(path);
+                            // path.order = key; // "right"; //orderSelect;
+                            // path.strokeColor = value.colorAction;
+                            // path.currentLoop = 0; // value.currentLoop;
+                            // path.shapeLoop = value.shapeLoop;
+                            // path.readyToDraw = true;
+                            // path.shape = shapeId;
+                            // // console.log(path);
                         }
                     } else {
-                        path.order = "";
+                        // path.order = "";
                     }
                 }
             }
-            pathCandidates.push(path)
         }
+    }
 
-        return pathCandidates;
+    retryStrokePath() {
+        for (const element of this.paths) {
+            if (element.split) {
+                // if (element.points.length > 1) {
+                // console.log("dsf")
+                // DANGER - DUPLICATE TO 2 PUNKTE - DA BRAUCHEN WIR ES NICHT NOCHMAL
+
+                element.points = this.sortIntersectionPoints(element)
+                this.createPathFromIntersections(element, this.allShapes)
+                // }
+            }
+        }
+    }
+
+    showPaths(group) {
+
+        // console.log(this.paths);
+        for (const element of this.paths) {
+            // console.log(element);
+            // if (element.readyToDraw == true && element.currentLoop <= (element.shapeLoop - 1)) {
+            if (element.readyToDraw == true) {
+                this.drawDebugLine(element.start, element.end, element.strokeColor, 1, group);
+            }
+
+            // // for inside or for the first loop
+            // if (
+            //     // strokes in white area
+            //     // (this.fullInside !== "" || this.loop == 0) &&
+            //     // (this.loop < this.shapeLoop)
+
+            //     // no strokes in whitespace
+            //     (this.fullInside !== "" && this.loop < this.shapeLoop)
+            // ) {
+
+            //     if (this.filledPath) {
+            //         // this.newPath = this.drawPath(this.start, this.controlA, this.controlB, this.end);
+            //         // this.newPath = this.drawPath(this.start, this.controlA, this.controlB, this.end);
+
+
+            //         new filledPath({
+            //             start: this.start,
+            //             end: this.end,
+            //             angleRadians: this.angleRadians,
+            //             strokeWidth: this.strokeWidth,
+            //             group: this.group,
+            //         });
+
+            //     } else {
+            //         this.newPath = this.drawDebugLine(this.start, this.end, this.strokeColor, 1);
+            //     }
+            // }
+        }
+    }
+
+
+    drawDebugLine(start, end, strokeColor, strokeWidth, groupString) {
+        // const svgNode = document.getElementById('svgNode');
+        const group = document.getElementById(groupString);
+
+        var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
+        // line.setAttributeNS(null, "id", "lineIdD");
+        line.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // line.setAttributeNS(null, "filter", "url(#fueta)");
+        line.setAttributeNS(null, "x1", start.x);
+        line.setAttributeNS(null, "y1", start.y);
+        line.setAttributeNS(null, "x2", end.x);
+        line.setAttributeNS(null, "y2", end.y);
+
+        line.setAttributeNS(null, "stroke", strokeColor);
+        line.setAttributeNS(null, "stroke-width", strokeWidth);
+        line.setAttributeNS(null, "opacity", 1);
+        line.setAttributeNS(null, "fill", "none");
+
+        // svgNode.appendChild(this.newPath);
+        group.appendChild(line);
     }
 }
