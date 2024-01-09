@@ -11,6 +11,7 @@ class strokeSplitter {
         // console.log(this.allShapes);
 
         this.paths = [];  // ehemals pathcandidates
+        this.loopMaterial = []; // restructured shape data
     }
 
     add(data) {
@@ -34,7 +35,7 @@ class strokeSplitter {
             y: this.center.y + (this.vectorMagnitude / 2 * Math.sin(this.angleRadians - Math.PI))
         }
 
-        this.path = new containedPath({
+        var path = new containedPath({
             "readyToDraw": false,
             start: this.start,
             end: this.end,
@@ -44,23 +45,54 @@ class strokeSplitter {
             shapeLoop: 0,
             full: false,
             split: false,
+            rerun: false,
             points: [],
         })
-        // console.log(this.path);
 
-        // push to pathcandidates and when finished to 
-        this.interactWithShapes();
+        this.restructureShapeData();
 
-        this.paths.push(this.path);
+        this.paths.push(path);
     }
 
-    interactWithShapes() {
+    runOnce() {
 
-        // reformat for showing hierarchy
-        var loopMaterial = {
+        for (const path of this.paths) {
+            // get the path's data 
+            for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
+                for (const shape of shapeList) {
+                    path.divideFullVsSplit(order, shape)
+                }
+            }
+        }
+
+        for (const path of this.paths) {
+            // console.log(path);
+            if (path.split == true) {
+                // console.log("oida");
+                // this.paths.push(path.createPathFromIntersection());
+                this.paths = this.paths.concat(path.createPathFromIntersection());
+                // console.log(rerunPaths)
+            }
+        }
+
+        for (const path of this.paths) {
+            if (path.rerun) {
+                for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
+                    for (const shape of shapeList) {
+                        path.divideFullVsSplit(order, shape)
+                    }
+                }
+            }
+        }
+    }
+
+    restructureShapeData() {
+
+        // reformat for displaying correct hierarchy
+        this.loopMaterial = {
             front: [],
-            down: [],
             right: [],
+            down: [],
             shadow: [],
         };
 
@@ -71,179 +103,24 @@ class strokeSplitter {
                 if (["front"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    loopMaterial[key].push(newValue);
+                    this.loopMaterial[key].push(newValue);
                 }
 
                 if (["down"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    loopMaterial[key].push(newValue);
+                    this.loopMaterial[key].push(newValue);
                 }
                 if (["right"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    loopMaterial[key].push(newValue);
+                    this.loopMaterial[key].push(newValue);
                 }
                 if (["shadow"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    loopMaterial[key].push(newValue);
+                    this.loopMaterial[key].push(newValue);
                 }
-            }
-        }
-
-        for (const [order, shapeList] of Object.entries(loopMaterial)) {
-            for (const shape of shapeList) {
-                // console.log(order)
-                // console.log(shape);
-                this.divideFullVsSplit(order, shape)
-            }
-        }
-
-    }
-
-
-    divideFullVsSplit(key, value) {
-
-        // split or full in order
-        var full = this.check3PointsIn(value.pointList);
-        var split = this.check1PointIn(value.pointList);
-
-        // prioritize - prevent that front split is more important than shadow full.
-        if (key == "front" && full) {
-            this.updateFull(key, value);
-        } else if (key == "front" && split) {
-            this.intersectSingleShape(key, value)
-        } else if ((key == "down" || key == "right") && full && this.path.order != "front") {
-            this.updateFull(key, value);
-        } else if ((key == "down" || key == "right") && split) {
-            // } else if ((key == "down" || key == "right") && split && this.path.order != "front") {
-            this.intersectSingleShape(key, value)
-        } else if (key == "shadow" && full && this.path.order == "") {
-            this.updateFull(key, value);
-            // } else if (key == "shadow" && split && this.path.order == "") {
-        } else if (key == "shadow" && split) {
-            this.intersectSingleShape(key, value)
-        }
-    }
-
-    // at least one point of start, center, end in one shape?
-    check1PointIn(pointList) {
-        return (
-            pointInPolygon(pointList, [this.start.x, this.start.y]) ||
-            pointInPolygon(pointList, [this.center.x, this.center.y]) ||
-            pointInPolygon(pointList, [this.end.x, this.end.y])
-        )
-    }
-
-    // start, center, end are all in one shape?
-    check3PointsIn(pointList) {
-        return (
-            pointInPolygon(pointList, [this.start.x, this.start.y]) &&
-            pointInPolygon(pointList, [this.center.x, this.center.y]) &&
-            pointInPolygon(pointList, [this.end.x, this.end.y])
-        )
-    }
-
-    updateFull(key, value) {
-        this.path.order = key;
-        this.path.full = true;
-        this.path.strokeColor = value.colorAction;
-        this.path.shapeLoop = value.shapeLoop;  // RENAME with MAX
-        this.path.points = [this.start, this.end];
-        this.path.readyToDraw = true;
-    }
-
-    intersectSingleShape(key, value) {
-        this.path.order = key;
-        this.path.points = [this.start];
-        this.path.split = true;
-
-        // dummy point
-        var intersectionPoint = {
-            x: 0,
-            y: 0
-        };
-
-        // if there is an intersection point with any shape, closest selected
-        // get all sides
-        for (var i = 0; i < value.pointList.length; i++) {
-
-            // get all sides
-            if (i != (value.pointList.length - 1)) {
-                this.shapeA = { x: value.pointList[i][0], y: value.pointList[i][1] };
-                this.shapeB = { x: value.pointList[i + 1][0], y: value.pointList[i + 1][1] }
-            } else {
-                // closing the loop
-                this.shapeA = { x: value.pointList[0][0], y: value.pointList[0][1] };
-                this.shapeB = { x: value.pointList[i][0], y: value.pointList[i][1] };
-            }
-
-            // find intersection point for the loop
-            this.interPointCandidate = intersect(this.shapeA.x, this.shapeA.y, this.shapeB.x, this.shapeB.y, this.start.x, this.start.y, this.end.x, this.end.y);
-            if (this.interPointCandidate === undefined) {
-                continue;
-            }
-
-            // if the intersection point lies between the points of the line and the shape's side. (vector is endless)
-            var shapeLineLength = vectorLength(vectorSub(this.shapeA, this.shapeB));
-            this.checkIntersectionShapePath = (
-                shapeLineLength > vectorLength(vectorSub(this.shapeA, this.interPointCandidate))
-            ) && (
-                    shapeLineLength > vectorLength(vectorSub(this.interPointCandidate, this.shapeB))
-                ) && (
-                    this.vectorMagnitude > vectorLength(vectorSub(this.start, this.interPointCandidate))
-                ) && (
-                    this.vectorMagnitude > vectorLength(vectorSub(this.interPointCandidate, this.end))
-                );
-
-            // get the intersection point with the shortest distance to center, here the intersectionPoint and the shape is selected
-            if (this.checkIntersectionShapePath) {
-                // console.log(this.center);
-                // console.log(this.interPointCandidate);
-                // console.log(intersectionPoint);
-                if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(intersectionPoint, this.center)))) {
-                    // per shape one intersection point, closest to center
-                    intersectionPoint = this.interPointCandidate;
-                };
-            }
-        }
-
-        this.path.points.push(intersectionPoint);
-        // this.path.intersectionPoints.push(intersectionPoint);
-        // this.path.intersectionOrders.push(key);
-        // this.path.intersectionShapes.push(shapeId);
-
-        this.createPathFromIntersection(key, value)
-    }
-
-    // NEW
-    createPathFromIntersection(key, value) {
-
-        this.path.points.push(this.end);
-
-        for (var i = 0; i < (this.path.points.length - 1); i++) {
-
-            // which part is in, which one is out?
-            var midPoint = getMiddlePpoint(this.path.points[i], this.path.points[i + 1]);
-
-            if (
-                pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
-            ) {
-                var newPath = new containedPath({
-                    readyToDraw: true,
-                    start: this.path.points[i],
-                    end: this.path.points[i + 1],
-                    order: key,
-                    strokeColor: value.colorAction,
-                    currentLoop: this.loop,
-                    shapeLoop: 0,
-                    full: true,
-                    split: false,
-                    points: [],
-                })
-                // console.log(newPath);
-                this.paths.push(newPath);
             }
         }
     }
@@ -402,11 +279,18 @@ class strokeSplitter {
     showPaths(group) {
 
         // console.log(this.paths);
-        for (const element of this.paths) {
+        for (const path of this.paths) {
+
+            // for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
+            //     for (const shape of shapeList) {
+            //         path.divideFullVsSplit(order, shape)
+            //     }
+            // }
+
             // console.log(element);
             // if (element.readyToDraw == true && element.currentLoop <= (element.shapeLoop - 1)) {
-            if (element.readyToDraw == true) {
-                this.drawDebugLine(element.start, element.end, element.strokeColor, 1, group);
+            if (path.readyToDraw == true) {
+                this.drawDebugLine(path.start, path.end, path.strokeColor, 1, group);
             }
 
             // // for inside or for the first loop
