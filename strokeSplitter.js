@@ -105,7 +105,6 @@ class strokeSplitter {
                     newValue.shapeId = shapeId;
                     this.loopMaterial[key].push(newValue);
                 }
-
                 if (["down"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;

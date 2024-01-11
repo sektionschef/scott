@@ -1,5 +1,6 @@
 class containedPath {
     constructor(data) {
+        this.uncertaintyShift = 3;
 
         this.readyToDraw = data.readyToDraw; // ready to draw,
         this.split = false; // one part is in a shape
@@ -13,8 +14,14 @@ class containedPath {
         this.shapeLoop = data.shapeLoop; // maximum loop
         this.points = data.points;
 
-        // recalc, not everyone has it.
-        this.center = getMiddlePpoint(this.start, this.end);;
+        // recalc, not everyone has it
+        this.center = getMiddlePpoint(this.start, this.end);
+        this.angle = angleBetweenPoints(this.start, this.end);
+
+        this.uncertaintyAdder = vectorFromAngle(this.angle, this.uncertaintyShift)
+        this.startShift = vectorAdd(this.start, this.uncertaintyAdder);
+        // console.log(this.startShift);
+        this.endShift = vectorSub(this.uncertaintyAdder, this.end);
     }
 
     divideFullVsSplit(key, value) {
@@ -55,9 +62,13 @@ class containedPath {
     // start, center, end are all in one shape?
     check3PointsIn(pointList) {
         return (
-            pointInPolygon(pointList, [this.start.x, this.start.y]) &&
+            pointInPolygon(pointList, [this.startShift.x, this.startShift.y]) &&
+            // pointInPolygon(pointList, [this.start.x, this.start.y]) &&
             pointInPolygon(pointList, [this.center.x, this.center.y]) &&
-            pointInPolygon(pointList, [this.end.x, this.end.y])
+            // pointInPolygon(pointList, [this.end.x, this.end.y])
+            pointInPolygon(pointList, [this.endShift.x, this.endShift.y])
+
+            // pointInPolygon(pointList, [this.center.x, this.center.y])
         )
     }
 
@@ -71,14 +82,9 @@ class containedPath {
     }
 
     intersectSingleShape(key, value) {
+        var intersectionPoint
         this.order = key;
         // this.points = [this.start];
-
-        // dummy point
-        var intersectionPoint = {
-            x: 0,
-            y: 0
-        };
 
         // if there is an intersection point with any shape, closest selected
         // get all sides
@@ -116,25 +122,32 @@ class containedPath {
 
             // get the intersection point with the shortest distance to center, here the intersectionPoint and the shape is selected
             if (this.checkIntersectionShapePath) {
-                if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(intersectionPoint, this.center)))) {
-                    // per shape one intersection point, closest to center
+                if (intersectionPoint != undefined) {
+                    if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(intersectionPoint, this.center)))) {
+                        // per shape one intersection point, closest to center
+                        intersectionPoint = this.interPointCandidate;
+                        this.split = true;
+                    };
+                } else {
                     intersectionPoint = this.interPointCandidate;
                     this.split = true;
-                };
+                }
             }
         }
 
-        // this.points.push(intersectionPoint);
-        // this.points.push(this.end);
-        this.points = [this.start, intersectionPoint, this.end];
-        this.pointList = value.pointList;
-        this.key = key;
+        if (intersectionPoint != undefined) {
+            this.points = [this.start, intersectionPoint, this.end];
+            this.pointList = value.pointList;
+            this.key = key;
+        }
 
         // this.createPathFromIntersection(key, value)
     }
 
     // createPathFromIntersection(key, value) {
     createPathFromIntersection() {
+
+        // console.log(this.points[2]);
 
         var newPath = new containedPath({
             readyToDraw: false,
@@ -144,27 +157,32 @@ class containedPath {
             // order: key,
             order: this.key,
             strokeColor: "orange",
-            currentLoop: this.loop,
-            shapeLoop: 0,
-            full: true,
-            split: false,
-            points: [],
-        })
-        var recycledPath = new containedPath({
-            readyToDraw: false,
-            rerun: true,
-            start: this.points[1],
-            end: this.points[2],
-            order: "",
-            strokeColor: "blue",
             currentLoop: 0,
             shapeLoop: 0,
             full: false,
             split: false,
             points: [],
         })
-        // this.paths.push(recycledPath);
-        return [newPath, recycledPath]
+
+        // CRAZY
+        if (this.points[2] != undefined) {
+            var recycledPath = new containedPath({
+                readyToDraw: false,
+                rerun: true,
+                start: this.points[1],
+                end: this.points[2],
+                order: "",
+                strokeColor: "blue",
+                currentLoop: 0,
+                shapeLoop: 0,
+                full: false,
+                split: false,
+                points: [],
+            })
+            return [newPath, recycledPath]
+        } else {
+            return [newPath]
+        }
 
         // for (var i = 0; i < (this.points.length - 1); i++) {
 
