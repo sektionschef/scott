@@ -33,21 +33,31 @@ class containedPath {
         var split = this.check1PointIn(value.pointList);
 
         // prioritize - prevent that front split is more important than shadow full.
-        if (key == "front" && full) {
+        // if (key == "front" && full) {
+        //     this.updateFull(key, value);
+        // } else if (key == "front" && split) {
+        //     this.intersectSingleShape(key, value)
+        // } else if ((key == "down" || key == "right") && full && this.order != "front") {
+        //     this.updateFull(key, value);
+        // } else if ((key == "down" || key == "right") && split) {
+        //     // } else if ((key == "down" || key == "right") && split && this.order != "front") {
+        //     this.intersectSingleShape(key, value)
+        // } else if (key == "shadow" && full && this.order == "") {
+        //     this.updateFull(key, value);
+        //     // } else if (key == "shadow" && split && this.order == "") {
+        // } else if (key == "shadow" && split) {
+        //     this.intersectSingleShape(key, value)
+        // }
+
+        // for (var i = 1; i < 20; i++) {
+        // if (key == i) {
+        if (full) {
             this.updateFull(key, value);
-        } else if (key == "front" && split) {
-            this.intersectSingleShape(key, value)
-        } else if ((key == "down" || key == "right") && full && this.order != "front") {
-            this.updateFull(key, value);
-        } else if ((key == "down" || key == "right") && split) {
-            // } else if ((key == "down" || key == "right") && split && this.order != "front") {
-            this.intersectSingleShape(key, value)
-        } else if (key == "shadow" && full && this.order == "") {
-            this.updateFull(key, value);
-            // } else if (key == "shadow" && split && this.order == "") {
-        } else if (key == "shadow" && split) {
-            this.intersectSingleShape(key, value)
+        } else if (split) {
+            this.intersectSingleShape(key, value);
         }
+        // }
+        // }
     }
 
     // at least one point of start, center, end in one shape?

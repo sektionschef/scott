@@ -17,6 +17,7 @@ class shapes {
                 superShadowHeightMax: 25, // heigt in boxes on y axis
                 front: {
                     shapeLoop: 2,
+                    order: 1,
                     // colorAction: "#5c5c5c",
                     colorAction: "red",
                     // colorAction: this.strokeColor,
@@ -24,6 +25,7 @@ class shapes {
                 },
                 down: {  // shadow beneath
                     shapeLoop: 1,
+                    order: 3,
                     colorAction: "green",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -31,6 +33,7 @@ class shapes {
                 },
                 right: {  // shadow beneath
                     shapeLoop: 1,
+                    order: 5,
                     colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -38,6 +41,7 @@ class shapes {
                 },
                 shadow: {  // shadow
                     shapeLoop: 1,
+                    order: 7,
                     colorAction: "#a937c0",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -57,6 +61,7 @@ class shapes {
                 superShadowHeightMax: 25, // heigt in boxes on y axis
                 front: {
                     shapeLoop: 2,
+                    order: 2,
                     // colorAction: "#5c5c5c",
                     colorAction: "red",
                     // colorAction: this.strokeColor,
@@ -64,6 +69,7 @@ class shapes {
                 },
                 down: {  // shadow beneath
                     shapeLoop: 1,
+                    order: 4,
                     colorAction: "green",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -71,6 +77,7 @@ class shapes {
                 },
                 right: {  // shadow beneath
                     shapeLoop: 1,
+                    order: 6,
                     colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -78,6 +85,7 @@ class shapes {
                 },
                 shadow: {  // shadow
                     shapeLoop: 1,
+                    order: 8,
                     colorAction: "#a937c0",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,

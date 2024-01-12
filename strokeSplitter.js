@@ -56,31 +56,38 @@ class strokeSplitter {
 
     runOnce() {
 
+        // console.log(this.loopMaterial);
+
         for (const path of this.paths) {
             // get the path's data 
-            for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
-                for (const shape of shapeList) {
-                    path.divideFullVsSplit(order, shape)
-                }
+            // for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
+            // for (const shape of shapeList) {
+            // path.divideFullVsSplit(order, shapeList)
+            // }
+            // }
+
+            for (var i = 8; i > 0; i--) {
+
+                // console.log(this.loopMaterial[i]);
+                path.divideFullVsSplit(i, this.loopMaterial[i])
             }
         }
 
         for (const path of this.paths) {
             // console.log(path);
             if (path.split == true) {
-                // console.log("oida");
-                // this.paths.push(path.createPathFromIntersection());
                 this.paths = this.paths.concat(path.createPathFromIntersection());
-                // console.log(rerunPaths)
             }
         }
 
+
         for (const path of this.paths) {
             if (path.rerun) {
-                for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
-                    for (const shape of shapeList) {
-                        path.divideFullVsSplit(order, shape)
-                    }
+                for (var i = 8; i > 0; i--) {
+                    // for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
+                    // path.divideFullVsSplit(order, shapeList)
+                    path.divideFullVsSplit(i, this.loopMaterial[i])
+                    // }
                 }
             }
         }
@@ -90,10 +97,10 @@ class strokeSplitter {
 
         // reformat for displaying correct hierarchy
         this.loopMaterial = {
-            front: [],
-            right: [],
-            down: [],
-            shadow: [],
+            // front: [],
+            // right: [],
+            // down: [],
+            // shadow: [],
         };
 
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
@@ -103,25 +110,34 @@ class strokeSplitter {
                 if (["front"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    this.loopMaterial[key].push(newValue);
+                    newValue.side = "front";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
                 }
                 if (["down"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    this.loopMaterial[key].push(newValue);
+                    newValue.side = "down";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
                 }
                 if (["right"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    this.loopMaterial[key].push(newValue);
+                    newValue.side = "right";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
                 }
                 if (["shadow"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
-                    this.loopMaterial[key].push(newValue);
+                    newValue.side = "shadow";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
                 }
             }
         }
+        // console.log(this.loopMaterial);
     }
 
 
