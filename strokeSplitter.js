@@ -4,7 +4,7 @@ class strokeSplitter {
         this.posStdCon = 1; // 0.4;  // control points
         this.posStdShiftX = 0; // add variance to x so no total overlap
         this.minLength = 5; // 5;  // a line should have a length of at least
-        this.filledPath = true;
+        this.filledPath = false;
         // this.shapeLoop = 1;  // limit for whitespace, 1 = general run
 
         this.allShapes = data.allShapes;
@@ -12,6 +12,8 @@ class strokeSplitter {
 
         this.paths = [];  // ehemals pathcandidates
         this.loopMaterial = []; // restructured shape data
+
+        this.restructureShapeData();
     }
 
     add(data) {
@@ -50,15 +52,16 @@ class strokeSplitter {
             points: [],
         })
 
-        this.restructureShapeData();
-
         this.paths.push(path);
     }
 
     run() {
 
+        this.shapeStartPosition = 1; // 0 for background, 1 for first
+        this.shapeCount = 8;
+
         for (const path of this.paths) {
-            for (var i = 1; i <= 8; i++) {
+            for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
                 path.divideFullVsSplit(i, this.loopMaterial[i])
             }
         }
@@ -71,7 +74,7 @@ class strokeSplitter {
 
         for (const path of this.paths) {
             if (path.rerun) {
-                for (var i = 1; i <= 8; i++) {
+                for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
                     path.divideFullVsSplit(i, this.loopMaterial[i])
                 }
             }
@@ -86,7 +89,7 @@ class strokeSplitter {
 
         for (const path of this.paths) {
             if (path.rerun) {
-                for (var i = 1; i <= 8; i++) {
+                for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
                     path.divideFullVsSplit(i, this.loopMaterial[i])
                 }
             }
@@ -102,6 +105,13 @@ class strokeSplitter {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             for (const [key, value] of Object.entries(shapeValues)) {
 
+                if (["background"].includes(key)) {
+                    var newValue = value;
+                    newValue.shapeId = shapeId;
+                    newValue.side = "background";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
+                }
                 // filter out other keys
                 if (["front"].includes(key)) {
                     var newValue = value;
@@ -133,7 +143,7 @@ class strokeSplitter {
                 }
             }
         }
-        // console.log(this.loopMaterial);
+        console.log(this.loopMaterial);
     }
 
 

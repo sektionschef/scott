@@ -33,11 +33,15 @@ class Grid {
             this.heightBoxCount = this.longBoxCount;
             this.widthMargin = this.shortMargin;
             this.heightMargin = this.longMargin;
+            this.canvasWidth = this.shortSide;
+            this.canvasHeight = this.longSide;
         } else {
             this.widthBoxCount = this.longBoxCount;
             this.heightBoxCount = this.shortBoxCount;
             this.widthMargin = this.longMargin;
             this.heightMargin = this.shortMargin;
+            this.canvasWidth = this.longSide;
+            this.canvasHeight = this.shortSide;
         }
 
         this.boxes = [];
@@ -49,7 +53,11 @@ class Grid {
         this.loopCategorize();
         // this.loopdebugCategory();
 
-        this.shapes = new shapes(this.stripeHeight);
+        this.shapes = new shapes(
+            this.stripeHeight,
+            this.canvasWidth,
+            this.canvasHeight
+        );
         this.shapes.defineBorders(this.boxes);
         // this.shapes.debugShowShape();
         // this.shapes.fillShape();
