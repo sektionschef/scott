@@ -378,7 +378,7 @@ class Grid {
                     // reference for being in shape is the middle of the stripe
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
 
-                    for (var v = 0; v < loopMax; v++) {
+                    for (var v = 1; v <= loopMax; v++) {
 
                         // first loop
                         if (v == 0) {
@@ -405,7 +405,7 @@ class Grid {
                             strokeColor: this.strokeColor,
                             strokeWidth: this.strokeWidth,
                             // allShapes: this.allShapes,
-                            loop: v,
+                            currentLoop: v,
                             group: this.group,
                         })
                     }

@@ -3,7 +3,8 @@ class containedPath {
         this.uncertaintyShift = 3;
 
         this.readyToDraw = data.readyToDraw; // ready to draw,
-        this.selected = false;
+        this.selected = data.selected;
+        this.sorgenkind = data.sorgenkind;  // DEBUG MARKER
         this.split = false; // one part is in a shape
         this.full = false; // full in a shape
         this.rerun = data.rerun;
@@ -12,7 +13,8 @@ class containedPath {
         this.order = data.order;
         this.strokeColor = data.strokeColor;
         this.currentLoop = data.currentLoop;
-        this.shapeLoop = data.shapeLoop; // maximum loop
+        // this.shapeLoop = data.shapeLoop; // maximum loop
+        this.shapeLoop = 0;
         this.points = data.points;
 
         // recalc, not everyone has it
@@ -27,37 +29,32 @@ class containedPath {
 
     divideFullVsSplit(key, value) {
 
-        // console.log(value.pointList)
-
-        // split or full in order
-        var full = this.check3PointsIn(value.pointList);
-        var split = this.check1PointIn(value.pointList);
-
-        // prioritize - prevent that front split is more important than shadow full.
-        // if (key == "front" && full) {
-        //     this.updateFull(key, value);
-        // } else if (key == "front" && split) {
-        //     this.intersectSingleShape(key, value)
-        // } else if ((key == "down" || key == "right") && full && this.order != "front") {
-        //     this.updateFull(key, value);
-        // } else if ((key == "down" || key == "right") && split) {
-        //     // } else if ((key == "down" || key == "right") && split && this.order != "front") {
-        //     this.intersectSingleShape(key, value)
-        // } else if (key == "shadow" && full && this.order == "") {
-        //     this.updateFull(key, value);
-        //     // } else if (key == "shadow" && split && this.order == "") {
-        // } else if (key == "shadow" && split) {
-        //     this.intersectSingleShape(key, value)
-        // }
-
-
+        // selected in shape previously
         if (this.selected == false) {
-            if (full) {
+            // split or full in order
+            var full = this.check3PointsIn(value.pointList);
+            var split = this.check1PointIn(value.pointList);
+            var loopLegal = this.checkShapeLoopNotExceeded(value);
+
+            // DEBUG POSITION
+            // if (this.sorgenkind == true) {
+            //     // console.log("hlp");
+            //     this.readyToDraw = true;
+            // }
+
+            // console.log(value.shapeLoop);
+            // console.log(this.currentLoop);
+
+            if (full && loopLegal) {
                 this.updateFull(key, value);
-            } else if (split) {
+            } else if (split && loopLegal) {
                 this.intersectSingleShape(key, value);
             }
         }
+    }
+
+    checkShapeLoopNotExceeded(value) {
+        return (this.currentLoop <= value.shapeLoop)
     }
 
     // at least one point of start, center, end in one shape?
@@ -163,25 +160,29 @@ class containedPath {
 
         // console.log(this.points[2]);
 
-        var newPath = new containedPath({
-            readyToDraw: false,
-            rerun: true,
-            start: this.points[0],
-            end: this.points[1],
-            // order: key,
-            order: this.key,
-            strokeColor: "orange",
-            currentLoop: 0,
-            shapeLoop: 0,
-            full: false,
-            split: false,
-            points: [],
-        })
+        if (this.points.length > 2) {
+            // if (this.points[2] != undefined) {
+            var newPath = new containedPath({
+                readyToDraw: false,
+                sorgenkind: false,
+                selected: false,
+                rerun: true,
+                start: this.points[0],
+                end: this.points[1],
+                // order: key,
+                order: this.key,
+                strokeColor: "orange",
+                currentLoop: 0,
+                shapeLoop: 0,
+                full: false,
+                split: false,
+                points: [],
+            })
 
-        // CRAZY
-        if (this.points[2] != undefined) {
             var recycledPath = new containedPath({
                 readyToDraw: false,
+                selected: false,
+                sorgenkind: true,
                 rerun: true,
                 start: this.points[1],
                 end: this.points[2],
@@ -194,49 +195,34 @@ class containedPath {
                 points: [],
             })
             return [newPath, recycledPath]
-        } else {
-            return [newPath]
         }
+    }
 
-        // for (var i = 0; i < (this.points.length - 1); i++) {
+    drawDebugLine(groupString) {
 
-        //     // which part is in, which one is out?
-        //     var midPoint = getMiddlePpoint(this.points[i], this.points[i + 1]);
+        this.strokeWidth = 0.5;
 
-        //     if (
-        //         // pointInPolygon(value.pointList, [midPoint.x, midPoint.y])
-        //         pointInPolygon(this.pointList, [midPoint.x, midPoint.y])
-        //     ) {
-        //         var newPath = new containedPath({
-        //             readyToDraw: true,
-        //             start: this.points[i],
-        //             end: this.points[i + 1],
-        //             // order: key,
-        //             order: this.key,
-        //             strokeColor: "orange",
-        //             currentLoop: this.loop,
-        //             shapeLoop: 0,
-        //             full: true,
-        //             split: false,
-        //             points: [],
-        //         })
-        //         // this.paths.push(newPath);
+        // jitter
+        var jitter = 1;
 
-        //         var recycledPath = new containedPath({
-        //             readyToDraw: false,
-        //             start: this.points[i - 1],
-        //             end: this.points[i],
-        //             order: "",
-        //             strokeColor: "blue",
-        //             currentLoop: 0,
-        //             shapeLoop: 0,
-        //             full: false,
-        //             split: false,
-        //             points: [],
-        //         })
-        //         // this.paths.push(recycledPath);
-        //         return [newPath, recycledPath]
-        //     }
-        // }
+        // const svgNode = document.getElementById('svgNode');
+        const group = document.getElementById(groupString);
+
+        var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
+        // line.setAttributeNS(null, "id", "lineIdD");
+        line.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // line.setAttributeNS(null, "filter", "url(#fueta)");
+        line.setAttributeNS(null, "x1", this.start.x + getRandomFromInterval(-jitter, jitter));
+        line.setAttributeNS(null, "y1", this.start.y + getRandomFromInterval(-jitter, jitter));
+        line.setAttributeNS(null, "x2", this.end.x + getRandomFromInterval(-jitter, jitter));
+        line.setAttributeNS(null, "y2", this.end.y + getRandomFromInterval(-jitter, jitter));
+
+        line.setAttributeNS(null, "stroke", this.strokeColor);
+        line.setAttributeNS(null, "stroke-width", this.strokeWidth);
+        line.setAttributeNS(null, "opacity", 1);
+        line.setAttributeNS(null, "fill", "none");
+
+        // svgNode.appendChild(this.newPath);
+        group.appendChild(line);
     }
 }

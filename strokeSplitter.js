@@ -20,7 +20,7 @@ class strokeSplitter {
         this.strokeColor = data.strokeColor;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude;
-        this.loop = data.loop;
+        this.currentLoop = data.currentLoop;
         this.group = data.group;
 
         // X = Cx + (r * cosine(angle))
@@ -36,13 +36,14 @@ class strokeSplitter {
 
         var path = new containedPath({
             readyToDraw: false,
+            sorgenkind: false,
             selected: false,
             start: this.start,
             end: this.end,
             order: "",
             strokeColor: "black",
-            currentLoop: this.loop,
-            shapeLoop: 0,
+            currentLoop: this.currentLoop,
+            shapeLoop: 0,  // remove her - fit with shape neeeded
             full: false,
             split: false,
             rerun: false,
@@ -63,7 +64,22 @@ class strokeSplitter {
         }
 
         for (const path of this.paths) {
-            if (path.split == true) {
+            if (path.split) {
+                this.paths = this.paths.concat(path.createPathFromIntersection());
+            }
+        }
+
+        for (const path of this.paths) {
+            if (path.rerun) {
+                for (var i = 1; i <= 8; i++) {
+                    path.divideFullVsSplit(i, this.loopMaterial[i])
+                }
+            }
+        }
+
+        // added - while selected and not drawn.
+        for (const path of this.paths) {
+            if (path.split) {
                 this.paths = this.paths.concat(path.createPathFromIntersection());
             }
         }
@@ -285,7 +301,7 @@ class strokeSplitter {
             // console.log(element);
             // if (element.readyToDraw == true && element.currentLoop <= (element.shapeLoop - 1)) {
             if (path.readyToDraw == true) {
-                this.drawDebugLine(path.start, path.end, path.strokeColor, 1, group);
+                path.drawDebugLine(group);
             }
 
             // // for inside or for the first loop
@@ -318,26 +334,4 @@ class strokeSplitter {
         }
     }
 
-
-    drawDebugLine(start, end, strokeColor, strokeWidth, groupString) {
-        // const svgNode = document.getElementById('svgNode');
-        const group = document.getElementById(groupString);
-
-        var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
-        // line.setAttributeNS(null, "id", "lineIdD");
-        line.setAttributeNS(null, "filter", "url(#filterPencil)");
-        // line.setAttributeNS(null, "filter", "url(#fueta)");
-        line.setAttributeNS(null, "x1", start.x);
-        line.setAttributeNS(null, "y1", start.y);
-        line.setAttributeNS(null, "x2", end.x);
-        line.setAttributeNS(null, "y2", end.y);
-
-        line.setAttributeNS(null, "stroke", strokeColor);
-        line.setAttributeNS(null, "stroke-width", strokeWidth);
-        line.setAttributeNS(null, "opacity", 1);
-        line.setAttributeNS(null, "fill", "none");
-
-        // svgNode.appendChild(this.newPath);
-        group.appendChild(line);
-    }
 }
