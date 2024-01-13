@@ -86,8 +86,8 @@ class shapes {
                 shadow: {  // shadow
                     shapeLoop: 1,
                     order: 8,
-                    colorAction: "#a937c0",
-                    // colorAction: "#5c5c5c",
+                    // colorAction: "#a937c0",
+                    colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
                     fillColor: "#aaaaaa",
                 }

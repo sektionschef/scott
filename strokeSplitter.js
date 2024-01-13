@@ -23,7 +23,6 @@ class strokeSplitter {
         this.loop = data.loop;
         this.group = data.group;
 
-
         // X = Cx + (r * cosine(angle))
         // Y = Cy + (r * sine(angle))
         this.start = {
@@ -36,7 +35,8 @@ class strokeSplitter {
         }
 
         var path = new containedPath({
-            "readyToDraw": false,
+            readyToDraw: false,
+            selected: false,
             start: this.start,
             end: this.end,
             order: "",
@@ -54,40 +54,24 @@ class strokeSplitter {
         this.paths.push(path);
     }
 
-    runOnce() {
-
-        // console.log(this.loopMaterial);
+    run() {
 
         for (const path of this.paths) {
-            // get the path's data 
-            // for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
-            // for (const shape of shapeList) {
-            // path.divideFullVsSplit(order, shapeList)
-            // }
-            // }
-
-            for (var i = 8; i > 0; i--) {
-
-                // console.log(this.loopMaterial[i]);
+            for (var i = 1; i <= 8; i++) {
                 path.divideFullVsSplit(i, this.loopMaterial[i])
             }
         }
 
         for (const path of this.paths) {
-            // console.log(path);
             if (path.split == true) {
                 this.paths = this.paths.concat(path.createPathFromIntersection());
             }
         }
 
-
         for (const path of this.paths) {
             if (path.rerun) {
-                for (var i = 8; i > 0; i--) {
-                    // for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
-                    // path.divideFullVsSplit(order, shapeList)
+                for (var i = 1; i <= 8; i++) {
                     path.divideFullVsSplit(i, this.loopMaterial[i])
-                    // }
                 }
             }
         }
@@ -97,10 +81,6 @@ class strokeSplitter {
 
         // reformat for displaying correct hierarchy
         this.loopMaterial = {
-            // front: [],
-            // right: [],
-            // down: [],
-            // shadow: [],
         };
 
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {

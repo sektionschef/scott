@@ -3,6 +3,7 @@ class containedPath {
         this.uncertaintyShift = 3;
 
         this.readyToDraw = data.readyToDraw; // ready to draw,
+        this.selected = false;
         this.split = false; // one part is in a shape
         this.full = false; // full in a shape
         this.rerun = data.rerun;
@@ -49,15 +50,14 @@ class containedPath {
         //     this.intersectSingleShape(key, value)
         // }
 
-        // for (var i = 1; i < 20; i++) {
-        // if (key == i) {
-        if (full) {
-            this.updateFull(key, value);
-        } else if (split) {
-            this.intersectSingleShape(key, value);
+
+        if (this.selected == false) {
+            if (full) {
+                this.updateFull(key, value);
+            } else if (split) {
+                this.intersectSingleShape(key, value);
+            }
         }
-        // }
-        // }
     }
 
     // at least one point of start, center, end in one shape?
@@ -89,6 +89,7 @@ class containedPath {
         this.shapeLoop = value.shapeLoop;  // RENAME with MAX
         this.points = [this.start, this.end];
         this.readyToDraw = true;
+        this.selected = true;  // matched with a shape
     }
 
     intersectSingleShape(key, value) {
@@ -133,12 +134,14 @@ class containedPath {
             // get the intersection point with the shortest distance to center, here the intersectionPoint and the shape is selected
             if (this.checkIntersectionShapePath) {
                 if (intersectionPoint != undefined) {
+                    // is there a better one
                     if (Math.abs(vectorLength(vectorSub(this.interPointCandidate, this.center))) < Math.abs(vectorLength(vectorSub(intersectionPoint, this.center)))) {
                         // per shape one intersection point, closest to center
                         intersectionPoint = this.interPointCandidate;
                         this.split = true;
                     };
                 } else {
+                    // set it once
                     intersectionPoint = this.interPointCandidate;
                     this.split = true;
                 }
@@ -149,6 +152,7 @@ class containedPath {
             this.points = [this.start, intersectionPoint, this.end];
             this.pointList = value.pointList;
             this.key = key;
+            this.selected = true;  // is matched to a shape
         }
 
         // this.createPathFromIntersection(key, value)
