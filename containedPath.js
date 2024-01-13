@@ -151,8 +151,6 @@ class containedPath {
             this.key = key;
             this.selected = true;  // is matched to a shape
         }
-
-        // this.createPathFromIntersection(key, value)
     }
 
     // createPathFromIntersection(key, value) {
@@ -172,7 +170,7 @@ class containedPath {
                 // order: key,
                 order: this.key,
                 strokeColor: "orange",
-                currentLoop: 0,
+                currentLoop: this.currentLoop,
                 shapeLoop: 0,
                 full: false,
                 split: false,
@@ -188,12 +186,14 @@ class containedPath {
                 end: this.points[2],
                 order: "",
                 strokeColor: "blue",
-                currentLoop: 0,
+                currentLoop: this.currentLoop,
                 shapeLoop: 0,
                 full: false,
                 split: false,
                 points: [],
             })
+
+            this.split = false; // removed for a consecutive loop
             return [newPath, recycledPath]
         }
     }
