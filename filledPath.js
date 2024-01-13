@@ -3,10 +3,11 @@ class filledPath {
 
         this.start = data.start;
         this.end = data.end;
-        this.angleRadians = data.angleRadians;
+        // this.angleRadians = data.angleRadians;
         this.strokeWidth = data.strokeWidth;
         this.group = data.group;
 
+        this.angleRadians = angleBetweenPoints(this.start, this.end);
         this.vectorMagnitude = vectorLength(vectorSub(this.start, this.end));
 
         this.A = {

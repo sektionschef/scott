@@ -225,4 +225,15 @@ class containedPath {
         // svgNode.appendChild(this.newPath);
         group.appendChild(line);
     }
+
+    drawFilledPath(group) {
+        this.strokeWidth = 1;
+
+        new filledPath({
+            start: this.start,
+            end: this.end,
+            strokeWidth: this.strokeWidth,
+            group: group,
+        })
+    }
 }

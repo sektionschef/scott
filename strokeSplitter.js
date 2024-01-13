@@ -4,7 +4,7 @@ class strokeSplitter {
         this.posStdCon = 1; // 0.4;  // control points
         this.posStdShiftX = 0; // add variance to x so no total overlap
         this.minLength = 5; // 5;  // a line should have a length of at least
-        this.filledPath = false;
+        this.filledPath = true;
         // this.shapeLoop = 1;  // limit for whitespace, 1 = general run
 
         this.allShapes = data.allShapes;
@@ -289,19 +289,14 @@ class strokeSplitter {
 
     showPaths(group) {
 
-        // console.log(this.paths);
         for (const path of this.paths) {
 
-            // for (const [order, shapeList] of Object.entries(this.loopMaterial)) {
-            //     for (const shape of shapeList) {
-            //         path.divideFullVsSplit(order, shape)
-            //     }
-            // }
-
-            // console.log(element);
-            // if (element.readyToDraw == true && element.currentLoop <= (element.shapeLoop - 1)) {
             if (path.readyToDraw == true) {
-                path.drawDebugLine(group);
+                if (this.filledPath) {
+                    path.drawFilledPath(group);
+                } else {
+                    path.drawDebugLine(group);
+                }
             }
 
             // // for inside or for the first loop

@@ -51,7 +51,7 @@ class Grid {
 
         this.shapes = new shapes(this.stripeHeight);
         this.shapes.defineBorders(this.boxes);
-        this.shapes.debugShowShape();
+        // this.shapes.debugShowShape();
         // this.shapes.fillShape();
 
         this.strokesplitter = new strokeSplitter({
