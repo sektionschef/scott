@@ -1,3 +1,6 @@
+// sorgenkind weg
+// 
+
 // https://codepen.io/yoksel/pen/QVLxpg 
 // https://codepen.io/sektionschef/pen/yLZqBbw
 
@@ -211,7 +214,7 @@ function main() {
 
   // // GRID
   let grid = new Grid({
-    stepCount: 200,  // 400
+    stepCountRes: 300,  // 400
     stripeHeight: 4,  // 2
     vectorMagnitude: 50,  // 50
     marginRelative: 1,

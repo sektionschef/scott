@@ -1,19 +1,18 @@
 class containedPath {
     constructor(data) {
-        this.uncertaintyShift = 3;
+        this.uncertaintyShift = 3; // shift inward for pointinpolygon better results
 
         this.readyToDraw = data.readyToDraw; // ready to draw,
         this.selected = data.selected;
-        this.sorgenkind = data.sorgenkind;  // DEBUG MARKER
         this.split = false; // one part is in a shape
         this.full = false; // full in a shape
         this.rerun = data.rerun;
         this.start = data.start;
         this.end = data.end;
         this.order = data.order;
+        this.density = data.density;
         this.strokeColor = data.strokeColor;
         this.currentLoop = data.currentLoop;
-        // this.shapeLoop = data.shapeLoop; // maximum loop
         this.shapeLoop = 0;
         this.points = data.points;
 
@@ -35,15 +34,6 @@ class containedPath {
             var full = this.check3PointsIn(value.pointList);
             var split = this.check1PointIn(value.pointList);
             var loopLegal = this.checkShapeLoopNotExceeded(value);
-
-            // DEBUG POSITION
-            // if (this.sorgenkind == true) {
-            //     // console.log("hlp");
-            //     this.readyToDraw = true;
-            // }
-
-            // console.log(value.shapeLoop);
-            // console.log(this.currentLoop);
 
             if (full && loopLegal) {
                 this.updateFull(key, value);
@@ -81,6 +71,7 @@ class containedPath {
 
     updateFull(key, value) {
         this.order = key;
+        this.density = value.density;
         this.full = true;
         this.strokeColor = value.colorAction;
         this.shapeLoop = value.shapeLoop;  // RENAME with MAX
@@ -91,8 +82,6 @@ class containedPath {
 
     intersectSingleShape(key, value) {
         var intersectionPoint
-        this.order = key;
-        // this.points = [this.start];
 
         // if there is an intersection point with any shape, closest selected
         // get all sides
@@ -153,22 +142,17 @@ class containedPath {
         }
     }
 
-    // createPathFromIntersection(key, value) {
     createPathFromIntersection() {
-
-        // console.log(this.points[2]);
-
         if (this.points.length > 2) {
-            // if (this.points[2] != undefined) {
             var newPath = new containedPath({
                 readyToDraw: false,
-                sorgenkind: false,
                 selected: false,
                 rerun: true,
                 start: this.points[0],
                 end: this.points[1],
                 // order: key,
                 order: this.key,
+                density: this.density,
                 strokeColor: "orange",
                 currentLoop: this.currentLoop,
                 shapeLoop: 0,
@@ -180,11 +164,11 @@ class containedPath {
             var recycledPath = new containedPath({
                 readyToDraw: false,
                 selected: false,
-                sorgenkind: true,
                 rerun: true,
                 start: this.points[1],
                 end: this.points[2],
                 order: "",
+                density: this.density,
                 strokeColor: "blue",
                 currentLoop: this.currentLoop,
                 shapeLoop: 0,

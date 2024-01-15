@@ -4,7 +4,7 @@ class Grid {
         this.vectorMagnitude = data.vectorMagnitude;
         this.marginRelative = data.marginRelative;
 
-        this.stepCount = data.stepCount; // 350 // how many strokePaths per stripe
+        this.stepCountRes = data.stepCountRes; // 350 // how many strokePaths per stripe
         this.angleRadiansStart = data.angleRadiansStart;  // starting angle
         this.angleRadiansGain = data.angleRadiansGain;  // adding/reducing each line
         this.strokeColor = data.strokeColor;
@@ -62,49 +62,14 @@ class Grid {
         // this.shapes.debugShowShape();
         // this.shapes.fillShape();
 
-        this.strokesplitter = new strokeSplitter({
+        this.strokeSystem = new strokeSystem({
             allShapes: this.shapes.allShapes,
         });
 
 
-        this.createStrokePath();
-        this.strokesplitter.run();
-        this.strokesplitter.showPaths(this.group);
-
-        // var posX = 610;
-        // var posY = 270;
-
-        // // sau
-        // var debugStroke = new strokePath({
-        //     "center": {
-        //         x: posX,
-        //         y: posY
-        //     },
-        //     vectorMagnitude: this.vectorMagnitude,
-        //     angleRadians: Math.PI / 2.5, // 0.2,
-        //     strokeColor: this.strokeColor,
-        //     allShapes: this.allShapes,
-        //     loop: 0,
-        // });
-
-        // debugStroke.showPath();
-
-        // for (var c = 0; c < 2; c++) {
-
-        //     var debugStroke2 = new strokePath({
-        //         "center": {
-        //             x: posX,
-        //             y: posY
-        //         },
-        //         vectorMagnitude: this.vectorMagnitude,
-        //         angleRadians: Math.PI / 2.5 + c * 0.5, // 0.2,
-        //         strokeColor: this.strokeColor,
-        //         allShapes: this.allShapes,
-        //         loop: 0,
-        //     });
-
-        //     debugStroke2.showPath();
-        // }
+        this.createStrokeLines();
+        this.strokeSystem.run();
+        this.strokeSystem.showPaths(this.group);
     }
 
     createBoxes() {
@@ -176,7 +141,6 @@ class Grid {
         for (var i = 0; i < this.boxes.length; i++) {
 
             var colory = "#f06"
-
 
             if (this.boxes[i].inactive == true) {
                 colory = "#a8a8a8"
@@ -353,7 +317,7 @@ class Grid {
         }
     }
 
-    createStrokePath() {
+    createStrokeLines() {
 
         var loopMax = 4;
 
@@ -378,10 +342,10 @@ class Grid {
                 var end = value.D
                 var startEnd = vectorSub(start, end);
 
-                for (var i = 0; i < this.stepCount; i++) {
+                for (var i = 0; i < this.stepCountRes; i++) {
 
-                    var positionX = start.x + i * startEnd.x / this.stepCount;
-                    var positionY = start.y + i * startEnd.y / this.stepCount;
+                    var positionX = start.x + i * startEnd.x / this.stepCountRes;
+                    var positionY = start.y + i * startEnd.y / this.stepCountRes;
 
                     // reference for being in shape is the middle of the stripe
                     var positionMiddleLineY = Math.round(positionY - this.boxSize * this.stripeHeight / 2);
@@ -403,7 +367,7 @@ class Grid {
                             var angleRadiansLooped = angleRadians;
                         }
 
-                        this.strokesplitter.add({
+                        this.strokeSystem.add({
                             "center": {
                                 x: positionX,
                                 y: positionMiddleLineY

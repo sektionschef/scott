@@ -10,6 +10,7 @@ class shapes {
                 background: {
                     shapeLoop: 1,
                     order: 0,
+                    density: 0, // density factor - 0 is full
                     // colorAction: "#5c5c5c",
                     colorAction: "red",
                     // colorAction: this.strokeColor,
@@ -40,6 +41,7 @@ class shapes {
                 front: {
                     shapeLoop: 2,
                     order: 1,
+                    density: 3,
                     // colorAction: "#5c5c5c",
                     colorAction: "red",
                     // colorAction: this.strokeColor,
@@ -48,6 +50,7 @@ class shapes {
                 down: {  // shadow beneath
                     shapeLoop: 1,
                     order: 3,
+                    density: 0,
                     colorAction: "green",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -56,6 +59,7 @@ class shapes {
                 right: {  // shadow beneath
                     shapeLoop: 1,
                     order: 5,
+                    density: 0,
                     colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -64,6 +68,7 @@ class shapes {
                 shadow: {  // shadow
                     shapeLoop: 1,
                     order: 7,
+                    density: 0,
                     colorAction: "#a937c0",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -84,6 +89,7 @@ class shapes {
                 front: {
                     shapeLoop: 2,
                     order: 2,
+                    density: 3,
                     // colorAction: "#5c5c5c",
                     colorAction: "red",
                     // colorAction: this.strokeColor,
@@ -92,6 +98,7 @@ class shapes {
                 down: {  // shadow beneath
                     shapeLoop: 1,
                     order: 4,
+                    density: 0,
                     colorAction: "green",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -100,6 +107,7 @@ class shapes {
                 right: {  // shadow beneath
                     shapeLoop: 1,
                     order: 6,
+                    density: 0,
                     colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -108,6 +116,7 @@ class shapes {
                 shadow: {  // shadow
                     shapeLoop: 1,
                     order: 8,
+                    density: 0,
                     // colorAction: "#a937c0",
                     colorAction: "#5c5c5c",
                     // colorAction: this.strokeColor,
@@ -324,7 +333,7 @@ class shapes {
                 // for (const [key, value] of Object.entries(this.shapes.allShapes)) {
 
                 if (["front", "down", "right", "shadow"].includes(key)) {
-                    console.log(value.pointList);
+                    // console.log(value.pointList);
                     const svgNode = document.getElementById('svgNode');
 
                     var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
