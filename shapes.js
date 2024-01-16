@@ -1,6 +1,7 @@
 class shapes {
     constructor(stripeHeight, canvasWidth, canvasHeight) {
 
+        this.colory = "#222222";
         this.stripeHeight = stripeHeight;
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
@@ -9,10 +10,10 @@ class shapes {
             shapeBackground: {
                 background: {
                     shapeLoop: 1,
-                    order: 0,
-                    density: 0, // density factor - 0 is full
+                    order: 9,
+                    density: 2, // density factor - 0 is full
                     // colorAction: "#5c5c5c",
-                    colorAction: "red",
+                    colorAction: this.colory,
                     // colorAction: this.strokeColor,
                     fillColor: "#afafaf",
                     A: { x: 0, y: 0 },
@@ -41,37 +42,36 @@ class shapes {
                 front: {
                     shapeLoop: 2,
                     order: 1,
-                    density: 3,
+                    density: 1,
                     // colorAction: "#5c5c5c",
-                    colorAction: "red",
-                    // colorAction: this.strokeColor,
+                    // colorAction: "red",
+                    colorAction: this.colory,
                     fillColor: "#afafaf",
                 },
                 down: {  // shadow beneath
-                    shapeLoop: 1,
+                    shapeLoop: 2,
                     order: 3,
                     density: 0,
-                    colorAction: "green",
-                    // colorAction: "#5c5c5c",
-                    // colorAction: this.strokeColor,
+                    // colorAction: "green",
+                    colorAction: this.colory,
                     fillColor: "#999999",
                 },
                 right: {  // shadow beneath
-                    shapeLoop: 1,
+                    shapeLoop: 2,
                     order: 5,
                     density: 0,
-                    colorAction: "#3daf3d",
+                    // colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
-                    // colorAction: this.strokeColor,
+                    colorAction: this.colory,
                     fillColor: "#a3a3a3",
                 },
                 shadow: {  // shadow
                     shapeLoop: 1,
                     order: 7,
                     density: 0,
-                    colorAction: "#a937c0",
+                    // colorAction: "#a937c0",
                     // colorAction: "#5c5c5c",
-                    // colorAction: this.strokeColor,
+                    colorAction: this.colory,
                     fillColor: "#aaaaaa",
                 }
             },
@@ -89,28 +89,28 @@ class shapes {
                 front: {
                     shapeLoop: 2,
                     order: 2,
-                    density: 3,
+                    density: 1,
                     // colorAction: "#5c5c5c",
-                    colorAction: "red",
-                    // colorAction: this.strokeColor,
+                    // colorAction: "red",
+                    colorAction: this.colory,
                     fillColor: "#afafaf",
                 },
                 down: {  // shadow beneath
-                    shapeLoop: 1,
+                    shapeLoop: 2,
                     order: 4,
                     density: 0,
-                    colorAction: "green",
+                    // colorAction: "green",
                     // colorAction: "#5c5c5c",
-                    // colorAction: this.strokeColor,
+                    colorAction: this.colory,
                     fillColor: "#999999",
                 },
                 right: {  // shadow beneath
-                    shapeLoop: 1,
+                    shapeLoop: 2,
                     order: 6,
                     density: 0,
-                    colorAction: "#3daf3d",
+                    // colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
-                    // colorAction: this.strokeColor,
+                    colorAction: this.colory,
                     fillColor: "#a3a3a3",
                 },
                 shadow: {  // shadow
@@ -118,8 +118,8 @@ class shapes {
                     order: 8,
                     density: 0,
                     // colorAction: "#a937c0",
-                    colorAction: "#5c5c5c",
-                    // colorAction: this.strokeColor,
+                    // colorAction: "#5c5c5c",
+                    colorAction: this.colory,
                     fillColor: "#aaaaaa",
                 }
             }

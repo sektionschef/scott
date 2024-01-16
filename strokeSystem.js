@@ -56,7 +56,7 @@ class strokeSystem {
 
     run() {
         this.shapeStartPosition = 1; // 0 for background, 1 for first
-        this.shapeCount = 8;
+        this.shapeCount = 9;
 
         // first run
         for (const path of this.paths) {
@@ -147,16 +147,28 @@ class strokeSystem {
         // console.log(this.loopMaterial);
     }
 
+    sortPaths() {
+        // console.log(this.paths[345]);
+
+        this.paths = this.paths.sort(function (a, b) { return (a.center.x + a.center.y * 1600) - (b.center.x + b.center.y * 1600) });
+        // this.paths = this.paths.sort(function (a, b) { return (a.start.x + a.start.y * 1600) - (b.start.x + b.start.y * 1600) });
+    }
+
     showPaths(group) {
+
+        this.sortPaths();
 
         var index = 0;
 
         for (const path of this.paths) {
-            index += 1;
-            if (index % path.density == 0) {
-                continue;
-            }
             if (path.readyToDraw == true) {
+
+                index += 1;
+                if (index % path.density == 0) {
+                    // if (index % 0 == 0) {
+                    continue;
+                }
+
                 if (this.filledPath) {
                     path.drawFilledPath(group);
                 } else {
