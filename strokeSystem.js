@@ -150,8 +150,22 @@ class strokeSystem {
     sortPaths() {
         // console.log(this.paths[345]);
 
-        this.paths = this.paths.sort(function (a, b) { return (a.center.x + a.center.y * 1600) - (b.center.x + b.center.y * 1600) });
+        // if ()
         // this.paths = this.paths.sort(function (a, b) { return (a.start.x + a.start.y * 1600) - (b.start.x + b.start.y * 1600) });
+        // this.paths = this.paths.sort(function (a, b) { return (a.center.x + a.center.y * 1600) - (b.center.x + b.center.y * 1600) });
+        // this.paths = this.paths.sort(function (a, b) { return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600) });
+        // this.paths = this.paths.sort(function (a, b) { return (a.start.x + a.start.y * 1600 + a.end.x + a.end.y * 1600) - (b.start.x + b.start.y * 1600 + b.end.x + b.end.y * 1600) });
+
+        console.log(Math.PI / 2)
+
+        this.paths = this.paths.sort(function (a, b) {
+            // console.log(angleBetweenPoints(a.end, a.start));
+            if (angleBetweenPoints(a.end, a.start) < Math.PI / 2) {
+                return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600)
+            } else {
+                return (a.start.x + a.start.y * 1600) - (b.start.x + b.start.y * 1600)
+            }
+        });
     }
 
     showPaths(group) {
