@@ -23,6 +23,7 @@ class strokeSystem {
         this.vectorMagnitude = data.vectorMagnitude;
         this.currentLoop = data.currentLoop;
         this.group = data.group;
+        this.boxIndex = data.boxIndex;
 
         // X = Cx + (r * cosine(angle))
         // Y = Cy + (r * sine(angle))
@@ -43,6 +44,7 @@ class strokeSystem {
             order: 0,
             oida: "",
             strokeColor: "black",
+            boxIndex: this.boxIndex,
             currentLoop: this.currentLoop,
             shapeLoop: 0,  // remove her - fit with shape neeeded
             full: false,
@@ -148,15 +150,12 @@ class strokeSystem {
     }
 
     sortPaths() {
-        // console.log(this.paths[345]);
 
-        // if ()
-        // this.paths = this.paths.sort(function (a, b) { return (a.start.x + a.start.y * 1600) - (b.start.x + b.start.y * 1600) });
-        // this.paths = this.paths.sort(function (a, b) { return (a.center.x + a.center.y * 1600) - (b.center.x + b.center.y * 1600) });
-        // this.paths = this.paths.sort(function (a, b) { return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600) });
-        // this.paths = this.paths.sort(function (a, b) { return (a.start.x + a.start.y * 1600 + a.end.x + a.end.y * 1600) - (b.start.x + b.start.y * 1600 + b.end.x + b.end.y * 1600) });
+        // this.paths = this.paths.filter(function (path) { return path.readyToDraw })
 
-        console.log(Math.PI / 2)
+        // this.paths = this.paths.sort(function (a, b) {
+        //     return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600)
+        // });
 
         this.paths = this.paths.sort(function (a, b) {
             // console.log(angleBetweenPoints(a.end, a.start));

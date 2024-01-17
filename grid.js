@@ -319,7 +319,8 @@ class Grid {
 
     createStrokeLines() {
 
-        var loopMax = 4;
+        var loopMax = 2;
+        var boxIndex = 0;
 
         // loop through the lines
         for (const [key, value] of Object.entries(this.lineVectors)) {
@@ -378,8 +379,11 @@ class Grid {
                             strokeWidth: this.strokeWidth,
                             // allShapes: this.allShapes,
                             currentLoop: v,
+                            boxIndex: boxIndex,
                             group: this.group,
                         })
+
+                        boxIndex += 1;
                     }
                 }
             }
