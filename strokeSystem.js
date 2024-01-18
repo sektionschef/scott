@@ -185,13 +185,9 @@ class strokeSystem {
 
         this.sortPaths();
 
-        // var index = 0;
-
         for (const path of this.paths) {
             if (path.readyToDraw == true) {
 
-                // index += 1;
-                // if (index % path.density == 0) {
                 // if (index % 0 == 0) {
                 if (path.boxIndex % path.density == 0) {
                     continue;

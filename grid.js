@@ -21,6 +21,7 @@ class Grid {
 
         // there should be no margin
         this.shortMargin = this.shortSide % this.boxSize;
+        // console.log(this.shortMargin);
         // this.shortMargin = 1
         if (this.shortMargin != 0) {
             throw new Error('wtf, there is a margin!');
@@ -49,7 +50,7 @@ class Grid {
         this.pathCandidates = [];
 
         this.createBoxes();
-        // this.showDebugBoxes();
+        this.showDebugBoxes();
         this.loopCategorize();
         // this.loopdebugCategory();
 
@@ -116,7 +117,8 @@ class Grid {
                 index += 1;
             }
 
-            if (h % this.stripeHeight == 0) {
+            // make sure it the first row is not skipped
+            if (h % this.stripeHeight == (this.stripeHeight - 1)) {
                 stripeIndex += 1;
             }
         }
