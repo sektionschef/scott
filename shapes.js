@@ -31,7 +31,7 @@ class shapes {
             shapeA: {
                 mainBoxPos: {  // where to start to draw in box count
                     x: 34,
-                    y: 9
+                    y: 8
                 },
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes
@@ -78,7 +78,7 @@ class shapes {
             shapeB: {
                 mainBoxPos: {  // where to start to draw in box count
                     x: 34,
-                    y: 33
+                    y: 32
                 },
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes

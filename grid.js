@@ -50,7 +50,7 @@ class Grid {
         this.pathCandidates = [];
 
         this.createBoxes();
-        this.showDebugBoxes();
+        // this.showDebugBoxes();
         this.loopCategorize();
         // this.loopdebugCategory();
 
