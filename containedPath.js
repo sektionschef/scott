@@ -13,8 +13,10 @@ class containedPath {
         this.density = data.density;
         this.strokeColor = data.strokeColor;
         this.currentLoop = data.currentLoop;
+        this.angleRadians = data.angleRadians;
         this.shapeLoop = 0;
         this.points = data.points;
+        this.boxIndex = data.boxIndex;
 
         // recalc, not everyone has it
         this.center = getMiddlePpoint(this.start, this.end);
@@ -150,7 +152,8 @@ class containedPath {
                 rerun: true,
                 start: this.points[0],
                 end: this.points[1],
-                // order: key,
+                boxIndex: (this.boxIndex),
+                angleRadians: this.angleRadians,
                 order: this.key,
                 density: this.density,
                 strokeColor: "orange",
@@ -167,6 +170,8 @@ class containedPath {
                 rerun: true,
                 start: this.points[1],
                 end: this.points[2],
+                boxIndex: (this.boxIndex),
+                angleRadians: this.angleRadians,
                 order: "",
                 density: this.density,
                 strokeColor: "blue",

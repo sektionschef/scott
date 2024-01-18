@@ -25,6 +25,8 @@ class strokeSystem {
         this.group = data.group;
         this.boxIndex = data.boxIndex;
 
+        // console.log(this.boxIndex);
+
         // X = Cx + (r * cosine(angle))
         // Y = Cy + (r * sine(angle))
         this.start = {
@@ -45,6 +47,7 @@ class strokeSystem {
             oida: "",
             strokeColor: "black",
             boxIndex: this.boxIndex,
+            angleRadians: this.angleRadians,
             currentLoop: this.currentLoop,
             shapeLoop: 0,  // remove her - fit with shape neeeded
             full: false,
@@ -151,34 +154,46 @@ class strokeSystem {
 
     sortPaths() {
 
+        // FILTER
         // this.paths = this.paths.filter(function (path) { return path.readyToDraw })
 
+        // EASY
         // this.paths = this.paths.sort(function (a, b) {
         //     return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600)
         // });
 
+        // DEPENDING ON ANGLE
+        // this.paths = this.paths.sort(function (a, b) {
+        //     // console.log(angleBetweenPoints(a.end, a.start));
+        //     if (angleBetweenPoints(a.end, a.start) < Math.PI / 2) {
+        //         return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600)
+        //     } else {
+        //         return (a.start.x + a.start.y * 1600) - (b.start.x + b.start.y * 1600)
+        //     }
+        // });
+
+        // SAVE ANGLE
         this.paths = this.paths.sort(function (a, b) {
-            // console.log(angleBetweenPoints(a.end, a.start));
-            if (angleBetweenPoints(a.end, a.start) < Math.PI / 2) {
-                return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600)
-            } else {
-                return (a.start.x + a.start.y * 1600) - (b.start.x + b.start.y * 1600)
-            }
+            // console.log(a.boxIndex)
+            // return (a.boxIndex + a.angleRadians - b.boxIndex + b.angleRadians)
+            return (a.boxIndex - b.boxIndex)
         });
+
     }
 
     showPaths(group) {
 
         this.sortPaths();
 
-        var index = 0;
+        // var index = 0;
 
         for (const path of this.paths) {
             if (path.readyToDraw == true) {
 
-                index += 1;
-                if (index % path.density == 0) {
-                    // if (index % 0 == 0) {
+                // index += 1;
+                // if (index % path.density == 0) {
+                // if (index % 0 == 0) {
+                if (path.boxIndex % path.density == 0) {
                     continue;
                 }
 

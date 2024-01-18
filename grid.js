@@ -383,8 +383,8 @@ class Grid {
                             group: this.group,
                         })
 
-                        boxIndex += 1;
                     }
+                    boxIndex += 1;
                 }
             }
         }
