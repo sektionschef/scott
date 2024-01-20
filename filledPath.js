@@ -15,93 +15,66 @@ class filledPath {
         this.end.id = "end";
         this.end.debugColor = "red";
 
-
-        this.Atheo = {
-            x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
-            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2)),
-            id: "A",
-            debugColor: "purple",
-        }
-        this.Btheo = {
-            x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
-            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2)),
-            id: "B",
-            debugColor: "purple",
-        }
-        this.Ctheo = {
-            x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2)),
-            id: "C",
-            debugColor: "purple",
-        }
-
-        this.Dtheo = {
-            x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2)),
-            id: "D",
-            debugColor: "purple",
-        }
-
+        this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+        this.Atheo.id = "Atheo";
+        this.Atheo.debugColor = "#747474";
         this.A = this.Atheo;
+        this.A.id = "A";
+        this.A.debugColor = "purple";
+
+        this.Btheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+        this.Btheo.id = "Btheo";
+        this.Btheo.debugColor = "#747474";
         this.B = this.Btheo;
+        this.B.id = "B";
+        this.B.debugColor = "purple";
+
+        this.Ctheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+        this.Ctheo.id = "Ctheo";
+        this.Ctheo.debugColor = "#747474";
         this.C = this.Ctheo;
+        this.C.id = "C";
+        this.C.debugColor = "purple";
+
+        this.Dtheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+        this.Dtheo.id = "Dtheo";
+        this.Dtheo.debugColor = "#747474";
         this.D = this.Dtheo;
+        this.D.id = "D";
+        this.D.debugColor = "purple";
 
         // between A and B - near A
-        this.cAB = {
-            x: this.A.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians)),
-            y: this.A.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians)),
-            id: "cAB",
-            debugColor: "blue",
-        }
+        this.cAB = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 3));
+        this.cAB.id = "cAB";
+        this.cAB.debugColor = "blue";
 
-        this.cBA = {
-            x: this.B.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - 2 * Math.PI)),
-            y: this.B.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - 2 * Math.PI)),
-            id: "cBA",
-            debugColor: "blue",
-        }
+        this.cBA = vectorAdd(this.Btheo, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 3));
+        this.cBA.id = "cBA";
+        this.cBA.debugColor = "blue";
 
-        this.cCD = {
-            x: this.D.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians)),
-            y: this.D.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians)),
-            id: "cCD",
-            debugColor: "blue",
-        }
+        this.cCD = vectorAdd(this.Ctheo, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 3));
+        this.cCD.id = "cCD";
+        this.cCD.debugColor = "blue";
 
-        this.cDC = {
-            x: this.C.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - 2 * Math.PI)),
-            y: this.C.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - 2 * Math.PI)),
-            id: "cDC",
-            debugColor: "blue",
-        }
+        this.cDC = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 3));
+        this.cDC.id = "cDC";
+        this.cDC.debugColor = "blue";
 
-        this.cBC = {
-            x: this.B.x + (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.B.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
-            id: "cBC",
-            debugColor: "blue",
-        }
+        this.cBC = vectorAdd(this.Btheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+        this.cBC.id = "cBC";
+        this.cBC.debugColor = "blue";
 
-        this.cCB = {
-            x: this.C.x - (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.C.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
-            id: "cCB",
-            debugColor: "blue",
-        }
+        this.cCB = vectorAdd(this.Ctheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+        this.cCB.id = "cCB";
+        this.cCB.debugColor = "blue";
 
-        this.cDA = {
-            x: this.A.x + (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.A.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
-            id: "cDA",
-            debugColor: "blue",
-        }
-        this.cAD = {
-            x: this.D.x - (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.D.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
-            id: "cAD",
-            debugColor: "blue",
-        }
+        this.cDA = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+        this.cDA.id = "cDA";
+        this.cDA.debugColor = "blue";
+
+        this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+        this.cAD.id = "cAD";
+        this.cAD.debugColor = "blue";
 
         // this.misplaceCoords();
         this.showFilledPath();
