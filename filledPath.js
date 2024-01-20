@@ -10,66 +10,92 @@ class filledPath {
         this.angleRadians = angleBetweenPoints(this.start, this.end);
         this.vectorMagnitude = vectorLength(vectorSub(this.start, this.end));
 
+        this.start.id = "start";
+        this.start.debugColor = "green";
+        this.end.id = "end";
+        this.end.debugColor = "red";
+
+
         this.A = {
             x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
-            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2))
+            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2)),
+            id: "A",
+            debugColor: "purple",
         }
-
-        // console.log(this.angleRadians);
-
         this.B = {
             x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
-            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2))
+            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2)),
+            id: "B",
+            debugColor: "purple",
         }
-
         this.C = {
             x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2))
+            y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2)),
+            id: "C",
+            debugColor: "purple",
         }
 
         this.D = {
             x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2))
+            y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2)),
+            id: "D",
+            debugColor: "purple",
         }
 
         // between A and B - near A
         this.cAB = {
             x: this.A.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.A.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+            y: this.A.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            id: "cAB",
+            debugColor: "blue",
         }
 
         this.cBA = {
             x: this.B.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.B.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+            y: this.B.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            id: "cBA",
+            debugColor: "blue",
         }
 
         this.cCD = {
             x: this.D.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.D.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+            y: this.D.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            id: "cCD",
+            debugColor: "blue",
         }
 
         this.cDC = {
             x: this.C.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.C.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI))
+            y: this.C.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            id: "cDC",
+            debugColor: "blue",
         }
 
         this.cBC = {
             x: this.B.x + (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.B.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+            y: this.B.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
+            id: "cBC",
+            debugColor: "blue",
         }
 
         this.cCB = {
             x: this.C.x - (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.C.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+            y: this.C.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
+            id: "cCB",
+            debugColor: "blue",
         }
 
         this.cDA = {
             x: this.A.x + (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.A.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+            y: this.A.y + (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
+            id: "cDA",
+            debugColor: "blue",
         }
         this.cAD = {
             x: this.D.x - (this.strokeWidth / 3 * Math.cos(this.angleRadians - Math.PI / 2)),
-            y: this.D.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2))
+            y: this.D.y - (this.strokeWidth / 3 * Math.sin(this.angleRadians - Math.PI / 2)),
+            id: "cAD",
+            debugColor: "blue",
         }
 
         this.misplaceCoords();
@@ -171,78 +197,62 @@ class filledPath {
         group.appendChild(this.path);
     }
 
-    showDebugPoint(x, y, colory) {
+    showDebugPoint(point) {
+
         this.debugPoint = document.createElementNS('http://www.w3.org/2000/svg', "circle");
         this.debugPoint.setAttributeNS(null, "id", "");
-        this.debugPoint.setAttributeNS(null, "cx", x);
-        this.debugPoint.setAttributeNS(null, "cy", y);
+        this.debugPoint.setAttributeNS(null, "cx", point.x);
+        this.debugPoint.setAttributeNS(null, "cy", point.y);
         this.debugPoint.setAttributeNS(null, "r", "2");
         this.debugPoint.setAttributeNS(null, "stroke", "none");
-        this.debugPoint.setAttributeNS(null, "fill", colory);
+        this.debugPoint.setAttributeNS(null, "fill", point.debugColor);
         this.debugPoint.setAttributeNS(null, "stroke-width", 0.1);
         this.debugPoint.setAttributeNS(null, "opacity", 1);
 
-        const svgNode = document.getElementById('svgNode');
-        svgNode.appendChild(this.debugPoint);
+        // const svgNode = document.getElementById('svgNode');
+        // svgNode.appendChild(this.debugPoint);
+
+        var group = document.getElementById(this.group);
+        group.appendChild(this.debugPoint);
+    }
+
+    showDebugText(point) {
+        var offset = 2;
+        const textSize = "0.5em";
+
+        var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', point.x + offset);
+        text.setAttribute('y', point.y - offset);
+        text.setAttribute('fill', point.debugColor);
+        text.setAttribute('font-size', textSize);
+        text.textContent = point.id;
+
+        var group = document.getElementById(this.group);
+        group.appendChild(text);
     }
 
     showDebugStroke() {
-        // if (this.splitSwitch) {
-        //     // svgNode.appendChild(this.debugCenter);
-        //     // svgNode.appendChild(this.debugStart);
-        //     // svgNode.appendChild(this.debugEnd);
-        //     // svgNode.appendChild(this.debugInterPoint);
-        //     // svgNode.appendChild(this.debugControlStartA);
-        //     // svgNode.appendChild(this.debugControlStartB);
-        //     // svgNode.appendChild(this.debugControlEndA);
-        //     // svgNode.appendChild(this.debugControlEndB);
-        //     // svgNode.appendChild(this.debugUp);
-        //     // svgNode.appendChild(this.debugDown);
-        //     svgNode.appendChild(this.debugmidPointStartInt);
-        //     svgNode.appendChild(this.debugmidPointEndInt);
-        // } else {
-        //     // svgNode.appendChild(this.debugCenter);
-        //     // svgNode.appendChild(this.debugStart);
-        //     // svgNode.appendChild(this.debugEnd);
-        //     // svgNode.appendChild(this.debugControlA);
-        //     // svgNode.appendChild(this.debugControlB);
-        // }
-        var pointListDebug = {
-            "red": [
-                this.A,
-                this.B,
-                this.C,
-                this.D,
-            ],
-            "green": [
-            ],
-            "blue": [
-                this.cAB,
-                this.cBA,
-                this.cBC,
-                this.cCB,
-                this.cCD,
-                this.cDC,
-                this.cDA,
-                this.cAD,
-            ],
-            "purple": [
-                this.center,
-                this.start,
-                this.end,
-            ],
-            "orange": [
-                this.A,
-                this.B,
-                this.C,
-                this.D,
-            ]
-        }
 
-        for (const [colory, pointList] of Object.entries(pointListDebug)) {
-            for (var i = 0; i < pointList.length; i++) {
-                this.showDebugPoint(pointList[i].x, pointList[i].y, colory);
-            }
+        var pointList = [
+            this.end,
+            this.start,
+            this.cAB,
+            this.cBA,
+            this.cBC,
+            this.cCB,
+            this.cCD,
+            this.cDC,
+            this.cDA,
+            this.cAD,
+            this.A,
+            this.B,
+            this.C,
+            this.D,
+        ]
+
+        for (var i = 0; i < pointList.length; i++) {
+            this.showDebugPoint(pointList[i]);
+            this.showDebugText(pointList[i]);
         }
     }
 }

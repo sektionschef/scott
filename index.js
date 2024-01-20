@@ -167,8 +167,6 @@ function main() {
   // console.log("Single transformed value:");
   // console.log($fx.getParam("color_id"));
 
-  var POLYGONPOINTS = [[200, 110], [250, 290], [160, 310]];
-
   const targetDiv = document.getElementById('badAssCanvas');
   const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svgNode.setAttributeNS(null, 'viewBox', '0 0 ' + canvasFormatChosen.canvasWidth + " " + canvasFormatChosen.canvasHeight);
@@ -235,36 +233,14 @@ function main() {
 
   // SHOW THE GRIDS
   showGroupA();
-  showGroupB();
+  // showGroupB();
   showGroupC();
 
   // showBlur();
 
 
-
-  // TEST CASE
-  // var singleStroke = new strokePath2({
-  //   "center": {
-  //     x: 250,
-  //     y: 133
-  //   },
-  //   vectorMagnitude: 400,
-  //   angleRadians: Math.PI / 8, // 0.2,
-  //   strokeColor: "black",
-  //   strokeWidth: 10,
-  //   allShapes: {
-  //     shapeMain: {
-  //       shapeLoop: 1,
-  //       colorAction: this.strokeColor,
-  //       fillColor: "#afafaf",
-  //       pointList: [],
-  //     },
-  //   },
-  //   loop: 0,
-  //   group: "groupC"
-  // });
-  // singleStroke.showPath();
-  // singleStroke.showDebugStroke();
+  // TESTS
+  testFilledPath()
 
 
   setTagsHTML({
