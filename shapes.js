@@ -36,7 +36,7 @@ class shapes {
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes
                 shadHeightLine: 2,  // height of main shape in lineheights
-                superShadowShiftX: 10,  //  shift in boxes on x axis
+                superShadowShiftX: 25,  //  shift in boxes on x axis
                 superShadowShiftY: 5,  // shift in boxes on y axis
                 superShadowHeightMax: 25, // heigt in boxes on y axis
                 front: {
@@ -83,7 +83,7 @@ class shapes {
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes
                 shadHeightLine: 2,  // height of main shape in lineheights
-                superShadowShiftX: 10,  //  shift in boxes on x axis
+                superShadowShiftX: 25,  //  shift in boxes on x axis
                 superShadowShiftY: 5,  // shift in boxes on y axis
                 superShadowHeightMax: 25, // heigt in boxes on y axis
                 front: {

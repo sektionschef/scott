@@ -17,7 +17,7 @@ var TITLE = "Scott";
 var ARTIST = "Stefan Schwaha, @sektionschef";
 var DESCRIPTION = "javascript on html canvas";
 var WEBSITE = "https://digitalitility.com";
-var YEAR = "2023";
+var YEAR = "2024";
 
 var BACKGROUNDTONE = "#ffffff";
 

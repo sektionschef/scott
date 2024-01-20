@@ -165,7 +165,7 @@ class filledPath {
         // this.path.setAttributeNS(null, "stroke-width", this.strokeWidth);
         this.path.setAttributeNS(null, "stroke", "none");
         this.path.setAttributeNS(null, "opacity", 1);
-        this.path.setAttributeNS(null, "fill", "black");
+        this.path.setAttributeNS(null, "fill", "#4d4d4d");
 
         // svgNode.appendChild(this.newPath);
         group.appendChild(this.path);
