@@ -16,57 +16,62 @@ class filledPath {
         this.end.debugColor = "red";
 
 
-        this.A = {
+        this.Atheo = {
             x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
             y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2)),
             id: "A",
             debugColor: "purple",
         }
-        this.B = {
+        this.Btheo = {
             x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians + Math.PI / 2)),
             y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians + Math.PI / 2)),
             id: "B",
             debugColor: "purple",
         }
-        this.C = {
+        this.Ctheo = {
             x: this.end.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
             y: this.end.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2)),
             id: "C",
             debugColor: "purple",
         }
 
-        this.D = {
+        this.Dtheo = {
             x: this.start.x + (this.strokeWidth / 2 * Math.cos(this.angleRadians - Math.PI / 2)),
             y: this.start.y + (this.strokeWidth / 2 * Math.sin(this.angleRadians - Math.PI / 2)),
             id: "D",
             debugColor: "purple",
         }
 
+        this.A = this.Atheo;
+        this.B = this.Btheo;
+        this.C = this.Ctheo;
+        this.D = this.Dtheo;
+
         // between A and B - near A
         this.cAB = {
-            x: this.A.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.A.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            x: this.A.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians)),
+            y: this.A.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians)),
             id: "cAB",
             debugColor: "blue",
         }
 
         this.cBA = {
-            x: this.B.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.B.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            x: this.B.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - 2 * Math.PI)),
+            y: this.B.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - 2 * Math.PI)),
             id: "cBA",
             debugColor: "blue",
         }
 
         this.cCD = {
-            x: this.D.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.D.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            x: this.D.x + (this.vectorMagnitude / 3 * Math.cos(this.angleRadians)),
+            y: this.D.y + (this.vectorMagnitude / 3 * Math.sin(this.angleRadians)),
             id: "cCD",
             debugColor: "blue",
         }
 
         this.cDC = {
-            x: this.C.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - Math.PI)),
-            y: this.C.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - Math.PI)),
+            x: this.C.x - (this.vectorMagnitude / 3 * Math.cos(this.angleRadians - 2 * Math.PI)),
+            y: this.C.y - (this.vectorMagnitude / 3 * Math.sin(this.angleRadians - 2 * Math.PI)),
             id: "cDC",
             debugColor: "blue",
         }
@@ -98,7 +103,7 @@ class filledPath {
             debugColor: "blue",
         }
 
-        this.misplaceCoords();
+        // this.misplaceCoords();
         this.showFilledPath();
 
         // this.showDebugPoint();
@@ -166,7 +171,7 @@ class filledPath {
         ${this.B.x} ${this.B.y},
         C
         ${this.cBC.x} ${this.cBC.y}, 
-        ${this.cBC.x} ${this.cCB.y},
+        ${this.cCB.x} ${this.cCB.y},
         ${this.C.x} ${this.C.y}
         C
         ${this.cCD.x} ${this.cCD.y}, 

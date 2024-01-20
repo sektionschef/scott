@@ -3,7 +3,7 @@ function testFilledPath() {
     var data = {
         start: { x: 100, y: 100 },
         end: { x: 250, y: 170 },
-        strokeWidth: 10,
+        strokeWidth: 60,
         group: "groupA",
     }
 
