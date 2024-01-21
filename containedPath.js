@@ -190,8 +190,6 @@ class containedPath {
     drawDebugLine(groupString) {
 
         this.strokeWidth = 0.5;
-
-        // jitter
         var jitter = 1;
 
         // const svgNode = document.getElementById('svgNode');
@@ -216,13 +214,12 @@ class containedPath {
     }
 
     drawFilledPath(group) {
-        // this.strokeWidth = 1;
-        this.strokeWidth = 1.3;
+        // this.strokeWidth = 0.5;
 
         new filledPath({
             start: this.start,
             end: this.end,
-            strokeWidth: this.strokeWidth,
+            // strokeWidth: this.strokeWidth,
             group: group,
         })
     }

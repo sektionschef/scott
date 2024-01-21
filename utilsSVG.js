@@ -76,6 +76,13 @@ function getMiddlePpoint(p1, p2) {
     return { x: ((p2.x - p1.x) / 2 + p1.x), y: ((p2.y - p1.y) / 2 + p1.y) }
 }
 
+function jitterPoint(p, jitter) {
+    var data = p;
+    data.x = p.x + gaussianRandAdj(0, jitter);
+    data.y = p.y + gaussianRandAdj(0, jitter);
+    return data
+}
+
 
 // COLOR
 

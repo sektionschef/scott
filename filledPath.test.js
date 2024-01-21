@@ -1,9 +1,9 @@
 function testFilledPath() {
 
     var data = {
-        start: { x: 100, y: 100 },
-        end: { x: 250, y: 170 },
-        strokeWidth: 20,
+        start: { x: 25, y: 90 },
+        end: { x: 60, y: 45 },
+        strokeWidth: 30,
         group: "groupA",
     }
 

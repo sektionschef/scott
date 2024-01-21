@@ -22,7 +22,9 @@ body {
 }
 
 svg {
-    width: 300%;
-    height: 300%;
+    width: 1000%;
+    /* change */
+    height: 1000%;
+    /* change */
     background-color: white;
 }

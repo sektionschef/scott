@@ -1,26 +1,28 @@
 class filledPath {
     constructor(data) {
+        this.strokeWidth = 1.3; // deprecatd
+        this.colory = "#2b2b2b"
+        // this.profile = "vanilla";
+        this.profile = "swingspitz";
+        var cat = 0.75;
+        var bogal = gaussianRandAdj(0, 0.05);
+
 
         this.start = data.start;
         this.end = data.end;
-        // this.angleRadians = data.angleRadians;
-        this.strokeWidth = data.strokeWidth;
+        // this.strokeWidth = data.strokeWidth;
         this.group = data.group;
 
         this.angleRadians = angleBetweenPoints(this.start, this.end);
         this.vectorMagnitude = vectorLength(vectorSub(this.start, this.end));
 
-        var cat = 1;
-
         this.start.id = "start";
         this.start.debugColor = "green";
-        this.start.x = this.start.x + gaussianRandAdj(0, cat);
-        this.start.y = this.start.y + gaussianRandAdj(0, cat);
+        this.start = jitterPoint(this.start, cat)
 
         this.end.id = "end";
         this.end.debugColor = "red";
-        this.end.x = this.end.x + gaussianRandAdj(0, cat);
-        this.end.y = this.end.y + gaussianRandAdj(0, cat);
+        this.end = jitterPoint(this.end, cat)
 
         this.center = getMiddlePpoint(this.start, this.end);
         this.center.id = "center";
@@ -28,9 +30,8 @@ class filledPath {
         // this.center.x = this.center.x + gaussianRandAdj(0, cat);
         // this.center.y = this.center.y + gaussianRandAdj(0, cat);
 
-
-        // this.profile = "vanilla";
-        this.profile = "swingspitz";
+        // var widthy =
+        // console.log(this.vectorMagnitude * 0.02);
 
         if (this.profile == "vanilla") {
             this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
@@ -93,129 +94,54 @@ class filledPath {
             this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
             this.cAD.id = "cAD";
             this.cAD.debugColor = "blue";
-        } else if (this.profile == "spitzbergen") {
-            this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
-            this.Atheo.id = "Atheo";
-            this.Atheo.debugColor = "#747474";
-            this.A = this.Atheo;
-            this.A.id = "A";
-            this.A.debugColor = "purple";
-
-            this.Btheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
-            this.Btheo.id = "Btheo";
-            this.Btheo.debugColor = "#747474";
-            this.B = vectorAdd(this.center, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
-            this.B.id = "B";
-            this.B.debugColor = "purple";
-
-            this.Ctheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
-            this.Ctheo.id = "Ctheo";
-            this.Ctheo.debugColor = "#747474";
-            this.C = vectorAdd(this.center, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
-            this.C.id = "C";
-            this.C.debugColor = "purple";
-
-            this.Dtheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
-            this.Dtheo.id = "Dtheo";
-            this.Dtheo.debugColor = "#747474";
-            this.D = this.Dtheo;
-            this.D.id = "D";
-            this.D.debugColor = "purple";
-
-            // between A and B - near A
-            this.cAB = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
-            this.cAB.id = "cAB";
-            this.cAB.debugColor = "blue";
-
-            this.cBA = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
-            this.cBA.id = "cBA";
-            this.cBA.debugColor = "blue";
-
-            this.cCD = vectorAdd(this.C, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
-            this.cCD.id = "cCD";
-            this.cCD.debugColor = "blue";
-
-            this.cDC = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
-            this.cDC.id = "cDC";
-            this.cDC.debugColor = "blue";
-
-            this.cBC = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.9, this.strokeWidth / 3));
-            this.cBC.id = "cBC";
-            this.cBC.debugColor = "blue";
-
-            this.cCB = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.9, this.strokeWidth / 3));
-            this.cCB.id = "cCB";
-            this.cCB.debugColor = "blue";
-
-            this.cDA = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
-            this.cDA.id = "cDA";
-            this.cDA.debugColor = "blue";
-
-            this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
-            this.cAD.id = "cAD";
-            this.cAD.debugColor = "blue";
         } else if (this.profile == "swingspitz") {
 
-            var centerOffset = this.strokeWidth;
-
-            this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
-            this.Atheo.id = "Atheo";
-            this.Atheo.debugColor = "#747474";
-            this.A = this.Atheo;
+            this.A = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI * 0.70, this.vectorMagnitude * 0.02));  // faus
             this.A.id = "A";
             this.A.debugColor = "purple";
 
-            this.Btheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
-            this.Btheo.id = "Btheo";
-            this.Btheo.debugColor = "#747474";
-            this.B = vectorAdd(this.center, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3 - centerOffset));
+            this.B = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.1, this.vectorMagnitude * 0.03)); // faus
             this.B.id = "B";
             this.B.debugColor = "purple";
 
-            this.Ctheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
-            this.Ctheo.id = "Ctheo";
-            this.Ctheo.debugColor = "#747474";
-            this.C = vectorAdd(this.center, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3 + centerOffset));
+            this.C = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.1, this.vectorMagnitude * 0.03));  // faus
             this.C.id = "C";
             this.C.debugColor = "purple";
 
-            this.Dtheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
-            this.Dtheo.id = "Dtheo";
-            this.Dtheo.debugColor = "#747474";
-            this.D = this.Dtheo;
+            this.D = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI * 0.80, this.vectorMagnitude * 0.02));  // faus
             this.D.id = "D";
             this.D.debugColor = "purple";
 
             // between A and B - near A
-            this.cAB = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
+            this.cAB = vectorAdd(this.A, vectorFromAngle(this.angleRadians - Math.PI * (bogal + gaussianRandAdj(0, 0.00)), this.vectorMagnitude / 6));  // 0.07
             this.cAB.id = "cAB";
             this.cAB.debugColor = "blue";
 
-            this.cBA = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
+            this.cBA = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI + Math.PI * (bogal + gaussianRandAdj(0, 0.00)), this.vectorMagnitude / 6));
             this.cBA.id = "cBA";
             this.cBA.debugColor = "blue";
 
-            this.cCD = vectorAdd(this.C, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
+            this.cCD = vectorAdd(this.C, vectorFromAngle(this.angleRadians - Math.PI + Math.PI * (bogal + gaussianRandAdj(0, 0.0)), this.vectorMagnitude / 6));
             this.cCD.id = "cCD";
             this.cCD.debugColor = "blue";
 
-            this.cDC = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
+            this.cDC = vectorAdd(this.D, vectorFromAngle(this.angleRadians - Math.PI * (bogal + gaussianRandAdj(0, 0.0)), this.vectorMagnitude / 6));
             this.cDC.id = "cDC";
             this.cDC.debugColor = "blue";
 
-            this.cBC = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.9, this.strokeWidth / 3));
+            this.cBC = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI * 0.05, this.vectorMagnitude * 0.04));
             this.cBC.id = "cBC";
             this.cBC.debugColor = "blue";
 
-            this.cCB = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.9, this.strokeWidth / 3));
+            this.cCB = vectorAdd(this.C, vectorFromAngle(this.angleRadians + Math.PI * 0.05, this.vectorMagnitude * 0.04));
             this.cCB.id = "cCB";
             this.cCB.debugColor = "blue";
 
-            this.cDA = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+            this.cDA = vectorAdd(this.D, vectorFromAngle(this.angleRadians - Math.PI * 0.82, this.vectorMagnitude * 0.04));
             this.cDA.id = "cDA";
             this.cDA.debugColor = "blue";
 
-            this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+            this.cAD = vectorAdd(this.A, vectorFromAngle(this.angleRadians + Math.PI * 0.82, this.vectorMagnitude * 0.04));
             this.cAD.id = "cAD";
             this.cAD.debugColor = "blue";
         }
@@ -309,11 +235,14 @@ class filledPath {
 
         const group = document.getElementById(this.group);
 
-        this.path.setAttributeNS(null, "stroke", this.strokeColor);
+        // this.path.setAttributeNS(null, "stroke", this.strokeColor);
+
         // this.path.setAttributeNS(null, "stroke-width", this.strokeWidth);
+        // this.path.setAttributeNS(null, "stroke", "black");
         this.path.setAttributeNS(null, "stroke", "none");
         this.path.setAttributeNS(null, "opacity", 1);
-        this.path.setAttributeNS(null, "fill", "#4d4d4d");
+        // this.path.setAttributeNS(null, "fill", "none");
+        this.path.setAttributeNS(null, "fill", this.colory);
 
         // svgNode.appendChild(this.newPath);
         group.appendChild(this.path);
@@ -325,10 +254,10 @@ class filledPath {
         this.debugPoint.setAttributeNS(null, "id", "");
         this.debugPoint.setAttributeNS(null, "cx", point.x);
         this.debugPoint.setAttributeNS(null, "cy", point.y);
-        this.debugPoint.setAttributeNS(null, "r", "2");
+        this.debugPoint.setAttributeNS(null, "r", "0.5");
         this.debugPoint.setAttributeNS(null, "stroke", "none");
         this.debugPoint.setAttributeNS(null, "fill", point.debugColor);
-        this.debugPoint.setAttributeNS(null, "stroke-width", 0.1);
+        this.debugPoint.setAttributeNS(null, "stroke-width", 0.01);
         this.debugPoint.setAttributeNS(null, "opacity", 1);
 
         // const svgNode = document.getElementById('svgNode');
@@ -340,7 +269,7 @@ class filledPath {
 
     showDebugText(point) {
         var offset = 2;
-        const textSize = "0.5em";
+        const textSize = "0.1em";
 
         var text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', point.x + offset);
@@ -358,6 +287,7 @@ class filledPath {
         var pointList = [
             this.end,
             this.start,
+            // this.center,
             this.cAB,
             this.cBA,
             this.cBC,
@@ -370,11 +300,6 @@ class filledPath {
             this.B,
             this.C,
             this.D,
-            // this.Atheo,
-            // this.Btheo,
-            // this.Ctheo,
-            // this.Dtheo,
-            this.center,
         ]
 
         for (var i = 0; i < pointList.length; i++) {

@@ -211,23 +211,23 @@ function main() {
   // });
 
   // // GRID
-  // let grid = new Grid({
-  //   stepCountRes: 300,  // 400
-  //   stripeHeight: 4,  // 2
-  //   vectorMagnitude: 50,  // 50
-  //   marginRelative: 1,
-  //   // strokeColor: "#222222ff",
-  //   strokeColor: "#4e4e4eff",
-  //   strokeWidth: 1,
-  //   angleRadiansStart: Math.PI / 2,
-  //   angleRadiansGain: Math.PI / 5,
-  //   // angleRadiansGain: 0,
-  //   shortBoxCount: RESOLUTIONBOXCOUNT,
-  //   longSide: LONGSIDE,
-  //   shortSide: SHORTSIDE,
-  //   landscape: LANDSCAPE,
-  //   group: "groupB",
-  // });
+  let grid = new Grid({
+    stepCountRes: 300,  // 400
+    stripeHeight: 4,  // 2
+    vectorMagnitude: 54,  // 50
+    marginRelative: 1,
+    // strokeColor: "#222222ff",
+    strokeColor: "#4e4e4eff",
+    strokeWidth: 1,
+    angleRadiansStart: Math.PI / 2,
+    angleRadiansGain: Math.PI / 5,
+    // angleRadiansGain: 0,
+    shortBoxCount: RESOLUTIONBOXCOUNT,
+    longSide: LONGSIDE,
+    shortSide: SHORTSIDE,
+    landscape: LANDSCAPE,
+    group: "groupB",
+  });
 
   // showOtherNoise();
 
@@ -240,7 +240,7 @@ function main() {
 
 
   // TESTS
-  testFilledPath()
+  // testFilledPath()
 
 
   setTagsHTML({
