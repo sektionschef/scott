@@ -5,7 +5,7 @@ class strokeSystem {
         // this.posStdCon = 1; // 0.4;  // control points
         // this.posStdShiftX = 0; // add variance to x so no total overlap
         // this.minLength = 5; // 5;  // a line should have a length of at least
-        this.filledPath = false;
+        this.filledPath = true;
 
         this.allShapes = data.allShapes;
 

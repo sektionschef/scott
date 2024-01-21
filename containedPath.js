@@ -216,7 +216,8 @@ class containedPath {
     }
 
     drawFilledPath(group) {
-        this.strokeWidth = 1;
+        // this.strokeWidth = 1;
+        this.strokeWidth = 1.3;
 
         new filledPath({
             start: this.start,

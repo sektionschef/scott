@@ -10,71 +10,215 @@ class filledPath {
         this.angleRadians = angleBetweenPoints(this.start, this.end);
         this.vectorMagnitude = vectorLength(vectorSub(this.start, this.end));
 
+        var cat = 1;
+
         this.start.id = "start";
         this.start.debugColor = "green";
+        this.start.x = this.start.x + gaussianRandAdj(0, cat);
+        this.start.y = this.start.y + gaussianRandAdj(0, cat);
+
         this.end.id = "end";
         this.end.debugColor = "red";
+        this.end.x = this.end.x + gaussianRandAdj(0, cat);
+        this.end.y = this.end.y + gaussianRandAdj(0, cat);
 
-        this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
-        this.Atheo.id = "Atheo";
-        this.Atheo.debugColor = "#747474";
-        this.A = this.Atheo;
-        this.A.id = "A";
-        this.A.debugColor = "purple";
+        this.center = getMiddlePpoint(this.start, this.end);
+        this.center.id = "center";
+        this.center.debugColor = "pink";
+        // this.center.x = this.center.x + gaussianRandAdj(0, cat);
+        // this.center.y = this.center.y + gaussianRandAdj(0, cat);
 
-        this.Btheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
-        this.Btheo.id = "Btheo";
-        this.Btheo.debugColor = "#747474";
-        this.B = this.Btheo;
-        this.B.id = "B";
-        this.B.debugColor = "purple";
 
-        this.Ctheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
-        this.Ctheo.id = "Ctheo";
-        this.Ctheo.debugColor = "#747474";
-        this.C = this.Ctheo;
-        this.C.id = "C";
-        this.C.debugColor = "purple";
+        // this.profile = "vanilla";
+        this.profile = "swingspitz";
 
-        this.Dtheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
-        this.Dtheo.id = "Dtheo";
-        this.Dtheo.debugColor = "#747474";
-        this.D = this.Dtheo;
-        this.D.id = "D";
-        this.D.debugColor = "purple";
+        if (this.profile == "vanilla") {
+            this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+            this.Atheo.id = "Atheo";
+            this.Atheo.debugColor = "#747474";
+            this.A = this.Atheo;
+            this.A.id = "A";
+            this.A.debugColor = "purple";
 
-        // between A and B - near A
-        this.cAB = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 3));
-        this.cAB.id = "cAB";
-        this.cAB.debugColor = "blue";
+            this.Btheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+            this.Btheo.id = "Btheo";
+            this.Btheo.debugColor = "#747474";
+            this.B = this.Btheo;
+            this.B.id = "B";
+            this.B.debugColor = "purple";
 
-        this.cBA = vectorAdd(this.Btheo, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 3));
-        this.cBA.id = "cBA";
-        this.cBA.debugColor = "blue";
+            this.Ctheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+            this.Ctheo.id = "Ctheo";
+            this.Ctheo.debugColor = "#747474";
+            this.C = this.Ctheo;
+            this.C.id = "C";
+            this.C.debugColor = "purple";
 
-        this.cCD = vectorAdd(this.Ctheo, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 3));
-        this.cCD.id = "cCD";
-        this.cCD.debugColor = "blue";
+            this.Dtheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+            this.Dtheo.id = "Dtheo";
+            this.Dtheo.debugColor = "#747474";
+            this.D = this.Dtheo;
+            this.D.id = "D";
+            this.D.debugColor = "purple";
 
-        this.cDC = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 3));
-        this.cDC.id = "cDC";
-        this.cDC.debugColor = "blue";
+            // between A and B - near A
+            this.cAB = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 3));
+            this.cAB.id = "cAB";
+            this.cAB.debugColor = "blue";
 
-        this.cBC = vectorAdd(this.Btheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
-        this.cBC.id = "cBC";
-        this.cBC.debugColor = "blue";
+            this.cBA = vectorAdd(this.Btheo, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 3));
+            this.cBA.id = "cBA";
+            this.cBA.debugColor = "blue";
 
-        this.cCB = vectorAdd(this.Ctheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
-        this.cCB.id = "cCB";
-        this.cCB.debugColor = "blue";
+            this.cCD = vectorAdd(this.Ctheo, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 3));
+            this.cCD.id = "cCD";
+            this.cCD.debugColor = "blue";
 
-        this.cDA = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
-        this.cDA.id = "cDA";
-        this.cDA.debugColor = "blue";
+            this.cDC = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 3));
+            this.cDC.id = "cDC";
+            this.cDC.debugColor = "blue";
 
-        this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
-        this.cAD.id = "cAD";
-        this.cAD.debugColor = "blue";
+            this.cBC = vectorAdd(this.Btheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+            this.cBC.id = "cBC";
+            this.cBC.debugColor = "blue";
+
+            this.cCB = vectorAdd(this.Ctheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+            this.cCB.id = "cCB";
+            this.cCB.debugColor = "blue";
+
+            this.cDA = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+            this.cDA.id = "cDA";
+            this.cDA.debugColor = "blue";
+
+            this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+            this.cAD.id = "cAD";
+            this.cAD.debugColor = "blue";
+        } else if (this.profile == "spitzbergen") {
+            this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+            this.Atheo.id = "Atheo";
+            this.Atheo.debugColor = "#747474";
+            this.A = this.Atheo;
+            this.A.id = "A";
+            this.A.debugColor = "purple";
+
+            this.Btheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+            this.Btheo.id = "Btheo";
+            this.Btheo.debugColor = "#747474";
+            this.B = vectorAdd(this.center, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+            this.B.id = "B";
+            this.B.debugColor = "purple";
+
+            this.Ctheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+            this.Ctheo.id = "Ctheo";
+            this.Ctheo.debugColor = "#747474";
+            this.C = vectorAdd(this.center, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+            this.C.id = "C";
+            this.C.debugColor = "purple";
+
+            this.Dtheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+            this.Dtheo.id = "Dtheo";
+            this.Dtheo.debugColor = "#747474";
+            this.D = this.Dtheo;
+            this.D.id = "D";
+            this.D.debugColor = "purple";
+
+            // between A and B - near A
+            this.cAB = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
+            this.cAB.id = "cAB";
+            this.cAB.debugColor = "blue";
+
+            this.cBA = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
+            this.cBA.id = "cBA";
+            this.cBA.debugColor = "blue";
+
+            this.cCD = vectorAdd(this.C, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
+            this.cCD.id = "cCD";
+            this.cCD.debugColor = "blue";
+
+            this.cDC = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
+            this.cDC.id = "cDC";
+            this.cDC.debugColor = "blue";
+
+            this.cBC = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.9, this.strokeWidth / 3));
+            this.cBC.id = "cBC";
+            this.cBC.debugColor = "blue";
+
+            this.cCB = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.9, this.strokeWidth / 3));
+            this.cCB.id = "cCB";
+            this.cCB.debugColor = "blue";
+
+            this.cDA = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+            this.cDA.id = "cDA";
+            this.cDA.debugColor = "blue";
+
+            this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+            this.cAD.id = "cAD";
+            this.cAD.debugColor = "blue";
+        } else if (this.profile == "swingspitz") {
+
+            var centerOffset = this.strokeWidth;
+
+            this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+            this.Atheo.id = "Atheo";
+            this.Atheo.debugColor = "#747474";
+            this.A = this.Atheo;
+            this.A.id = "A";
+            this.A.debugColor = "purple";
+
+            this.Btheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
+            this.Btheo.id = "Btheo";
+            this.Btheo.debugColor = "#747474";
+            this.B = vectorAdd(this.center, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3 - centerOffset));
+            this.B.id = "B";
+            this.B.debugColor = "purple";
+
+            this.Ctheo = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+            this.Ctheo.id = "Ctheo";
+            this.Ctheo.debugColor = "#747474";
+            this.C = vectorAdd(this.center, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3 + centerOffset));
+            this.C.id = "C";
+            this.C.debugColor = "purple";
+
+            this.Dtheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 2));
+            this.Dtheo.id = "Dtheo";
+            this.Dtheo.debugColor = "#747474";
+            this.D = this.Dtheo;
+            this.D.id = "D";
+            this.D.debugColor = "purple";
+
+            // between A and B - near A
+            this.cAB = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
+            this.cAB.id = "cAB";
+            this.cAB.debugColor = "blue";
+
+            this.cBA = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
+            this.cBA.id = "cBA";
+            this.cBA.debugColor = "blue";
+
+            this.cCD = vectorAdd(this.C, vectorFromAngle(this.angleRadians - Math.PI, this.vectorMagnitude / 9));
+            this.cCD.id = "cCD";
+            this.cCD.debugColor = "blue";
+
+            this.cDC = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians, this.vectorMagnitude / 9));
+            this.cDC.id = "cDC";
+            this.cDC.debugColor = "blue";
+
+            this.cBC = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.9, this.strokeWidth / 3));
+            this.cBC.id = "cBC";
+            this.cBC.debugColor = "blue";
+
+            this.cCB = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.9, this.strokeWidth / 3));
+            this.cCB.id = "cCB";
+            this.cCB.debugColor = "blue";
+
+            this.cDA = vectorAdd(this.Dtheo, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 3));
+            this.cDA.id = "cDA";
+            this.cDA.debugColor = "blue";
+
+            this.cAD = vectorAdd(this.Atheo, vectorFromAngle(this.angleRadians - Math.PI / 2, this.strokeWidth / 3));
+            this.cAD.id = "cAD";
+            this.cAD.debugColor = "blue";
+        }
 
         // this.misplaceCoords();
         this.showFilledPath();
@@ -226,6 +370,11 @@ class filledPath {
             this.B,
             this.C,
             this.D,
+            // this.Atheo,
+            // this.Btheo,
+            // this.Ctheo,
+            // this.Dtheo,
+            this.center,
         ]
 
         for (var i = 0; i < pointList.length; i++) {

@@ -211,29 +211,29 @@ function main() {
   // });
 
   // // GRID
-  let grid = new Grid({
-    stepCountRes: 300,  // 400
-    stripeHeight: 4,  // 2
-    vectorMagnitude: 50,  // 50
-    marginRelative: 1,
-    // strokeColor: "#222222ff",
-    strokeColor: "#4e4e4eff",
-    strokeWidth: 1,
-    angleRadiansStart: Math.PI / 2,
-    angleRadiansGain: Math.PI / 5,
-    // angleRadiansGain: 0,
-    shortBoxCount: RESOLUTIONBOXCOUNT,
-    longSide: LONGSIDE,
-    shortSide: SHORTSIDE,
-    landscape: LANDSCAPE,
-    group: "groupB",
-  });
+  // let grid = new Grid({
+  //   stepCountRes: 300,  // 400
+  //   stripeHeight: 4,  // 2
+  //   vectorMagnitude: 50,  // 50
+  //   marginRelative: 1,
+  //   // strokeColor: "#222222ff",
+  //   strokeColor: "#4e4e4eff",
+  //   strokeWidth: 1,
+  //   angleRadiansStart: Math.PI / 2,
+  //   angleRadiansGain: Math.PI / 5,
+  //   // angleRadiansGain: 0,
+  //   shortBoxCount: RESOLUTIONBOXCOUNT,
+  //   longSide: LONGSIDE,
+  //   shortSide: SHORTSIDE,
+  //   landscape: LANDSCAPE,
+  //   group: "groupB",
+  // });
 
   // showOtherNoise();
 
   // SHOW THE GRIDS
   showGroupA();
-  // showGroupB();
+  showGroupB();
   showGroupC();
 
   // showBlur();
@@ -353,8 +353,8 @@ function createPencilNoiseFilter() {
   turbulence.setAttribute("id", "turbulence");
   // turbulence.setAttribute("type", "fractalNoise");
   turbulence.setAttribute("type", "turbulence");
-  turbulence.setAttribute("baseFrequency", "1.5"); // 1.5
-  turbulence.setAttribute("numOctaves", "3");  // 1
+  turbulence.setAttribute("baseFrequency", "0.01"); // 1.5
+  turbulence.setAttribute("numOctaves", "9");  // 1
   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
   turbulence.setAttribute("stitchTiles", "stitch");
   turbulence.setAttribute("x", "0%");
