@@ -96,19 +96,19 @@ class filledPath {
             this.cAD.debugColor = "blue";
         } else if (this.profile == "swingspitz") {
 
-            this.A = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI * 0.70, this.vectorMagnitude * 0.02));  // faus
+            this.A = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI * 0.70, 1));
             this.A.id = "A";
             this.A.debugColor = "purple";
 
-            this.B = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.1, this.vectorMagnitude * 0.02)); // faus
+            this.B = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.1, 1)); // faus
             this.B.id = "B";
             this.B.debugColor = "purple";
 
-            this.C = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.1, this.vectorMagnitude * 0.02));  // faus
+            this.C = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.1, 1));  // faus
             this.C.id = "C";
             this.C.debugColor = "purple";
 
-            this.D = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI * 0.80, this.vectorMagnitude * 0.02));  // faus
+            this.D = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI * 0.80, 1));  // faus
             this.D.id = "D";
             this.D.debugColor = "purple";
 
@@ -129,19 +129,19 @@ class filledPath {
             this.cDC.id = "cDC";
             this.cDC.debugColor = "blue";
 
-            this.cBC = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI * 0.04, this.vectorMagnitude * 0.02));
+            this.cBC = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI * 0.04, 1));
             this.cBC.id = "cBC";
             this.cBC.debugColor = "blue";
 
-            this.cCB = vectorAdd(this.C, vectorFromAngle(this.angleRadians + Math.PI * 0.04, this.vectorMagnitude * 0.02));
+            this.cCB = vectorAdd(this.C, vectorFromAngle(this.angleRadians + Math.PI * 0.04, 1));
             this.cCB.id = "cCB";
             this.cCB.debugColor = "blue";
 
-            this.cDA = vectorAdd(this.D, vectorFromAngle(this.angleRadians - Math.PI * 0.82, this.vectorMagnitude * 0.04));
+            this.cDA = vectorAdd(this.D, vectorFromAngle(this.angleRadians - Math.PI * 0.82, 1));
             this.cDA.id = "cDA";
             this.cDA.debugColor = "blue";
 
-            this.cAD = vectorAdd(this.A, vectorFromAngle(this.angleRadians + Math.PI * 0.82, this.vectorMagnitude * 0.04));
+            this.cAD = vectorAdd(this.A, vectorFromAngle(this.angleRadians + Math.PI * 0.82, 1));
             this.cAD.id = "cAD";
             this.cAD.debugColor = "blue";
         }
