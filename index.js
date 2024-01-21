@@ -240,7 +240,7 @@ function main() {
 
 
   // TESTS
-  // testFilledPath()
+  testFilledPath()
 
 
   setTagsHTML({

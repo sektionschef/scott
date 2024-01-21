@@ -100,11 +100,11 @@ class filledPath {
             this.A.id = "A";
             this.A.debugColor = "purple";
 
-            this.B = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.1, this.vectorMagnitude * 0.03)); // faus
+            this.B = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.1, this.vectorMagnitude * 0.02)); // faus
             this.B.id = "B";
             this.B.debugColor = "purple";
 
-            this.C = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.1, this.vectorMagnitude * 0.03));  // faus
+            this.C = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.1, this.vectorMagnitude * 0.02));  // faus
             this.C.id = "C";
             this.C.debugColor = "purple";
 
@@ -129,11 +129,11 @@ class filledPath {
             this.cDC.id = "cDC";
             this.cDC.debugColor = "blue";
 
-            this.cBC = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI * 0.05, this.vectorMagnitude * 0.04));
+            this.cBC = vectorAdd(this.B, vectorFromAngle(this.angleRadians - Math.PI * 0.04, this.vectorMagnitude * 0.02));
             this.cBC.id = "cBC";
             this.cBC.debugColor = "blue";
 
-            this.cCB = vectorAdd(this.C, vectorFromAngle(this.angleRadians + Math.PI * 0.05, this.vectorMagnitude * 0.04));
+            this.cCB = vectorAdd(this.C, vectorFromAngle(this.angleRadians + Math.PI * 0.04, this.vectorMagnitude * 0.02));
             this.cCB.id = "cCB";
             this.cCB.debugColor = "blue";
 
@@ -285,8 +285,6 @@ class filledPath {
     showDebugStroke() {
 
         var pointList = [
-            this.end,
-            this.start,
             // this.center,
             this.cAB,
             this.cBA,
@@ -300,6 +298,8 @@ class filledPath {
             this.B,
             this.C,
             this.D,
+            this.end,
+            this.start,
         ]
 
         for (var i = 0; i < pointList.length; i++) {
