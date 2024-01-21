@@ -353,8 +353,8 @@ function createPencilNoiseFilter() {
   turbulence.setAttribute("id", "turbulence");
   // turbulence.setAttribute("type", "fractalNoise");
   turbulence.setAttribute("type", "turbulence");
-  turbulence.setAttribute("baseFrequency", "0.01"); // 1.5
-  turbulence.setAttribute("numOctaves", "9");  // 1
+  turbulence.setAttribute("baseFrequency", "1.5"); // 1.5
+  turbulence.setAttribute("numOctaves", "4");  // 1
   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
   turbulence.setAttribute("stitchTiles", "stitch");
   turbulence.setAttribute("x", "0%");
@@ -365,7 +365,7 @@ function createPencilNoiseFilter() {
 
   var displacement = document.createElementNS("http://www.w3.org/2000/svg", "feDisplacementMap");
   displacement.setAttribute("id", "displacement");
-  displacement.setAttribute("scale", "0.75");
+  displacement.setAttribute("scale", "1");
   displacement.setAttribute("in", "SourceGraphic");
 
   filterPencil.appendChild(turbulence);
