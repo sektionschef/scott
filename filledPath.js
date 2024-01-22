@@ -146,65 +146,41 @@ class filledPath {
             this.cAD.debugColor = "blue";
         }
 
-        // this.misplaceCoords();
         this.showFilledPath();
 
-        // this.showDebugPoint();
+        this.smallerPath();
+        this.showFilledPath();
     }
 
-    misplaceCoords() {
-        var shiftX = gaussianRandAdj(0, this.posStdShiftX);
+    smallerPath() {
+        var pointList = [
+            this.cAB,
+            this.cBA,
+            this.cBC,
+            this.cCB,
+            this.cCD,
+            this.cDC,
+            this.cDA,
+            this.cAD,
+            this.A,
+            this.B,
+            this.C,
+            this.D,
+            this.end,
+            this.start,
+        ]
 
-        // start and end distortion
-        // this.start.x = this.start.x + gaussianRandAdj(0, this.posStd) + shiftX;
-        // this.end.x = this.end.x + gaussianRandAdj(0, this.posStd) + shiftX;
-        // this.start.y = this.start.y + gaussianRandAdj(0, this.posStd);
-        // this.end.y = this.end.y + gaussianRandAdj(0, this.posStd);
-
-        // NEEDS VECTOR MANIPULATION
-        this.pointStd = 0;
-        this.longStd = 1;
-        this.shortStd = 1;
-
-        var misplacementList = {
-            [this.pointStd]: [
-                this.A,
-                this.B,
-                this.C,
-                this.D,
-            ],
-            [this.longStd]: [
-                this.cAB,
-                this.cBA,
-                this.cCD,
-                this.cDC,
-            ],
-            [this.shortStd]: [
-                this.cBC,
-                this.cCB,
-                this.cDA,
-                this.cAD,
-            ]
-        }
-
-        for (const [cat, coordList] of Object.entries(misplacementList)) {
-            for (var i = 0; i < coordList.length; i++) {
-
-
-                // coordList[i].x = coordList[i].x + gaussianRandAdj(0, this.posStd) + shiftX;
-                // coordList[i].y = coordList[i].y + gaussianRandAdj(0, this.posStd) + shiftX;
-
-                coordList[i].x = coordList[i].x + gaussianRandAdj(0, cat);
-                coordList[i].y = coordList[i].y + gaussianRandAdj(0, cat);
-            }
+        for (var i = 0; i < pointList.length; i++) {
+            pointList[i] = jitterPoint(pointList[i], 3);
         }
     }
+
 
     drawPath() {
 
         this.path = document.createElementNS('http://www.w3.org/2000/svg', "path");
         this.path.setAttributeNS(null, "id", "pathIdD");
-        // this.path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        this.path.setAttributeNS(null, "filter", "url(#filterPencil)");
 
         this.path.setAttributeNS(null, "d", `M 
         ${this.A.x} ${this.A.y}, 
