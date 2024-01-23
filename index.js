@@ -180,7 +180,7 @@ function main() {
 
   createPencilNoiseFilter();
   createPaperFilter();
-  // createOtherNoiseLayer();
+  createOtherNoiseLayer();
 
   // createBlur();
   // createBrightness();
@@ -229,13 +229,13 @@ function main() {
     group: "groupB",
   });
 
-  // showOtherNoise();
 
   // SHOW THE GRIDS
   showGroupA();
   showGroupB();
   showGroupC();
 
+  showOtherNoise();
   // showBlur();
 
 
@@ -481,7 +481,6 @@ function createOtherNoiseLayer() {
   fuetaObj.setAttribute("filter", "url(#fueta)");
   defs.appendChild(fueta);
   defs.appendChild(fuetaObj);
-
 }
 
 function showOtherNoise() {

@@ -1,7 +1,8 @@
 class filledPath {
     constructor(data) {
         this.strokeWidth = 1.3; // deprecatd
-        this.colory = "#0000006e"
+        // this.colory = "#0000006e"
+        this.colory = "#00000048"
         // this.profile = "vanilla";
         this.profile = "swingspitz";
         var cat = 0.75;
@@ -150,6 +151,9 @@ class filledPath {
 
         this.smallerPath();
         this.showFilledPath();
+
+        this.smallerPath();
+        this.showFilledPath();
     }
 
     smallerPath() {
@@ -171,7 +175,7 @@ class filledPath {
         ]
 
         for (var i = 0; i < pointList.length; i++) {
-            pointList[i] = jitterPoint(pointList[i], 3);
+            pointList[i] = jitterPoint(pointList[i], 1);
         }
     }
 
@@ -180,7 +184,8 @@ class filledPath {
 
         this.path = document.createElementNS('http://www.w3.org/2000/svg', "path");
         this.path.setAttributeNS(null, "id", "pathIdD");
-        this.path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // this.path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // this.path.setAttributeNS(null, "filter", "url(#fueta)");
 
         this.path.setAttributeNS(null, "d", `M 
         ${this.A.x} ${this.A.y}, 
