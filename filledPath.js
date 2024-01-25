@@ -2,7 +2,8 @@ class filledPath {
     constructor(data) {
         this.strokeWidth = 1.3; // deprecatd
         // this.colory = "#0000006e"
-        this.colory = "#00000048"
+        // this.colory = "#00000041"
+        this.colory = "#818181ff"
         // this.profile = "vanilla";
         this.profile = "swingspitz";
         var cat = 0.75;
@@ -33,6 +34,8 @@ class filledPath {
 
         // var widthy =
         // console.log(this.vectorMagnitude * 0.02);
+
+        var distanceWidth = 1;
 
         if (this.profile == "vanilla") {
             this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));
@@ -97,19 +100,19 @@ class filledPath {
             this.cAD.debugColor = "blue";
         } else if (this.profile == "swingspitz") {
 
-            this.A = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI * 0.70, 1));
+            this.A = vectorAdd(this.start, vectorFromAngle(this.angleRadians - Math.PI * 0.70, distanceWidth));
             this.A.id = "A";
             this.A.debugColor = "purple";
 
-            this.B = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.1, 1)); // faus
+            this.B = vectorAdd(this.end, vectorFromAngle(this.angleRadians + Math.PI * 1.1, distanceWidth)); // faus
             this.B.id = "B";
             this.B.debugColor = "purple";
 
-            this.C = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.1, 1));  // faus
+            this.C = vectorAdd(this.end, vectorFromAngle(this.angleRadians - Math.PI * 1.1, distanceWidth));  // faus
             this.C.id = "C";
             this.C.debugColor = "purple";
 
-            this.D = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI * 0.80, 1));  // faus
+            this.D = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI * 0.80, distanceWidth));  // faus
             this.D.id = "D";
             this.D.debugColor = "purple";
 
@@ -149,14 +152,18 @@ class filledPath {
 
         this.showFilledPath();
 
-        this.smallerPath();
+        this.randomPath();
+        this.colory = "#5a5a5aff";
         this.showFilledPath();
 
-        this.smallerPath();
+        this.randomPath();
+        this.colory = "#1a1a1aff";
         this.showFilledPath();
     }
 
-    smallerPath() {
+    randomPath() {
+        var redParam = 2;
+
         var pointList = [
             this.cAB,
             this.cBA,
@@ -175,7 +182,21 @@ class filledPath {
         ]
 
         for (var i = 0; i < pointList.length; i++) {
-            pointList[i] = jitterPoint(pointList[i], 1);
+            // pointList[i] = jitterPoint(pointList[i], 1);
+            var subVector = vectorSub(this.center, pointList[i]);
+            // console.log(subVector);
+            var subVectorLength = Math.abs(vectorLength(subVector));
+            // console.log(subVectorLength);
+            var redux = {};
+            redux.x = subVector.x / subVectorLength * redParam;
+            redux.y = subVector.y / subVectorLength * redParam;
+            // console.log(redux);
+
+            // no plain vector
+            pointList[i].x = pointList[i].x - redux.x;
+            pointList[i].y = pointList[i].y - redux.y;
+            // this.showDebugPoint(pointList[i]);
+            // console.log(pointList[i]);
         }
     }
 

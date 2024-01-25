@@ -63,7 +63,6 @@ function vectorLength(p1) {
     return Math.sqrt(p1.x * p1.x + p1.y * p1.y);
 }
 
-
 function vectorAdd(p1, p2) {
     return { x: p1.x + p2.x, y: p1.y + p2.y }
 }
