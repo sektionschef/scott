@@ -3,7 +3,7 @@ class filledPath {
         this.strokeWidth = 1.3; // deprecatd
         // this.colory = "#0000006e"
         // this.colory = "#00000041"
-        this.colory = "#818181ff"
+        this.colory = "#8181815e"
         // this.profile = "vanilla";
         this.profile = "swingspitz";
         var cat = 0.75;
@@ -152,9 +152,9 @@ class filledPath {
 
         this.showFilledPath();
 
-        this.randomPath();
-        this.colory = "#5a5a5aff";
-        this.showFilledPath();
+        // this.randomPath();
+        // this.colory = "#5a5a5a8c";
+        // this.showFilledPath();
 
         this.randomPath();
         this.colory = "#1a1a1aff";
