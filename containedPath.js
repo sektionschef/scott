@@ -197,7 +197,7 @@ class containedPath {
 
         var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
         // line.setAttributeNS(null, "id", "lineIdD");
-        line.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // line.setAttributeNS(null, "filter", "url(#filterPencil)");
         // line.setAttributeNS(null, "filter", "url(#fueta)");
         line.setAttributeNS(null, "x1", this.start.x + getRandomFromInterval(-jitter, jitter));
         line.setAttributeNS(null, "y1", this.start.y + getRandomFromInterval(-jitter, jitter));

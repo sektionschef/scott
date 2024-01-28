@@ -346,8 +346,8 @@ function createPencilNoiseFilter() {
   turbulence.setAttribute("id", "turbulence");
   // turbulence.setAttribute("type", "fractalNoise");
   turbulence.setAttribute("type", "turbulence");
-  turbulence.setAttribute("baseFrequency", "2.5"); // 1.5
-  turbulence.setAttribute("numOctaves", "1");  // 2
+  turbulence.setAttribute("baseFrequency", "10"); // 0.01, 1.5 , 2.5
+  turbulence.setAttribute("numOctaves", "50");  // 6
   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
   turbulence.setAttribute("stitchTiles", "stitch");
   turbulence.setAttribute("x", "0%");
@@ -358,9 +358,13 @@ function createPencilNoiseFilter() {
 
   var displacement = document.createElementNS("http://www.w3.org/2000/svg", "feDisplacementMap");
   displacement.setAttribute("id", "displacement");
-  displacement.setAttribute("scale", "4");  // 1.1
+  displacement.setAttribute("scale", "1.2");  // 1.1
   displacement.setAttribute("in", "SourceGraphic");
-  // displacement.setAttribute("in", "SourceGraphic");
+  displacement.setAttribute("in2", "turbulence");
+  displacement.setAttribute("xChannelSelector", "R");
+  displacement.setAttribute("yChannelSelector", "G");
+  // displacement.setAttribute("yChannelSelector", "R");
+  displacement.setAttribute("result", "displacement");
 
   filterPencil.appendChild(turbulence);
   filterPencil.appendChild(displacement);  // comment for debug
@@ -550,6 +554,7 @@ function showGroupB() {
   var groupB = document.createElementNS("http://www.w3.org/2000/svg", "use");
   groupB.setAttribute("id", "groupB");
   groupB.setAttribute("href", "#groupB");
+  groupB.setAttribute("filter", "url(#filterPencil)");  // sau
 
   svgNode.appendChild(groupB);
 }

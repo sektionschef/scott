@@ -205,7 +205,7 @@ class filledPath {
 
         this.path = document.createElementNS('http://www.w3.org/2000/svg', "path");
         this.path.setAttributeNS(null, "id", "pathIdD");
-        this.path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // this.path.setAttributeNS(null, "filter", "url(#filterPencil)");
         // this.path.setAttributeNS(null, "filter", "url(#fueta)");
 
         this.path.setAttributeNS(null, "d", `M 
