@@ -1,7 +1,7 @@
 class shapes {
     constructor(stripeHeight, canvasWidth, canvasHeight) {
 
-        this.marginBackgroundShape = 90;
+        this.marginBackgroundShape = 92;
 
         this.colory = "#222222";
         this.stripeHeight = stripeHeight;

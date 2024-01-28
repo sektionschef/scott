@@ -173,12 +173,14 @@ function main() {
 
   createPencilNoiseFilter();
   createPaperFilter();
+  createPaperBigFilter();
   createOtherNoiseLayer();
 
   // createBlur();
   // createBrightness();
 
   createBackground();
+  createWhat();
   createGroupA();
   createGroupB();
   createGroupC();
@@ -207,7 +209,7 @@ function main() {
   let grid = new Grid({
     stepCountRes: 300,  // 400
     stripeHeight: 4,  // 2
-    vectorMagnitude: 60,  // 50
+    vectorMagnitude: 55,  // 50
     marginRelative: 1,  // 1
     // strokeColor: "#222222ff",
     strokeColor: "#4e4e4eff",
@@ -223,6 +225,7 @@ function main() {
   });
 
 
+  showBigPaper();
   // SHOW THE GRIDS
   showGroupA();
   showGroupB();
@@ -305,6 +308,19 @@ function createBackground() {
   backgroundRect.setAttribute("fill", "none");
   backgroundRect.setAttribute("filter", "url(#filterPaper)");
   svgNode.appendChild(backgroundRect);
+}
+
+function createWhat() {
+  // create background
+  var whatRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  whatRect.setAttribute("id", "whatRect");
+  whatRect.setAttribute("x", "0");
+  whatRect.setAttribute("y", "0");
+  whatRect.setAttribute("width", "100%");
+  whatRect.setAttribute("height", "100%");
+  whatRect.setAttribute("fill", "none");
+  whatRect.setAttribute("filter", "url(#filterBigPaper)");
+  svgNode.appendChild(whatRect);
 }
 
 function createGroupA() {
@@ -418,6 +434,57 @@ function createPaperFilter() {
 
   // defs.appendChild(turbulence);
   defs.appendChild(filterPaper);
+}
+
+function createPaperBigFilter() {
+
+  var filterBigPaper = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+  filterBigPaper.setAttribute("id", "filterBigPaper");
+  filterBigPaper.setAttribute("x", "0");
+  filterBigPaper.setAttribute("y", "0");
+  // added
+  filterBigPaper.setAttribute("filterUnits", "objectBoundingBox");
+  filterBigPaper.setAttribute("primitiveUnits", "userSpaceOnUse");
+  filterBigPaper.setAttribute("color-interpolation-filters", "linearRGB");
+
+  let turbulenceBig = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
+  turbulenceBig.setAttribute("id", "turbulenceBig");
+  turbulenceBig.setAttribute("type", "turbulence");
+  turbulenceBig.setAttribute("baseFrequency", "0.003 0.005"); // 0.04
+  // turbulenceBig.setAttribute("baseFrequency", "0.3 0.5"); // 0.04
+  turbulenceBig.setAttribute("numOctaves", "3");
+  turbulenceBig.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
+  turbulenceBig.setAttribute("stitchTiles", "stitch");
+  turbulenceBig.setAttribute("x", "0%");
+  turbulenceBig.setAttribute("y", "0%");
+  turbulenceBig.setAttribute("width", "100%");
+  turbulenceBig.setAttribute("height", "100%");
+  turbulenceBig.setAttribute("result", "turbulenceBig");
+
+  // sau
+
+  let feSpecularLightingA = document.createElementNS("http://www.w3.org/2000/svg", "feSpecularLighting");
+  feSpecularLightingA.setAttribute("id", "feSpecularLightingA");
+  feSpecularLightingA.setAttribute("surfaceScale", "-13"); // change for more radical results
+  feSpecularLightingA.setAttribute("specularConstant", "1.25");
+  feSpecularLightingA.setAttribute("specularExponent", "5");  // 15
+  feSpecularLightingA.setAttribute("kernelUnitLength", "0 0");
+  feSpecularLightingA.setAttribute("lighting-color", "#ffffff");
+  feSpecularLightingA.setAttribute("in", "turbulenceBig");
+  feSpecularLightingA.setAttribute("result", "feSpecularLightingA");
+
+  let fePointLight = document.createElementNS("http://www.w3.org/2000/svg", "fePointLight");
+  fePointLight.setAttribute("id", "fePointLight");
+  fePointLight.setAttribute("x", "200");
+  fePointLight.setAttribute("y", "300");
+  fePointLight.setAttribute("z", "200");
+
+  filterBigPaper.appendChild(turbulenceBig);
+  feSpecularLightingA.appendChild(fePointLight);
+  filterBigPaper.appendChild(feSpecularLightingA);
+
+  // defs.appendChild(turbulence);
+  defs.appendChild(filterBigPaper);
 }
 
 function createOtherNoiseLayer() {
@@ -579,4 +646,11 @@ function showGroupC() {
   groupC.setAttribute("href", "#groupC");
 
   svgNode.appendChild(groupC);
+}
+
+function showBigPaper() {
+  const svgNode = document.getElementById('svgNode');
+  var oida = document.getElementById('whatRect');
+
+  svgNode.appendChild(oida);
 }
