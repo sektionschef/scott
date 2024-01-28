@@ -1,6 +1,8 @@
 class shapes {
     constructor(stripeHeight, canvasWidth, canvasHeight) {
 
+        this.marginBackgroundShape = 90;
+
         this.colory = "#222222";
         this.stripeHeight = stripeHeight;
         this.canvasWidth = canvasWidth;
@@ -16,22 +18,22 @@ class shapes {
                     colorAction: this.colory,
                     // colorAction: this.strokeColor,
                     fillColor: "#afafaf",
-                    A: { x: 0, y: 0 },
-                    B: { x: canvasWidth, y: 0 },
-                    C: { x: canvasWidth, y: canvasHeight },
-                    D: { x: 0, y: canvasHeight },
+                    A: { x: this.marginBackgroundShape, y: this.marginBackgroundShape },
+                    B: { x: canvasWidth - this.marginBackgroundShape, y: this.marginBackgroundShape },
+                    C: { x: canvasWidth - this.marginBackgroundShape, y: canvasHeight - this.marginBackgroundShape },
+                    D: { x: this.marginBackgroundShape, y: canvasHeight - this.marginBackgroundShape },
                     pointList: [
-                        [0, 0],
-                        [canvasWidth, 0],
-                        [canvasWidth, canvasHeight],
-                        [0, canvasHeight],
+                        [this.marginBackgroundShape, this.marginBackgroundShape],
+                        [canvasWidth - this.marginBackgroundShape, this.marginBackgroundShape],
+                        [canvasWidth - this.marginBackgroundShape, canvasHeight - this.marginBackgroundShape],
+                        [this.marginBackgroundShape, canvasHeight - this.marginBackgroundShape],
                     ]
                 }
             },
             shapeA: {
                 mainBoxPos: {  // where to start to draw in box count
                     x: 34,
-                    y: 8
+                    y: 16,
                 },
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes
@@ -78,7 +80,7 @@ class shapes {
             shapeB: {
                 mainBoxPos: {  // where to start to draw in box count
                     x: 34,
-                    y: 28
+                    y: 36
                 },
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes

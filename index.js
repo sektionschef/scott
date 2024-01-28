@@ -1,10 +1,3 @@
-// sorgenkind weg
-// 
-
-// https://codepen.io/yoksel/pen/QVLxpg 
-// https://codepen.io/sektionschef/pen/yLZqBbw
-
-
 // ########################################
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
@@ -214,8 +207,8 @@ function main() {
   let grid = new Grid({
     stepCountRes: 300,  // 400
     stripeHeight: 4,  // 2
-    vectorMagnitude: 54,  // 50
-    marginRelative: 1,
+    vectorMagnitude: 60,  // 50
+    marginRelative: 1,  // 1
     // strokeColor: "#222222ff",
     strokeColor: "#4e4e4eff",
     strokeWidth: 1,
@@ -353,8 +346,8 @@ function createPencilNoiseFilter() {
   turbulence.setAttribute("id", "turbulence");
   // turbulence.setAttribute("type", "fractalNoise");
   turbulence.setAttribute("type", "turbulence");
-  turbulence.setAttribute("baseFrequency", "1.5"); // 1.5
-  turbulence.setAttribute("numOctaves", "2");  // 2
+  turbulence.setAttribute("baseFrequency", "2.5"); // 1.5
+  turbulence.setAttribute("numOctaves", "1");  // 2
   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
   turbulence.setAttribute("stitchTiles", "stitch");
   turbulence.setAttribute("x", "0%");
@@ -365,8 +358,9 @@ function createPencilNoiseFilter() {
 
   var displacement = document.createElementNS("http://www.w3.org/2000/svg", "feDisplacementMap");
   displacement.setAttribute("id", "displacement");
-  displacement.setAttribute("scale", "1.1");  // 1.1
+  displacement.setAttribute("scale", "4");  // 1.1
   displacement.setAttribute("in", "SourceGraphic");
+  // displacement.setAttribute("in", "SourceGraphic");
 
   filterPencil.appendChild(turbulence);
   filterPencil.appendChild(displacement);  // comment for debug

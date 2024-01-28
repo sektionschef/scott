@@ -15,7 +15,11 @@ class Grid {
         this.landscape = data.landscape;
         this.group = data.group;
 
-        this.marginBoxCount = Math.round(this.stripeHeight * this.marginRelative);
+        if (this.marginRelative == 0) {
+            this.marginBoxCount = 0;
+        } else {
+            this.marginBoxCount = Math.round(this.stripeHeight * this.marginRelative);
+        }
         this.boxSize = this.shortSide / this.shortBoxCount;
         this.longBoxCount = Math.floor(this.longSide / this.boxSize);
 
