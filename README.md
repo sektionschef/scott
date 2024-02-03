@@ -1,3 +1,6 @@
+// result ist wichtig bei filter
+// und reingeben in den filter
+
 # fx(hash) boilerplate
 
 A boilerplate for the creation of generative art that can be published on fx(hash).

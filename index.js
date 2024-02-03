@@ -173,14 +173,13 @@ function main() {
 
   createPencilNoiseFilter();
   createPaperFilter();
-  createPaperBigFilter();
+  var bigNoisePaperFilter = new bigNoisePaper();
   createOtherNoiseLayer();
 
   // createBlur();
   // createBrightness();
 
   createBackground();
-  createWhat();
   createGroupA();
   createGroupB();
   createGroupC();
@@ -225,13 +224,106 @@ function main() {
   });
 
 
-  showBigPaper();
-  // SHOW THE GRIDS
-  showGroupA();
-  showGroupB();
-  showGroupC();
+  // DEBUG ELEMENTS
+  var imagePuppy = document.createElementNS("http://www.w3.org/2000/svg", "feImage");
+  imagePuppy.setAttribute("href", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Golde33443.jpg/497px-Golde33443.jpg");
+  imagePuppy.setAttribute("id", "imagePuppy");
+  imagePuppy.setAttribute("result", "imagePuppy");
+  imagePuppy.setAttribute("x", "0");
+  imagePuppy.setAttribute("y", "0");
+  imagePuppy.setAttribute("width", "500");
+  imagePuppy.setAttribute("height", "500");
+  // svgNode.appendChild(imagePuppy);
+  // defs.appendChild(imagePuppy);
 
-  showOtherNoise();
+  var imageButterfly = document.createElementNS("http://www.w3.org/2000/svg", "feImage");
+  imageButterfly.setAttribute("href", "https://365austria.com/wp-content/uploads/2022/04/Schmetterlingshaus-Wien-365Austria-by-Paul-Weindl-IMG_1450-scaled.jpg");
+  imageButterfly.setAttribute("id", "imageButterfly");
+  imageButterfly.setAttribute("result", "imageButterfly");
+  imageButterfly.setAttribute("x", "0");
+  imageButterfly.setAttribute("y", "0");
+  imageButterfly.setAttribute("width", "500");
+  imageButterfly.setAttribute("height", "500");
+  // svgNode.appendChild(imageButterfly);
+  // defs.appendChild(imageButterfly);
+
+  var floodFill = document.createElementNS("http://www.w3.org/2000/svg", "feFlood");
+  floodFill.setAttribute("id", "floodFill");
+  floodFill.setAttribute("result", "floodFill");
+  floodFill.setAttribute("x", "0");
+  floodFill.setAttribute("y", "0");
+  floodFill.setAttribute("width", "100%");
+  floodFill.setAttribute("height", "100%");
+  floodFill.setAttribute("flood-color", "green");
+  floodFill.setAttribute("flood-opacity", "1");
+
+  // svgNode.appendChild(floodFill);
+  // defs.appendChild(floodFill);
+
+
+  var blendFilter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+  blendFilter.setAttribute("id", "blendFilter");
+  blendFilter.setAttribute("x", "0");
+  blendFilter.setAttribute("y", "0");
+  // // added
+  // blendFilter.setAttribute("filterUnits", "objectBoundingBox");
+  // blendFilter.setAttribute("primitiveUnits", "userSpaceOnUse");
+  // blendFilter.setAttribute("color-interpolation-filters", "linearRGB");
+
+  blendFilter.appendChild(imagePuppy);
+  blendFilter.appendChild(imageButterfly);
+  // blendFilter.appendChild(floodFill);
+
+  var blend = document.createElementNS("http://www.w3.org/2000/svg", "feBlend");
+  // blend.setAttribute("in", "SourceGraphic");
+  blend.setAttribute("in", "imagePuppy");
+  // blend.setAttribute("in2", "imagePuppy");
+  // blend.setAttribute("in2", "floodFill");
+  blend.setAttribute("in2", "imageButterfly");
+  // blend.setAttribute("in2", "bigPaperContainer");
+  // blend.setAttribute("in2", "url(#bigPaperContainer)");
+  blend.setAttribute("mode", "overlay");
+  // blend.setAttribute("mode", "normal");
+  // blend.setAttribute("mode", "multiply");
+
+  blendFilter.appendChild(blend);
+  defs.appendChild(blendFilter);
+
+  var blendContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  blendContainer.setAttribute("id", "blendContainer");
+  blendContainer.setAttribute("x", "0");
+  blendContainer.setAttribute("y", "0");
+  blendContainer.setAttribute("width", "100%");
+  blendContainer.setAttribute("height", "100%");
+  blendContainer.setAttribute("fill", "none");
+  // blendContainer.setAttribute("fill", "blue");
+  // blendContainer.setAttribute("filter", "url(#blendFilter)");
+  // defs.appendChild(blendContainer);
+  // blendContainer.appendChild(imagePuppy);
+
+  var dumbeutel = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  dumbeutel.setAttribute("id", "dumbeutel");
+  dumbeutel.setAttribute("x", "40");
+  dumbeutel.setAttribute("y", "40");
+  dumbeutel.setAttribute("width", "100");
+  dumbeutel.setAttribute("height", "100");
+  dumbeutel.setAttribute("fill", "magenta");
+  // svgNode.appendChild(dumbeutel);
+
+  // svgNode.appendChild(blendContainer);
+
+
+
+  // SHOW THE GRIDS
+  // showGroupA();
+  showGroupB();
+  // showGroupC();
+  // bigNoisePaperFilter.showBigPaperDEBUG();
+  // bigNoisePaperFilter.showBlendBigPaper();
+
+  // showOtherNoise();
+
+
   // showBlur();
 
 
@@ -308,19 +400,6 @@ function createBackground() {
   backgroundRect.setAttribute("fill", "none");
   backgroundRect.setAttribute("filter", "url(#filterPaper)");
   svgNode.appendChild(backgroundRect);
-}
-
-function createWhat() {
-  // create background
-  var whatRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  whatRect.setAttribute("id", "whatRect");
-  whatRect.setAttribute("x", "0");
-  whatRect.setAttribute("y", "0");
-  whatRect.setAttribute("width", "100%");
-  whatRect.setAttribute("height", "100%");
-  whatRect.setAttribute("fill", "none");
-  whatRect.setAttribute("filter", "url(#filterBigPaper)");
-  svgNode.appendChild(whatRect);
 }
 
 function createGroupA() {
@@ -434,57 +513,6 @@ function createPaperFilter() {
 
   // defs.appendChild(turbulence);
   defs.appendChild(filterPaper);
-}
-
-function createPaperBigFilter() {
-
-  var filterBigPaper = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-  filterBigPaper.setAttribute("id", "filterBigPaper");
-  filterBigPaper.setAttribute("x", "0");
-  filterBigPaper.setAttribute("y", "0");
-  // added
-  filterBigPaper.setAttribute("filterUnits", "objectBoundingBox");
-  filterBigPaper.setAttribute("primitiveUnits", "userSpaceOnUse");
-  filterBigPaper.setAttribute("color-interpolation-filters", "linearRGB");
-
-  let turbulenceBig = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
-  turbulenceBig.setAttribute("id", "turbulenceBig");
-  turbulenceBig.setAttribute("type", "turbulence");
-  turbulenceBig.setAttribute("baseFrequency", "0.003 0.005"); // 0.04
-  // turbulenceBig.setAttribute("baseFrequency", "0.3 0.5"); // 0.04
-  turbulenceBig.setAttribute("numOctaves", "3");
-  turbulenceBig.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
-  turbulenceBig.setAttribute("stitchTiles", "stitch");
-  turbulenceBig.setAttribute("x", "0%");
-  turbulenceBig.setAttribute("y", "0%");
-  turbulenceBig.setAttribute("width", "100%");
-  turbulenceBig.setAttribute("height", "100%");
-  turbulenceBig.setAttribute("result", "turbulenceBig");
-
-  // sau
-
-  let feSpecularLightingA = document.createElementNS("http://www.w3.org/2000/svg", "feSpecularLighting");
-  feSpecularLightingA.setAttribute("id", "feSpecularLightingA");
-  feSpecularLightingA.setAttribute("surfaceScale", "-13"); // change for more radical results
-  feSpecularLightingA.setAttribute("specularConstant", "1.25");
-  feSpecularLightingA.setAttribute("specularExponent", "5");  // 15
-  feSpecularLightingA.setAttribute("kernelUnitLength", "0 0");
-  feSpecularLightingA.setAttribute("lighting-color", "#ffffff");
-  feSpecularLightingA.setAttribute("in", "turbulenceBig");
-  feSpecularLightingA.setAttribute("result", "feSpecularLightingA");
-
-  let fePointLight = document.createElementNS("http://www.w3.org/2000/svg", "fePointLight");
-  fePointLight.setAttribute("id", "fePointLight");
-  fePointLight.setAttribute("x", "200");
-  fePointLight.setAttribute("y", "300");
-  fePointLight.setAttribute("z", "200");
-
-  filterBigPaper.appendChild(turbulenceBig);
-  feSpecularLightingA.appendChild(fePointLight);
-  filterBigPaper.appendChild(feSpecularLightingA);
-
-  // defs.appendChild(turbulence);
-  defs.appendChild(filterBigPaper);
 }
 
 function createOtherNoiseLayer() {
@@ -621,7 +649,8 @@ function showGroupB() {
   var groupB = document.createElementNS("http://www.w3.org/2000/svg", "use");
   groupB.setAttribute("id", "groupB");
   groupB.setAttribute("href", "#groupB");
-  groupB.setAttribute("filter", "url(#filterPencil)");  // sau
+  // groupB.setAttribute("filter", "url(#filterPencil)");
+  groupB.setAttribute("filter", "url(#blendFilter)");
 
   svgNode.appendChild(groupB);
 }
@@ -648,9 +677,3 @@ function showGroupC() {
   svgNode.appendChild(groupC);
 }
 
-function showBigPaper() {
-  const svgNode = document.getElementById('svgNode');
-  var oida = document.getElementById('whatRect');
-
-  svgNode.appendChild(oida);
-}
