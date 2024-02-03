@@ -12,7 +12,7 @@ class shapes {
             shapeBackground: {
                 background: {
                     shapeLoop: 1,
-                    order: 9,
+                    order: 13,
                     density: 2, // density factor - 0 is full
                     // colorAction: "#5c5c5c",
                     colorAction: this.colory,
@@ -33,14 +33,14 @@ class shapes {
             shapeA: {
                 mainBoxPos: {  // where to start to draw in box count
                     x: 34,
-                    y: 16,
+                    y: 12,
                 },
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes
                 shadHeightLine: 1,  // height of main shape in lineheights
                 superShadowShiftX: 25,  //  shift in boxes on x axis
-                superShadowShiftY: 0,  // shift in boxes on y axis
-                superShadowHeightMax: 25, // heigt in boxes on y axis
+                superShadowShiftY: 1,  // shift in boxes on y axis
+                superShadowHeightMax: 15, // 25, // heigt in boxes on y axis
                 front: {
                     shapeLoop: 2,
                     order: 1,
@@ -52,7 +52,7 @@ class shapes {
                 },
                 down: {  // shadow beneath
                     shapeLoop: 2,
-                    order: 3,
+                    order: 4,
                     density: 0,
                     // colorAction: "green",
                     colorAction: this.colory,
@@ -60,7 +60,7 @@ class shapes {
                 },
                 right: {  // shadow beneath
                     shapeLoop: 2,
-                    order: 5,
+                    order: 7,
                     density: 0,
                     // colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
@@ -69,7 +69,7 @@ class shapes {
                 },
                 shadow: {  // shadow
                     shapeLoop: 1,
-                    order: 7,
+                    order: 10,
                     density: 0,
                     // colorAction: "#a937c0",
                     // colorAction: "#5c5c5c",
@@ -80,14 +80,14 @@ class shapes {
             shapeB: {
                 mainBoxPos: {  // where to start to draw in box count
                     x: 34,
-                    y: 36
+                    y: 32,
                 },
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes
                 shadHeightLine: 1,  // height of main shape in lineheights
                 superShadowShiftX: 25,  //  shift in boxes on x axis
-                superShadowShiftY: 0,  // shift in boxes on y axis
-                superShadowHeightMax: 25, // heigt in boxes on y axis
+                superShadowShiftY: 1,  // shift in boxes on y axis
+                superShadowHeightMax: 15, // heigt in boxes on y axis
                 front: {
                     shapeLoop: 2,
                     order: 2,
@@ -99,7 +99,7 @@ class shapes {
                 },
                 down: {  // shadow beneath
                     shapeLoop: 2,
-                    order: 4,
+                    order: 5,
                     density: 0,
                     // colorAction: "green",
                     // colorAction: "#5c5c5c",
@@ -108,7 +108,7 @@ class shapes {
                 },
                 right: {  // shadow beneath
                     shapeLoop: 2,
-                    order: 6,
+                    order: 8,
                     density: 0,
                     // colorAction: "#3daf3d",
                     // colorAction: "#5c5c5c",
@@ -117,7 +117,7 @@ class shapes {
                 },
                 shadow: {  // shadow
                     shapeLoop: 1,
-                    order: 8,
+                    order: 11,
                     density: 0,
                     // colorAction: "#a937c0",
                     // colorAction: "#5c5c5c",
@@ -125,54 +125,54 @@ class shapes {
                     fillColor: "#aaaaaa",
                 }
             },
-            // shapeC: {
-            //     mainBoxPos: {  // where to start to draw in box count
-            //         x: 34,
-            //         y: 56
-            //     },
-            //     MainHeightLine: 2, // height of main shape in lineheights
-            //     MainWidth: 70,  // width of the shape in boxes
-            //     shadHeightLine: 1,  // height of main shape in lineheights
-            //     superShadowShiftX: 25,  //  shift in boxes on x axis
-            //     superShadowShiftY: 5,  // shift in boxes on y axis
-            //     superShadowHeightMax: 25, // heigt in boxes on y axis
-            //     front: {
-            //         shapeLoop: 2,
-            //         order: 2,
-            //         density: 1,
-            //         // colorAction: "#5c5c5c",
-            //         // colorAction: "red",
-            //         colorAction: this.colory,
-            //         fillColor: "#afafaf",
-            //     },
-            //     down: {  // shadow beneath
-            //         shapeLoop: 2,
-            //         order: 4,
-            //         density: 0,
-            //         // colorAction: "green",
-            //         // colorAction: "#5c5c5c",
-            //         colorAction: this.colory,
-            //         fillColor: "#999999",
-            //     },
-            //     right: {  // shadow beneath
-            //         shapeLoop: 2,
-            //         order: 6,
-            //         density: 0,
-            //         // colorAction: "#3daf3d",
-            //         // colorAction: "#5c5c5c",
-            //         colorAction: this.colory,
-            //         fillColor: "#a3a3a3",
-            //     },
-            //     shadow: {  // shadow
-            //         shapeLoop: 1,
-            //         order: 8,
-            //         density: 0,
-            //         // colorAction: "#a937c0",
-            //         // colorAction: "#5c5c5c",
-            //         colorAction: this.colory,
-            //         fillColor: "#aaaaaa",
-            //     }
-            // }
+            shapeC: {
+                mainBoxPos: {  // where to start to draw in box count
+                    x: 34,
+                    y: 52,
+                },
+                MainHeightLine: 2, // height of main shape in lineheights
+                MainWidth: 70,  // width of the shape in boxes
+                shadHeightLine: 1,  // height of main shape in lineheights
+                superShadowShiftX: 25,  //  shift in boxes on x axis
+                superShadowShiftY: 1,  // shift in boxes on y axis
+                superShadowHeightMax: 15, // heigt in boxes on y axis
+                front: {
+                    shapeLoop: 2,
+                    order: 3,
+                    density: 1,
+                    // colorAction: "#5c5c5c",
+                    // colorAction: "red",
+                    colorAction: this.colory,
+                    fillColor: "#afafaf",
+                },
+                down: {  // shadow beneath
+                    shapeLoop: 2,
+                    order: 6,
+                    density: 0,
+                    // colorAction: "green",
+                    // colorAction: "#5c5c5c",
+                    colorAction: this.colory,
+                    fillColor: "#999999",
+                },
+                right: {  // shadow beneath
+                    shapeLoop: 2,
+                    order: 9,
+                    density: 0,
+                    // colorAction: "#3daf3d",
+                    // colorAction: "#5c5c5c",
+                    colorAction: this.colory,
+                    fillColor: "#a3a3a3",
+                },
+                shadow: {  // shadow
+                    shapeLoop: 1,
+                    order: 12,
+                    density: 0,
+                    // colorAction: "#a937c0",
+                    // colorAction: "#5c5c5c",
+                    colorAction: this.colory,
+                    fillColor: "#aaaaaa",
+                }
+            }
         }
 
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
@@ -270,9 +270,20 @@ class shapes {
             }
         }
 
+        // DEFAULT VALUES
+        // for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
+        //     if (shapeId != "shapeBackground") {
+        //         if (!shapeValues.shadow.hasOwnProperty('E')) {
+        //             shapeValues.shadow.E = this.allShapes.shapeBackground.background.C;
+        //         }
+        //         // shapeValues.shadow.E = ;
+        //     }
+        // }
+
         // for (const shape of this.allShapes) {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             if (shapeId != "shapeBackground") {
+                // console.log(shapeValues);
 
                 shapeValues.front.pointString = `
                 ${shapeValues.front.A.x}, ${shapeValues.front.A.y}

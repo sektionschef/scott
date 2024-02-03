@@ -61,7 +61,7 @@ class strokeSystem {
 
     run() {
         this.shapeStartPosition = 1; // 0 for background, 1 for first
-        this.shapeCount = 9;
+        this.shapeCount = 13;  // 9
 
         // first run
         for (const path of this.paths) {
