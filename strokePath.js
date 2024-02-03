@@ -283,7 +283,7 @@ class strokePath {
     drawPath(start, cA, cB, end) {
         var path = document.createElementNS('http://www.w3.org/2000/svg', "path");
         path.setAttributeNS(null, "id", "pathIdD");
-        path.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // path.setAttributeNS(null, "filter", "url(#filterPencil)");
         // path.setAttributeNS(null, "filter", "url(#fueta)");
         path.setAttributeNS(null, "d", `M 
         ${start.x} 
@@ -303,7 +303,7 @@ class strokePath {
     drawLine(start, end) {
         var line = document.createElementNS('http://www.w3.org/2000/svg', "line");
         line.setAttributeNS(null, "id", "lineIdD");
-        line.setAttributeNS(null, "filter", "url(#filterPencil)");
+        // line.setAttributeNS(null, "filter", "url(#filterPencil)");
         // line.setAttributeNS(null, "filter", "url(#fueta)");
         line.setAttributeNS(null, "x1", start.x);
         line.setAttributeNS(null, "y1", start.y);

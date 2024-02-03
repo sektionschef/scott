@@ -181,6 +181,7 @@ function main() {
   // createBlur();
   // createBrightness();
 
+  createGroupForNoising();
   createBackground();
   createGroupA();
   createGroupB();
@@ -226,103 +227,14 @@ function main() {
   });
 
 
-
-  // // DEBUG ELEMENTS
-  // var imagePuppy = document.createElementNS("http://www.w3.org/2000/svg", "feImage");
-  // imagePuppy.setAttribute("href", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Golde33443.jpg/497px-Golde33443.jpg");
-  // imagePuppy.setAttribute("id", "imagePuppy");
-  // imagePuppy.setAttribute("result", "imagePuppy");
-  // imagePuppy.setAttribute("x", "0");
-  // imagePuppy.setAttribute("y", "0");
-  // imagePuppy.setAttribute("width", "500");
-  // imagePuppy.setAttribute("height", "500");
-  // // svgNode.appendChild(imagePuppy);
-  // // defs.appendChild(imagePuppy);
-
-  // var imageButterfly = document.createElementNS("http://www.w3.org/2000/svg", "feImage");
-  // imageButterfly.setAttribute("href", "https://365austria.com/wp-content/uploads/2022/04/Schmetterlingshaus-Wien-365Austria-by-Paul-Weindl-IMG_1450-scaled.jpg");
-  // imageButterfly.setAttribute("id", "imageButterfly");
-  // imageButterfly.setAttribute("result", "imageButterfly");
-  // imageButterfly.setAttribute("x", "0");
-  // imageButterfly.setAttribute("y", "0");
-  // imageButterfly.setAttribute("width", "500");
-  // imageButterfly.setAttribute("height", "500");
-  // // svgNode.appendChild(imageButterfly);
-  // // defs.appendChild(imageButterfly);
-
-  // var floodFill = document.createElementNS("http://www.w3.org/2000/svg", "feFlood");
-  // floodFill.setAttribute("id", "floodFill");
-  // floodFill.setAttribute("result", "floodFill");
-  // floodFill.setAttribute("x", "0");
-  // floodFill.setAttribute("y", "0");
-  // floodFill.setAttribute("width", "100%");
-  // floodFill.setAttribute("height", "100%");
-  // floodFill.setAttribute("flood-color", "green");
-  // floodFill.setAttribute("flood-opacity", "1");
-
-  // // svgNode.appendChild(floodFill);
-  // // defs.appendChild(floodFill);
-
-
-  // var blendFilter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-  // blendFilter.setAttribute("id", "blendFilter");
-  // blendFilter.setAttribute("x", "0");
-  // blendFilter.setAttribute("y", "0");
-  // // // added
-  // // blendFilter.setAttribute("filterUnits", "objectBoundingBox");
-  // // blendFilter.setAttribute("primitiveUnits", "userSpaceOnUse");
-  // // blendFilter.setAttribute("color-interpolation-filters", "linearRGB");
-
-  // blendFilter.appendChild(imagePuppy);
-  // blendFilter.appendChild(imageButterfly);
-  // // blendFilter.appendChild(floodFill);
-
-  // var blend = document.createElementNS("http://www.w3.org/2000/svg", "feBlend");
-  // // blend.setAttribute("in", "SourceGraphic");
-  // blend.setAttribute("in", "imagePuppy");
-  // // blend.setAttribute("in2", "imagePuppy");
-  // // blend.setAttribute("in2", "floodFill");
-  // blend.setAttribute("in2", "imageButterfly");
-  // // blend.setAttribute("in2", "bigPaperContainer");
-  // // blend.setAttribute("in2", "url(#bigPaperContainer)");
-  // blend.setAttribute("mode", "overlay");
-  // // blend.setAttribute("mode", "normal");
-  // // blend.setAttribute("mode", "multiply");
-
-  // blendFilter.appendChild(blend);
-  // defs.appendChild(blendFilter);
-
-  // var blendContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  // blendContainer.setAttribute("id", "blendContainer");
-  // blendContainer.setAttribute("x", "0");
-  // blendContainer.setAttribute("y", "0");
-  // blendContainer.setAttribute("width", "100%");
-  // blendContainer.setAttribute("height", "100%");
-  // blendContainer.setAttribute("fill", "none");
-  // // blendContainer.setAttribute("fill", "blue");
-  // // blendContainer.setAttribute("filter", "url(#blendFilter)");
-  // // defs.appendChild(blendContainer);
-  // // blendContainer.appendChild(imagePuppy);
-
-  // var dumbeutel = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  // dumbeutel.setAttribute("id", "dumbeutel");
-  // dumbeutel.setAttribute("x", "40");
-  // dumbeutel.setAttribute("y", "40");
-  // dumbeutel.setAttribute("width", "100");
-  // dumbeutel.setAttribute("height", "100");
-  // dumbeutel.setAttribute("fill", "magenta");
-  // // svgNode.appendChild(dumbeutel);
-
-  // // svgNode.appendChild(blendContainer);
-
-
-
   // SHOW THE GRIDS
-  showGroupA();
-  showGroupB();
-  showGroupC();
+  // showBackground();
+  // showGroupA();
+  // showGroupB();
+  // showGroupC();
   // bigNoisePaperFilter.showBigPaperDEBUG();
-  bigNoisePaperFilter.showBlendBigPaper();
+
+  showGroupForNoising();
 
   showOtherNoise();
 
@@ -395,6 +307,7 @@ function createBackground() {
   // create background
   var backgroundRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   backgroundRect.setAttribute("id", "backgroundRect");
+  backgroundRect.setAttribute("result", "backgroundRect");
   backgroundRect.setAttribute("x", "0");
   backgroundRect.setAttribute("y", "0");
   backgroundRect.setAttribute("width", "100%");
@@ -402,6 +315,17 @@ function createBackground() {
   // backgroundRect.setAttribute("fill", BACKGROUNDTONE);
   backgroundRect.setAttribute("fill", "none");
   backgroundRect.setAttribute("filter", "url(#filterPaper)");
+
+  // const defs = document.getElementById('defs');
+  // defs.appendChild(backgroundRect);
+
+  const groupForNoising = document.getElementById('groupForNoising');
+  groupForNoising.appendChild(backgroundRect);
+}
+
+function showBackground() {
+  const backgroundRect = document.getElementById('backgroundRect');
+
   svgNode.appendChild(backgroundRect);
 }
 
@@ -643,21 +567,27 @@ function createGroupB() {
   groupB.setAttribute("width", "100%");
   groupB.setAttribute("height", "100%");
   groupB.setAttribute("fill", "none");
+  groupB.setAttribute("filter", "url(#filterPencil)");  // is cool
 
   // svgNode.appendChild(groupB);
-  defs.appendChild(groupB);
+  // defs.appendChild(groupB);
+
+  const groupForNoising = document.getElementById('groupForNoising');
+  groupForNoising.appendChild(groupB);
 }
 
 function showGroupB() {
   var groupB = document.createElementNS("http://www.w3.org/2000/svg", "use");
   groupB.setAttribute("id", "groupB");
+  groupB.setAttribute("result", "groupB");
   groupB.setAttribute("href", "#groupB");
   // groupB.setAttribute("filter", "url(#filterPencil)");  // is cool
 
-  // groupB.setAttribute("filter", "url(#blendFilter)");
-  groupB.setAttribute("filter", "url(#filterBigPaper)");
+  // groupB.setAttribute("filter", "url(#filterBigPaper)");
+  // svgNode.appendChild(groupB);
 
-  svgNode.appendChild(groupB);
+  // const groupForNoising = document.getElementById('groupForNoising');
+  // groupForNoising.appendChild(groupB);
 }
 
 function createGroupC() {
@@ -682,3 +612,38 @@ function showGroupC() {
   svgNode.appendChild(groupC);
 }
 
+
+function createGroupForNoising() {
+  // create background
+  var groupForNoising = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  groupForNoising.setAttribute("id", "groupForNoising");
+  groupForNoising.setAttribute("x", "0");
+  groupForNoising.setAttribute("y", "0");
+  groupForNoising.setAttribute("width", "100%");
+  groupForNoising.setAttribute("height", "100%");
+  groupForNoising.setAttribute("fill", "none");
+  groupForNoising.setAttribute("filter", "url(#filterBigPaper)");
+
+  // svgNode.appendChild(groupForNoising); 
+  defs.appendChild(groupForNoising);
+}
+
+function showGroupForNoising() {
+  var groupForNoisingUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  groupForNoisingUse.setAttribute("id", "groupForNoisingUse");
+  groupForNoisingUse.setAttribute("href", "#groupForNoising");
+  // groupForNoisingUse.setAttribute("filter", "url(#filterBigPaper)");
+
+  // const backgroundRect = document.getElementById('backgroundRect');
+  // groupForNoising.appendChild(backgroundRect);
+
+  // const groupB = document.getElementById('groupB');
+  // groupForNoisingUse.appendChild(groupB);
+
+  // var groupBUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  // groupBUse.setAttribute("id", "groupBUse");
+  // groupBUse.setAttribute("href", "#groupB");
+
+  // groupForNoisingUse.setAttribute("filter", "url(#filterBigPaper)");
+  svgNode.appendChild(groupForNoisingUse);
+}
