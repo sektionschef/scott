@@ -182,6 +182,7 @@ function main() {
   // createBrightness();
 
   createGroupForNoising();
+
   createBackground();
   createGroupA();
   createGroupB();
@@ -232,8 +233,8 @@ function main() {
   // showGroupA();
   // showGroupB();
   // showGroupC();
-  // bigNoisePaperFilter.showBigPaperDEBUG();
 
+  // bigNoisePaperFilter.showBigPaperDEBUG();
   showGroupForNoising();
 
   showOtherNoise();
@@ -567,7 +568,7 @@ function createGroupB() {
   groupB.setAttribute("width", "100%");
   groupB.setAttribute("height", "100%");
   groupB.setAttribute("fill", "none");
-  groupB.setAttribute("filter", "url(#filterPencil)");  // is cool
+  groupB.setAttribute("filter", "url(#filterPencil)");
 
   // svgNode.appendChild(groupB);
   // defs.appendChild(groupB);
@@ -581,13 +582,6 @@ function showGroupB() {
   groupB.setAttribute("id", "groupB");
   groupB.setAttribute("result", "groupB");
   groupB.setAttribute("href", "#groupB");
-  // groupB.setAttribute("filter", "url(#filterPencil)");  // is cool
-
-  // groupB.setAttribute("filter", "url(#filterBigPaper)");
-  // svgNode.appendChild(groupB);
-
-  // const groupForNoising = document.getElementById('groupForNoising');
-  // groupForNoising.appendChild(groupB);
 }
 
 function createGroupC() {
@@ -632,18 +626,6 @@ function showGroupForNoising() {
   var groupForNoisingUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
   groupForNoisingUse.setAttribute("id", "groupForNoisingUse");
   groupForNoisingUse.setAttribute("href", "#groupForNoising");
-  // groupForNoisingUse.setAttribute("filter", "url(#filterBigPaper)");
 
-  // const backgroundRect = document.getElementById('backgroundRect');
-  // groupForNoising.appendChild(backgroundRect);
-
-  // const groupB = document.getElementById('groupB');
-  // groupForNoisingUse.appendChild(groupB);
-
-  // var groupBUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
-  // groupBUse.setAttribute("id", "groupBUse");
-  // groupBUse.setAttribute("href", "#groupB");
-
-  // groupForNoisingUse.setAttribute("filter", "url(#filterBigPaper)");
   svgNode.appendChild(groupForNoisingUse);
 }
