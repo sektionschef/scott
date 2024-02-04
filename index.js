@@ -14,7 +14,7 @@ var DESCRIPTION = "javascript on html canvas";
 var WEBSITE = "https://digitalitility.com";
 var YEAR = "2024";
 
-var BACKGROUNDTONE = "#ffffff";
+var BACKGROUNDTONE = "#929292";
 
 
 Math.random = $fx.rand;
@@ -172,11 +172,8 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
-
   createPencilNoiseFilter();
-  createPaperFilter();
-  var bigNoisePaperFilter = new bigNoisePaper();
-  createOtherNoiseLayer();
+  var bigNoisePaperFilter = new filterOverall();
 
   // createBlur();
   // createBrightness();
@@ -237,7 +234,7 @@ function main() {
   // bigNoisePaperFilter.showBigPaperDEBUG();
   showGroupForNoising();
 
-  showOtherNoise();
+  // showOtherNoise();
 
 
   // showBlur();
@@ -315,7 +312,7 @@ function createBackground() {
   backgroundRect.setAttribute("height", "100%");
   // backgroundRect.setAttribute("fill", BACKGROUNDTONE);
   backgroundRect.setAttribute("fill", "none");
-  backgroundRect.setAttribute("filter", "url(#filterPaper)");
+  // backgroundRect.setAttribute("filter", "url(#filterPaper)");
 
   // const defs = document.getElementById('defs');
   // defs.appendChild(backgroundRect);
@@ -324,11 +321,11 @@ function createBackground() {
   groupForNoising.appendChild(backgroundRect);
 }
 
-function showBackground() {
-  const backgroundRect = document.getElementById('backgroundRect');
+// function showBackground() {
+//   const backgroundRect = document.getElementById('backgroundRect');
 
-  svgNode.appendChild(backgroundRect);
-}
+//   svgNode.appendChild(backgroundRect);
+// }
 
 function createGroupA() {
   // create background
@@ -394,122 +391,122 @@ function createPencilNoiseFilter() {
   defs.appendChild(filterPencil);
 }
 
-function createPaperFilter() {
+// function createPaperFilter() {
 
-  // <feTurbulence type="fractalNoise" baseFrequency='0.04' numOctaves="5" result='noise' />
-  //   <feDiffuseLighting in='noise' lighting-color='white' surfaceScale='2'>
-  //   <feDistantLight azimuth='45' elevation='60' />
-  // </feDiffuseLighting>
+//   // <feTurbulence type="fractalNoise" baseFrequency='0.04' numOctaves="5" result='noise' />
+//   //   <feDiffuseLighting in='noise' lighting-color='white' surfaceScale='2'>
+//   //   <feDistantLight azimuth='45' elevation='60' />
+//   // </feDiffuseLighting>
 
-  var filterPaper = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-  filterPaper.setAttribute("id", "filterPaper");
-  filterPaper.setAttribute("x", "0");
-  filterPaper.setAttribute("y", "0");
-  // added
-  filterPaper.setAttribute("filterUnits", "objectBoundingBox");
-  filterPaper.setAttribute("primitiveUnits", "userSpaceOnUse");
-  filterPaper.setAttribute("color-interpolation-filters", "linearRGB");
+//   var filterPaper = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+//   filterPaper.setAttribute("id", "filterPaper");
+//   filterPaper.setAttribute("x", "0");
+//   filterPaper.setAttribute("y", "0");
+//   // added
+//   filterPaper.setAttribute("filterUnits", "objectBoundingBox");
+//   filterPaper.setAttribute("primitiveUnits", "userSpaceOnUse");
+//   filterPaper.setAttribute("color-interpolation-filters", "linearRGB");
 
-  let turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
-  turbulence.setAttribute("id", "turbulence");
-  turbulence.setAttribute("type", "fractalNoise");
-  turbulence.setAttribute("baseFrequency", "0.4"); // 0.04
-  turbulence.setAttribute("numOctaves", "5");
-  // turbulence.setAttribute("seed", "15");
-  turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
-  turbulence.setAttribute("stitchTiles", "stitch");
-  turbulence.setAttribute("x", "0%");
-  turbulence.setAttribute("y", "0%");
-  turbulence.setAttribute("width", "100%");
-  turbulence.setAttribute("height", "100%");
-  turbulence.setAttribute("result", "turbulence");
+//   let turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
+//   turbulence.setAttribute("id", "turbulence");
+//   turbulence.setAttribute("type", "fractalNoise");
+//   turbulence.setAttribute("baseFrequency", "0.4"); // 0.04
+//   turbulence.setAttribute("numOctaves", "5");
+//   // turbulence.setAttribute("seed", "15");
+//   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
+//   turbulence.setAttribute("stitchTiles", "stitch");
+//   turbulence.setAttribute("x", "0%");
+//   turbulence.setAttribute("y", "0%");
+//   turbulence.setAttribute("width", "100%");
+//   turbulence.setAttribute("height", "100%");
+//   turbulence.setAttribute("result", "turbulence");
 
-  let diffuseLighting = document.createElementNS("http://www.w3.org/2000/svg", "feDiffuseLighting");
-  diffuseLighting.setAttribute("id", "diffuseLighting");
-  diffuseLighting.setAttribute("in", "turbulence");
-  diffuseLighting.setAttribute("lighting-color", "white");
-  diffuseLighting.setAttribute("surfaceScale", "0.25");  // 2
+//   let diffuseLighting = document.createElementNS("http://www.w3.org/2000/svg", "feDiffuseLighting");
+//   diffuseLighting.setAttribute("id", "diffuseLighting");
+//   diffuseLighting.setAttribute("in", "turbulence");
+//   diffuseLighting.setAttribute("lighting-color", "white");
+//   diffuseLighting.setAttribute("surfaceScale", "0.25");  // 2
 
-  let distantLight = document.createElementNS("http://www.w3.org/2000/svg", "feDistantLight");
-  distantLight.setAttribute("id", "distantLight");
-  distantLight.setAttribute("azimuth", "45");
-  distantLight.setAttribute("elevation", "60");
+//   let distantLight = document.createElementNS("http://www.w3.org/2000/svg", "feDistantLight");
+//   distantLight.setAttribute("id", "distantLight");
+//   distantLight.setAttribute("azimuth", "45");
+//   distantLight.setAttribute("elevation", "60");
 
-  filterPaper.appendChild(turbulence);
-  diffuseLighting.appendChild(distantLight);
-  filterPaper.appendChild(diffuseLighting);
+//   filterPaper.appendChild(turbulence);
+//   diffuseLighting.appendChild(distantLight);
+//   filterPaper.appendChild(diffuseLighting);
 
-  // defs.appendChild(turbulence);
-  defs.appendChild(filterPaper);
-}
+//   // defs.appendChild(turbulence);
+//   defs.appendChild(filterPaper);
+// }
 
-function createOtherNoiseLayer() {
-  // https://codepen.io/lagats/pen/QpOOVB
-  const svgNode = document.getElementById('svgNode');
-  const defs = document.getElementById('defs');
+// function createOtherNoiseLayer() {
+//   // https://codepen.io/lagats/pen/QpOOVB
+//   const svgNode = document.getElementById('svgNode');
+//   const defs = document.getElementById('defs');
 
-  var fuetaObj = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-  fuetaObj.setAttribute("id", "fuetaObj");
-  fuetaObj.setAttribute("width", "100%");
-  fuetaObj.setAttribute("height", "100%");
-  fuetaObj.setAttribute("opacity", "1");
-  // fuetaObj.setAttribute("opacity", "0.3");
+//   var fuetaObj = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+//   fuetaObj.setAttribute("id", "fuetaObj");
+//   fuetaObj.setAttribute("width", "100%");
+//   fuetaObj.setAttribute("height", "100%");
+//   fuetaObj.setAttribute("opacity", "1");
+//   // fuetaObj.setAttribute("opacity", "0.3");
 
-  var fueta = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-  fueta.setAttribute("id", "fueta");
+//   var fueta = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+//   fueta.setAttribute("id", "fueta");
 
-  var turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
-  turbulence.setAttribute("id", "turbulence");
-  turbulence.setAttribute("type", "fractalNoise");
-  turbulence.setAttribute("baseFrequency", "10");
-  turbulence.setAttribute("numOctaves", "6");
-  turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
-  turbulence.setAttribute("stitchTiles", "stitch");
-  turbulence.setAttribute("x", "0%");
-  turbulence.setAttribute("y", "0%");
-  turbulence.setAttribute("width", "100%");
-  turbulence.setAttribute("height", "100%");
-  turbulence.setAttribute("result", "turbulence");
+//   var turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
+//   turbulence.setAttribute("id", "turbulence");
+//   turbulence.setAttribute("type", "fractalNoise");
+//   turbulence.setAttribute("baseFrequency", "10");
+//   turbulence.setAttribute("numOctaves", "6");
+//   turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
+//   turbulence.setAttribute("stitchTiles", "stitch");
+//   turbulence.setAttribute("x", "0%");
+//   turbulence.setAttribute("y", "0%");
+//   turbulence.setAttribute("width", "100%");
+//   turbulence.setAttribute("height", "100%");
+//   turbulence.setAttribute("result", "turbulence");
 
-  var deSaturate = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
-  deSaturate.setAttribute("type", "saturate");
-  deSaturate.setAttribute("values", "0");
-  deSaturate.setAttribute("x", "0%");
-  deSaturate.setAttribute("y", "0%");
-  deSaturate.setAttribute("width", "100%");
-  deSaturate.setAttribute("height", "100%");
-  deSaturate.setAttribute("in", "sourceGraphic");
-  deSaturate.setAttribute("result", "deSaturate");
+//   var deSaturate = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
+//   deSaturate.setAttribute("type", "saturate");
+//   deSaturate.setAttribute("values", "0");
+//   deSaturate.setAttribute("x", "0%");
+//   deSaturate.setAttribute("y", "0%");
+//   deSaturate.setAttribute("width", "100%");
+//   deSaturate.setAttribute("height", "100%");
+//   deSaturate.setAttribute("in", "sourceGraphic");
+//   deSaturate.setAttribute("result", "deSaturate");
 
-  // https://stackoverflow.com/questions/64946883/apply-noise-to-image-with-transparency-by-use-of-svg-filters
-  var composite = document.createElementNS("http://www.w3.org/2000/svg", "feComposite");
-  composite.setAttribute("operator", "in");
-  composite.setAttribute("in2", "sourceGraphic");
-  composite.setAttribute("result", "composite");
+//   // https://stackoverflow.com/questions/64946883/apply-noise-to-image-with-transparency-by-use-of-svg-filters
+//   var composite = document.createElementNS("http://www.w3.org/2000/svg", "feComposite");
+//   composite.setAttribute("operator", "in");
+//   composite.setAttribute("in2", "sourceGraphic");
+//   composite.setAttribute("result", "composite");
 
-  var blend = document.createElementNS("http://www.w3.org/2000/svg", "feBlend");
-  blend.setAttribute("in", "sourceGraphic");
-  // blend.setAttribute("in2", "deSaturate");
-  blend.setAttribute("in2", "composite");
-  blend.setAttribute("mode", "overlay");
-  // blend.setAttribute("mode", "multiply");
+//   var blend = document.createElementNS("http://www.w3.org/2000/svg", "feBlend");
+//   blend.setAttribute("in", "sourceGraphic");
+//   // blend.setAttribute("in2", "deSaturate");
+//   blend.setAttribute("in2", "composite");
+//   blend.setAttribute("mode", "overlay");
+//   // blend.setAttribute("mode", "multiply");
 
-  fueta.appendChild(turbulence);
-  fueta.appendChild(deSaturate);
-  fueta.appendChild(composite);
-  // fueta.appendChild(blend);
+//   fueta.appendChild(turbulence);
+//   fueta.appendChild(deSaturate);
+//   fueta.appendChild(composite);
+//   // fueta.appendChild(blend);
 
-  fuetaObj.setAttribute("filter", "url(#fueta)");
-  defs.appendChild(fueta);
-  defs.appendChild(fuetaObj);
-}
+//   fuetaObj.setAttribute("filter", "url(#fueta)");
+//   defs.appendChild(fueta);
+//   defs.appendChild(fuetaObj);
+// }
 
-function showOtherNoise() {
-  const svgNode = document.getElementById('svgNode');
-  var fuetaObj = document.getElementById('fuetaObj');
+// function showOtherNoise() {
+//   const svgNode = document.getElementById('svgNode');
+//   var fuetaObj = document.getElementById('fuetaObj');
 
-  svgNode.appendChild(fuetaObj);
-}
+//   svgNode.appendChild(fuetaObj);
+// }
 
 
 function createBlur() {
@@ -616,7 +613,7 @@ function createGroupForNoising() {
   groupForNoising.setAttribute("width", "100%");
   groupForNoising.setAttribute("height", "100%");
   groupForNoising.setAttribute("fill", "none");
-  groupForNoising.setAttribute("filter", "url(#filterBigPaper)");
+  groupForNoising.setAttribute("filter", "url(#filterOverall)");
 
   // svgNode.appendChild(groupForNoising); 
   defs.appendChild(groupForNoising);
