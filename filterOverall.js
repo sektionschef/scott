@@ -1,5 +1,14 @@
 class filterOverall {
     constructor() {
+        this.filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
+        this.filter.setAttribute("id", "filterOverall");
+        this.filter.setAttribute("result", "filterOverall");
+        this.filter.setAttribute("x", "0");
+        this.filter.setAttribute("y", "0");
+        // added
+        // this.filter.setAttribute("filterUnits", "objectBoundingBox");
+        // this.filter.setAttribute("primitiveUnits", "userSpaceOnUse");
+        // this.filter.setAttribute("color-interpolation-filters", "linearRGB");
 
         // bigPaper
         this.createTurbulenceBig();
@@ -14,27 +23,6 @@ class filterOverall {
         // this.createCompositeGrain();
         this.createBlendGrain();
 
-        this.filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-        this.filter.setAttribute("id", "filterOverall");
-        this.filter.setAttribute("result", "filterOverall");
-        this.filter.setAttribute("x", "0");
-        this.filter.setAttribute("y", "0");
-        // added
-        // this.filter.setAttribute("filterUnits", "objectBoundingBox");
-        // this.filter.setAttribute("primitiveUnits", "userSpaceOnUse");
-        // this.filter.setAttribute("color-interpolation-filters", "linearRGB");
-
-        this.filter.appendChild(this.turbulenceBig)
-        this.feSpecularLightingABig.appendChild(this.fePointLightBig);
-        this.filter.appendChild(this.feSpecularLightingABig);
-        this.filter.appendChild(this.blendBig);
-
-        this.filter.appendChild(this.turbulenceGrain);
-        this.filter.appendChild(this.deSaturateGrain);
-        // this.filter.appendChild(this.compositeGrain);
-        this.filter.appendChild(this.blendGrain);
-
-        // defs.appendChild(turbulence);
         defs.appendChild(this.filter);
     }
 
@@ -72,6 +60,8 @@ class filterOverall {
         this.turbulenceBig.setAttribute("width", "100%");
         this.turbulenceBig.setAttribute("height", "100%");
         this.turbulenceBig.setAttribute("result", "turbulenceBig");
+
+        this.filter.appendChild(this.turbulenceBig)
     }
 
     createFeSpecularLightingABig() {
@@ -84,6 +74,8 @@ class filterOverall {
         this.feSpecularLightingABig.setAttribute("lighting-color", "#ffffff");
         this.feSpecularLightingABig.setAttribute("in", "turbulenceBig");
         this.feSpecularLightingABig.setAttribute("result", "feSpecularLightingABig");
+
+        this.filter.appendChild(this.feSpecularLightingABig);
     }
 
     createFePointLightBig() {
@@ -92,6 +84,8 @@ class filterOverall {
         this.fePointLightBig.setAttribute("x", "200");
         this.fePointLightBig.setAttribute("y", "300");
         this.fePointLightBig.setAttribute("z", "200");
+
+        this.feSpecularLightingABig.appendChild(this.fePointLightBig);
     }
 
     createFloodFillDEBUG() {
@@ -117,6 +111,8 @@ class filterOverall {
         this.blendBig.setAttribute("mode", "hard-light");
         // this.blendBig.setAttribute("mode", "normal");
         // this.blendBig.setAttribute("mode", "multiply");
+
+        this.filter.appendChild(this.blendBig);
     }
 
     createTurbulenceGrain() {
@@ -132,6 +128,8 @@ class filterOverall {
         this.turbulenceGrain.setAttribute("width", "100%");
         this.turbulenceGrain.setAttribute("height", "100%");
         this.turbulenceGrain.setAttribute("result", "turbulenceGrain");
+
+        this.filter.appendChild(this.turbulenceGrain);
     }
 
     createSaturateGrain() {
@@ -144,6 +142,8 @@ class filterOverall {
         this.deSaturateGrain.setAttribute("height", "100%");
         this.deSaturateGrain.setAttribute("in", "turbulenceGrain");
         this.deSaturateGrain.setAttribute("result", "deSaturateGrain");
+
+        this.filter.appendChild(this.deSaturateGrain);
     }
 
     createCompositeGrain() {
@@ -153,6 +153,8 @@ class filterOverall {
         this.compositeGrain.setAttribute("in", "SourceGraphic");
         this.compositeGrain.setAttribute("in2", "deSaturateGrain");
         this.compositeGrain.setAttribute("result", "compositeGrain");
+
+        this.filter.appendChild(this.compositeGrain);
     }
 
     createBlendGrain() {
@@ -164,6 +166,8 @@ class filterOverall {
         this.blendGrain.setAttribute("in2", "deSaturateGrain");
         this.blendGrain.setAttribute("mode", "overlay");
         // this.blendGrain.setAttribute("mode", "hard-light");
+
+        this.filter.appendChild(this.blendGrain);
     }
 
 }
