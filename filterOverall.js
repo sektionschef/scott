@@ -52,7 +52,7 @@ class filterOverall {
         this.turbulenceBig.setAttribute("type", "turbulence");
         this.turbulenceBig.setAttribute("baseFrequency", "0.003 0.005"); // 0.04
         // this.turbulenceBig.setAttribute("baseFrequency", "0.3 0.5"); // 0.04
-        this.turbulenceBig.setAttribute("numOctaves", "3");
+        this.turbulenceBig.setAttribute("numOctaves", "3"); // 1-6
         this.turbulenceBig.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
         this.turbulenceBig.setAttribute("stitchTiles", "stitch");
         this.turbulenceBig.setAttribute("x", "0%");
@@ -67,11 +67,12 @@ class filterOverall {
     createFeSpecularLightingABig() {
         this.feSpecularLightingABig = document.createElementNS("http://www.w3.org/2000/svg", "feSpecularLighting");
         this.feSpecularLightingABig.setAttribute("id", "feSpecularLightingABig");
-        this.feSpecularLightingABig.setAttribute("surfaceScale", "-43"); // 13 // change for more radical results
+        this.feSpecularLightingABig.setAttribute("surfaceScale", "-10"); // 13 // change for more radical results
         this.feSpecularLightingABig.setAttribute("specularConstant", "1.25");
         this.feSpecularLightingABig.setAttribute("specularExponent", "5");  // 15
         this.feSpecularLightingABig.setAttribute("kernelUnitLength", "0 0");
-        this.feSpecularLightingABig.setAttribute("lighting-color", "#ffffff");
+        this.feSpecularLightingABig.setAttribute("lighting-color", "#ffffff");  // PARAM
+        // this.feSpecularLightingABig.setAttribute("lighting-color", "#75808f");
         this.feSpecularLightingABig.setAttribute("in", "turbulenceBig");
         this.feSpecularLightingABig.setAttribute("result", "feSpecularLightingABig");
 
@@ -119,7 +120,7 @@ class filterOverall {
         this.turbulenceGrain = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
         this.turbulenceGrain.setAttribute("id", "turbulenceGrain");
         this.turbulenceGrain.setAttribute("type", "fractalNoise");
-        this.turbulenceGrain.setAttribute("baseFrequency", "10");
+        this.turbulenceGrain.setAttribute("baseFrequency", "0.9 0.6");
         this.turbulenceGrain.setAttribute("numOctaves", "6");
         this.turbulenceGrain.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
         this.turbulenceGrain.setAttribute("stitchTiles", "stitch");
