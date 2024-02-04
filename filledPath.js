@@ -3,7 +3,7 @@ class filledPath {
         this.strokeWidth = 1.3; // deprecatd
         // this.colory = "#0000006e"
         // this.colory = "#00000041"
-        this.colory = "#4e4e4eff"
+        this.colory = "#353535ff"
         // this.profile = "vanilla";
         this.profile = "swingspitz";
         var cat = 0.75;

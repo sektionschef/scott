@@ -173,8 +173,8 @@ function main() {
   svgNode.appendChild(defs);
 
   createPaperFilter();
-  createPencilNoiseFilter();
-  var bigNoisePaperFilter = new filterOverall();
+  new filterOverall();
+  new pencilFilter();
 
   // createBlur();
   // createBrightness();
@@ -352,45 +352,6 @@ function showGroupA() {
   svgNode.appendChild(groupAUse);
 }
 
-function createPencilNoiseFilter() {
-  var filterPencil = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-  filterPencil.setAttribute("id", "filterPencil");
-  filterPencil.setAttribute("x", "0");
-  filterPencil.setAttribute("y", "0");
-  // added
-  // filterPencil.setAttribute("filterUnits", "objectBoundingBox");
-  // filterPencil.setAttribute("primitiveUnits", "userSpaceOnUse");
-  // filterPencil.setAttribute("color-interpolation-filters", "linearRGB");
-
-  let turbulence = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
-  turbulence.setAttribute("id", "turbulence");
-  // turbulence.setAttribute("type", "fractalNoise");
-  turbulence.setAttribute("type", "turbulence");
-  turbulence.setAttribute("baseFrequency", "1"); // 0.01, 1.5 , 2.5
-  turbulence.setAttribute("numOctaves", "50");  // 6
-  turbulence.setAttribute("seed", `${Math.round($fx.rand() * 100)}`);
-  turbulence.setAttribute("stitchTiles", "stitch");
-  turbulence.setAttribute("x", "0%");
-  turbulence.setAttribute("y", "0%");
-  turbulence.setAttribute("width", "100%");
-  turbulence.setAttribute("height", "100%");
-  turbulence.setAttribute("result", "turbulence");
-
-  var displacement = document.createElementNS("http://www.w3.org/2000/svg", "feDisplacementMap");
-  displacement.setAttribute("id", "displacement");
-  displacement.setAttribute("scale", "1");  // 1.1
-  displacement.setAttribute("in", "SourceGraphic");
-  displacement.setAttribute("in2", "turbulence");
-  displacement.setAttribute("xChannelSelector", "R");
-  displacement.setAttribute("yChannelSelector", "G");
-  // displacement.setAttribute("yChannelSelector", "R");
-  displacement.setAttribute("result", "displacement");
-
-  filterPencil.appendChild(turbulence);
-  filterPencil.appendChild(displacement);  // comment for debug
-  defs.appendChild(filterPencil);
-}
-
 function createPaperFilter() {
 
   // <feTurbulence type="fractalNoise" baseFrequency='0.04' numOctaves="5" result='noise' />
@@ -497,7 +458,7 @@ function createGroupB() {
   groupB.setAttribute("width", "100%");
   groupB.setAttribute("height", "100%");
   groupB.setAttribute("fill", "none");
-  groupB.setAttribute("filter", "url(#filterPencil)");
+  groupB.setAttribute("filter", "url(#pencilFilter)");
 
   // svgNode.appendChild(groupB);
   // defs.appendChild(groupB);
