@@ -239,6 +239,8 @@ function main() {
 
   // showBlur();
 
+  new noiseDotFilter();
+
 
   // TESTS
   // testFilledPath()
