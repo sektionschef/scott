@@ -25,6 +25,21 @@ class noiseDotFilter {
         this.filterDot.setAttribute("x", "0");
         this.filterDot.setAttribute("y", "0");
 
+        this.createTurbulence();
+        this.createSpecularLight();
+        this.createDistantLight();
+        this.createColorMatrix();
+
+        const defs = document.getElementById('defs');
+        defs.appendChild(this.filterDot);
+
+        this.createRect();
+
+        const svgNode = document.getElementById('svgNode');
+        svgNode.appendChild(this.rectDot);
+    }
+
+    createTurbulence() {
         this.turbulenceDot = document.createElementNS("http://www.w3.org/2000/svg", "feTurbulence");
         this.turbulenceDot.setAttribute("id", "turbulenceDot");
         this.turbulenceDot.setAttribute("type", "turbulence");
@@ -39,7 +54,9 @@ class noiseDotFilter {
         this.turbulenceDot.setAttribute("height", "100%");
         this.turbulenceDot.setAttribute("result", "turbulenceDot");
         this.filterDot.appendChild(this.turbulenceDot);
+    }
 
+    createSpecularLight() {
         this.feSpecularLightingDot = document.createElementNS("http://www.w3.org/2000/svg", "feSpecularLighting");
         this.feSpecularLightingDot.setAttribute("id", "feSpecularLightingDot");
         this.feSpecularLightingDot.setAttribute("surfaceScale", "28"); // 13 // change for more radical results
@@ -47,32 +64,31 @@ class noiseDotFilter {
         this.feSpecularLightingDot.setAttribute("specularExponent", "20");  // 15
         // this.feSpecularLightingDot.setAttribute("kernelUnitLength", "0 0");
         // this.feSpecularLightingDot.setAttribute("lighting-color", "#0400ff");
-        this.feSpecularLightingDot.setAttribute("lighting-color", "#15139e");
+        this.feSpecularLightingDot.setAttribute("lighting-color", "#3d3c92");
         this.feSpecularLightingDot.setAttribute("in", "turbulenceDot");
         this.feSpecularLightingDot.setAttribute("result", "feSpecularLightingDot");
-
         this.filterDot.appendChild(this.feSpecularLightingDot);
+    }
 
+    createDistantLight() {
         this.feDistantLightDot = document.createElementNS("http://www.w3.org/2000/svg", "feDistantLight");
         this.feDistantLightDot.setAttribute("id", "feDistantLightDot");
         this.feDistantLightDot.setAttribute("azimuth", "3");
         this.feDistantLightDot.setAttribute("elevation", "103");
-
         this.feSpecularLightingDot.appendChild(this.feDistantLightDot);
+    }
 
-
+    createColorMatrix() {
         this.feColorMatrixDot = document.createElementNS("http://www.w3.org/2000/svg", "feColorMatrix");
         this.feColorMatrixDot.setAttribute("id", "feColorMatrixDot");
         this.feColorMatrixDot.setAttribute("type", "saturate");
         this.feColorMatrixDot.setAttribute("values", "0");
         this.feColorMatrixDot.setAttribute("in", "feSpecularLightingDot");
         this.feColorMatrixDot.setAttribute("result", "colormatrix");
-
         this.filterDot.appendChild(this.feColorMatrixDot);
+    }
 
-        const defs = document.getElementById('defs');
-        defs.appendChild(this.filterDot);
-
+    createRect() {
         this.rectDot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         this.rectDot.setAttribute("id", "rectDot");
         this.rectDot.setAttribute("result", "rectDot");
@@ -81,9 +97,7 @@ class noiseDotFilter {
         this.rectDot.setAttribute("width", "100%");
         this.rectDot.setAttribute("height", "100%");
         this.rectDot.setAttribute("fill", "#0400ff");
+        // this.rectDot.setAttribute("fill", "#706e1600");
         this.rectDot.setAttribute("filter", "url(#filterDot)");
-
-        const svgNode = document.getElementById('svgNode');
-        svgNode.appendChild(this.rectDot);
     }
 }
