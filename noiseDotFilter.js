@@ -64,7 +64,7 @@ class noiseDotFilter {
         this.feSpecularLightingDot.setAttribute("specularExponent", "20");  // 15
         // this.feSpecularLightingDot.setAttribute("kernelUnitLength", "0 0");
         // this.feSpecularLightingDot.setAttribute("lighting-color", "#0400ff");
-        this.feSpecularLightingDot.setAttribute("lighting-color", "#3d3c92");
+        this.feSpecularLightingDot.setAttribute("lighting-color", "#1210af");
         this.feSpecularLightingDot.setAttribute("in", "turbulenceDot");
         this.feSpecularLightingDot.setAttribute("result", "feSpecularLightingDot");
         this.filterDot.appendChild(this.feSpecularLightingDot);
