@@ -15,10 +15,6 @@ class paperFilter {
         this.createDiffuseLighting();
         this.createDistanceLight();
 
-        this.filterPaper.appendChild(this.turbulence);
-        this.diffuseLighting.appendChild(this.distantLight);
-        this.filterPaper.appendChild(this.diffuseLighting);
-
         // defs.appendChild(turbulence);
         defs.appendChild(this.filterPaper);
     }
@@ -37,6 +33,7 @@ class paperFilter {
         this.turbulence.setAttribute("width", "100%");
         this.turbulence.setAttribute("height", "100%");
         this.turbulence.setAttribute("result", "turbulence");
+        this.filterPaper.appendChild(this.turbulence);
     }
 
     createDiffuseLighting() {
@@ -45,6 +42,7 @@ class paperFilter {
         this.diffuseLighting.setAttribute("in", "turbulence");
         this.diffuseLighting.setAttribute("lighting-color", "white");
         this.diffuseLighting.setAttribute("surfaceScale", "0.25");  // 2
+        this.filterPaper.appendChild(this.diffuseLighting);
     }
 
     createDistanceLight() {
@@ -52,5 +50,6 @@ class paperFilter {
         this.distantLight.setAttribute("id", "distantLight");
         this.distantLight.setAttribute("azimuth", "45");
         this.distantLight.setAttribute("elevation", "60");
+        this.diffuseLighting.appendChild(this.distantLight);
     }
 }

@@ -20,6 +20,8 @@
 class noiseDotFilter {
     constructor() {
 
+        this.colory = "#6160ad";
+
         this.filterDot = document.createElementNS("http://www.w3.org/2000/svg", "filter");
         this.filterDot.setAttribute("id", "filterDot");
         this.filterDot.setAttribute("x", "0");
@@ -64,7 +66,7 @@ class noiseDotFilter {
         this.feSpecularLightingDot.setAttribute("specularExponent", "20");  // 15
         // this.feSpecularLightingDot.setAttribute("kernelUnitLength", "0 0");
         // this.feSpecularLightingDot.setAttribute("lighting-color", "#0400ff");
-        this.feSpecularLightingDot.setAttribute("lighting-color", "#1210af");
+        this.feSpecularLightingDot.setAttribute("lighting-color", this.colory);
         this.feSpecularLightingDot.setAttribute("in", "turbulenceDot");
         this.feSpecularLightingDot.setAttribute("result", "feSpecularLightingDot");
         this.filterDot.appendChild(this.feSpecularLightingDot);
