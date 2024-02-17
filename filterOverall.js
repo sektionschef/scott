@@ -24,10 +24,14 @@ class filterOverall {
         this.createBlendGrain();
 
         defs.appendChild(this.filter);
+        this.showBigPaperDEBUG();
+
     }
 
 
     showBigPaperDEBUG() {
+
+        this.opacity = "0.5";
 
         var bigPaperContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         bigPaperContainer.setAttribute("id", "bigPaperContainer");
@@ -37,6 +41,7 @@ class filterOverall {
         bigPaperContainer.setAttribute("width", "100%");
         bigPaperContainer.setAttribute("height", "100%");
         bigPaperContainer.setAttribute("fill", "none");
+        bigPaperContainer.setAttribute("opacity", this.opacity);
         // bigPaperContainer.setAttribute("fill", "red");  // DEBUG
         bigPaperContainer.setAttribute("filter", "url(#filterOverall)");
 

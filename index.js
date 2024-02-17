@@ -173,13 +173,11 @@ function main() {
   svgNode.appendChild(defs);
 
   new paperFilter();
-  // new filterOverall();
+  new filterOverall();
   new pencilFilter();
 
   // createBlur();
   // createBrightness();
-
-  createGroupForNoising();
 
   createBackground();
   createGroupA();
@@ -227,17 +225,23 @@ function main() {
 
 
   // SHOW THE GRIDS
-  // showBackground();
-  // showGroupA();
-  // showGroupB();
-  // showGroupC();
+  showBackground();
 
-  showGroupForNoising();
+  // showGroupA();
+  showGroupB();
+  // showGroupC();
 
   // showOtherNoise();
 
 
   // showBlur();
+
+
+  var oida = document.createElementNS("http://www.w3.org/2000/svg", "use");
+  oida.setAttribute("id", "romba");
+  oida.setAttribute("href", "#bigPaperContainer");
+
+  svgNode.appendChild(oida);
 
   new noiseDotFilter();
 
@@ -316,18 +320,18 @@ function createBackground() {
   backgroundRect.setAttribute("fill", "none");
   backgroundRect.setAttribute("filter", "url(#filterPaper)");
 
-  // const defs = document.getElementById('defs');
-  // defs.appendChild(backgroundRect);
+  const defs = document.getElementById('defs');
+  defs.appendChild(backgroundRect);
 
-  const groupForNoising = document.getElementById('groupForNoising');
-  groupForNoising.appendChild(backgroundRect);
+  // const groupForNoising = document.getElementById('groupForNoising');
+  // groupForNoising.appendChild(backgroundRect);
 }
 
-// function showBackground() {
-//   const backgroundRect = document.getElementById('backgroundRect');
+function showBackground() {
+  const backgroundRect = document.getElementById('backgroundRect');
 
-//   svgNode.appendChild(backgroundRect);
-// }
+  svgNode.appendChild(backgroundRect);
+}
 
 function createGroupA() {
   // create background
@@ -414,10 +418,11 @@ function createGroupB() {
   groupB.setAttribute("filter", "url(#pencilFilter)");
 
   // svgNode.appendChild(groupB);
-  // defs.appendChild(groupB);
+  const defs = document.getElementById('defs');
+  defs.appendChild(groupB);
 
-  const groupForNoising = document.getElementById('groupForNoising');
-  groupForNoising.appendChild(groupB);
+  // const groupForNoising = document.getElementById('groupForNoising');
+  // groupForNoising.appendChild(groupB);
 }
 
 function showGroupB() {
@@ -425,6 +430,8 @@ function showGroupB() {
   groupB.setAttribute("id", "groupB");
   groupB.setAttribute("result", "groupB");
   groupB.setAttribute("href", "#groupB");
+
+  svgNode.appendChild(groupB);
 }
 
 function createGroupC() {
@@ -447,28 +454,4 @@ function showGroupC() {
   groupC.setAttribute("href", "#groupC");
 
   svgNode.appendChild(groupC);
-}
-
-
-function createGroupForNoising() {
-  // create background
-  var groupForNoising = document.createElementNS("http://www.w3.org/2000/svg", "g");
-  groupForNoising.setAttribute("id", "groupForNoising");
-  groupForNoising.setAttribute("x", "0");
-  groupForNoising.setAttribute("y", "0");
-  groupForNoising.setAttribute("width", "100%");
-  groupForNoising.setAttribute("height", "100%");
-  groupForNoising.setAttribute("fill", "none");
-  groupForNoising.setAttribute("filter", "url(#filterOverall)");
-
-  // svgNode.appendChild(groupForNoising); 
-  defs.appendChild(groupForNoising);
-}
-
-function showGroupForNoising() {
-  var groupForNoisingUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
-  groupForNoisingUse.setAttribute("id", "groupForNoisingUse");
-  groupForNoisingUse.setAttribute("href", "#groupForNoising");
-
-  svgNode.appendChild(groupForNoisingUse);
 }
