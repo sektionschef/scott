@@ -173,7 +173,7 @@ function main() {
   svgNode.appendChild(defs);
 
   var paper = new paperFilter();
-  var bigPaper = new filterOverall();
+  var paperLight = new paperLightFilter();
   new pencilFilter();
 
   // createBlur();
@@ -224,28 +224,21 @@ function main() {
   });
 
 
-  // SHOW THE GRIDS
   showBackground();
 
   // showGroupA();
   showGroupB();
   // showGroupC();
 
-  // showOtherNoise();
-
 
   // showBlur();
 
 
-
+  new noiseDotFilter();
 
   // bigPaper.showBigPaperDEBUG();
-  bigPaper.showLayer();
-
+  paperLight.showLayer();
   // paper.showPaperDEBUG();
-
-
-  // new noiseDotFilter();
 
 
   // TESTS

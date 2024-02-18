@@ -1,8 +1,8 @@
-class filterOverall {
+class paperLightFilter {
     constructor() {
         this.filter = document.createElementNS("http://www.w3.org/2000/svg", "filter");
-        this.filter.setAttribute("id", "filterOverall");
-        this.filter.setAttribute("result", "filterOverall");
+        this.filter.setAttribute("id", "paperLightFilter");
+        this.filter.setAttribute("result", "paperLightFilter");
         this.filter.setAttribute("x", "0");
         this.filter.setAttribute("y", "0");
         // added
@@ -24,7 +24,6 @@ class filterOverall {
         this.createBlendGrain();
 
         defs.appendChild(this.filter);
-
         this.createLayer();
     }
 
@@ -43,7 +42,7 @@ class filterOverall {
         paperLightContainer.setAttribute("fill", "none");
         paperLightContainer.setAttribute("opacity", this.opacity);
         // paperLightContainer.setAttribute("fill", "red");  // DEBUG
-        paperLightContainer.setAttribute("filter", "url(#filterOverall)");
+        paperLightContainer.setAttribute("filter", "url(#paperLightFilter)");
 
         defs.appendChild(paperLightContainer);
     }
@@ -67,7 +66,7 @@ class filterOverall {
         paperLightContainerDEBUG.setAttribute("height", "100%");
         paperLightContainerDEBUG.setAttribute("fill", "none");
         // paperLightContainerDEBUG.setAttribute("fill", "red");  // DEBUG
-        paperLightContainerDEBUG.setAttribute("filter", "url(#filterOverall)");
+        paperLightContainerDEBUG.setAttribute("filter", "url(#paperLightFilter)");
 
         defs.appendChild(paperLightContainerDEBUG);
 
