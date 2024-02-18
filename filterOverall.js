@@ -24,31 +24,55 @@ class filterOverall {
         this.createBlendGrain();
 
         defs.appendChild(this.filter);
-        this.showBigPaperDEBUG();
 
+        this.createLayer();
+    }
+
+
+    createLayer() {
+
+        this.opacity = "0.4";
+
+        var paperLightContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        paperLightContainer.setAttribute("id", "paperLightContainer");
+        paperLightContainer.setAttribute("result", "paperLightContainer");
+        paperLightContainer.setAttribute("x", "0");
+        paperLightContainer.setAttribute("y", "0");
+        paperLightContainer.setAttribute("width", "100%");
+        paperLightContainer.setAttribute("height", "100%");
+        paperLightContainer.setAttribute("fill", "none");
+        paperLightContainer.setAttribute("opacity", this.opacity);
+        // paperLightContainer.setAttribute("fill", "red");  // DEBUG
+        paperLightContainer.setAttribute("filter", "url(#filterOverall)");
+
+        defs.appendChild(paperLightContainer);
+    }
+
+    showLayer() {
+        var paperLightContainerUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        paperLightContainerUse.setAttribute("id", "paperLightContainerUse");
+        paperLightContainerUse.setAttribute("href", "#paperLightContainer");
+        svgNode.appendChild(paperLightContainerUse);
     }
 
 
     showBigPaperDEBUG() {
 
-        this.opacity = "0.5";
+        var paperLightContainerDEBUG = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        paperLightContainerDEBUG.setAttribute("id", "paperLightContainerDEBUG");
+        paperLightContainerDEBUG.setAttribute("result", "paperLightContainerDEBUG");
+        paperLightContainerDEBUG.setAttribute("x", "0");
+        paperLightContainerDEBUG.setAttribute("y", "0");
+        paperLightContainerDEBUG.setAttribute("width", "100%");
+        paperLightContainerDEBUG.setAttribute("height", "100%");
+        paperLightContainerDEBUG.setAttribute("fill", "none");
+        // paperLightContainerDEBUG.setAttribute("fill", "red");  // DEBUG
+        paperLightContainerDEBUG.setAttribute("filter", "url(#filterOverall)");
 
-        var bigPaperContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        bigPaperContainer.setAttribute("id", "bigPaperContainer");
-        bigPaperContainer.setAttribute("result", "bigPaperContainer");
-        bigPaperContainer.setAttribute("x", "0");
-        bigPaperContainer.setAttribute("y", "0");
-        bigPaperContainer.setAttribute("width", "100%");
-        bigPaperContainer.setAttribute("height", "100%");
-        bigPaperContainer.setAttribute("fill", "none");
-        bigPaperContainer.setAttribute("opacity", this.opacity);
-        // bigPaperContainer.setAttribute("fill", "red");  // DEBUG
-        bigPaperContainer.setAttribute("filter", "url(#filterOverall)");
-
-        // defs.appendChild(bigPaperContainer);
+        defs.appendChild(paperLightContainerDEBUG);
 
         const svgNode = document.getElementById('svgNode');
-        svgNode.appendChild(bigPaperContainer);
+        svgNode.appendChild(paperLightContainerDEBUG);
     }
 
     createTurbulenceBig() {
@@ -172,6 +196,7 @@ class filterOverall {
         this.blendGrain.setAttribute("in2", "deSaturateGrain");
         this.blendGrain.setAttribute("mode", "overlay");
         // this.blendGrain.setAttribute("mode", "hard-light");
+        // this.blendGrain.setAttribute("mode", "multiply");
 
         this.filter.appendChild(this.blendGrain);
     }

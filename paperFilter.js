@@ -1,6 +1,39 @@
 class paperFilter {
     constructor() {
 
+
+
+        this.createFilter();
+        this.createTurbulence();
+        this.createDiffuseLighting();
+        this.createDistanceLight();
+
+        // defs.appendChild(turbulence);
+        defs.appendChild(this.filterPaper);
+    }
+
+
+    showPaperDEBUG() {
+
+        var bigPaperContainer = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        bigPaperContainer.setAttribute("id", "paperContainer");
+        bigPaperContainer.setAttribute("result", "paperContainer");
+        bigPaperContainer.setAttribute("x", "0");
+        bigPaperContainer.setAttribute("y", "0");
+        bigPaperContainer.setAttribute("width", "100%");
+        bigPaperContainer.setAttribute("height", "100%");
+        bigPaperContainer.setAttribute("fill", "none");
+        // bigPaperContainer.setAttribute("fill", "red");  // DEBUG
+        bigPaperContainer.setAttribute("filter", "url(#filterPaper)");
+
+        defs.appendChild(bigPaperContainer);
+
+        const svgNode = document.getElementById('svgNode');
+        svgNode.appendChild(bigPaperContainer);
+    }
+
+    createFilter() {
+
         this.filterPaper = document.createElementNS("http://www.w3.org/2000/svg", "filter");
         this.filterPaper.setAttribute("id", "filterPaper");
         this.filterPaper.setAttribute("x", "0");
@@ -9,14 +42,6 @@ class paperFilter {
         // this.filterPaper.setAttribute("filterUnits", "objectBoundingBox");
         // this.filterPaper.setAttribute("primitiveUnits", "userSpaceOnUse");
         // this.filterPaper.setAttribute("color-interpolation-filters", "linearRGB");
-
-        // PAPER
-        this.createTurbulence();
-        this.createDiffuseLighting();
-        this.createDistanceLight();
-
-        // defs.appendChild(turbulence);
-        defs.appendChild(this.filterPaper);
     }
 
     createTurbulence() {

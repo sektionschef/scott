@@ -172,17 +172,17 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
-  new paperFilter();
-  new filterOverall();
+  var paper = new paperFilter();
+  var bigPaper = new filterOverall();
   new pencilFilter();
 
   // createBlur();
   // createBrightness();
 
   createBackground();
-  createGroupA();
+  // createGroupA();
   createGroupB();
-  createGroupC();
+  // createGroupC();
 
 
   // GRID 2
@@ -237,13 +237,15 @@ function main() {
   // showBlur();
 
 
-  var oida = document.createElementNS("http://www.w3.org/2000/svg", "use");
-  oida.setAttribute("id", "romba");
-  oida.setAttribute("href", "#bigPaperContainer");
 
-  svgNode.appendChild(oida);
 
-  new noiseDotFilter();
+  // bigPaper.showBigPaperDEBUG();
+  bigPaper.showLayer();
+
+  // paper.showPaperDEBUG();
+
+
+  // new noiseDotFilter();
 
 
   // TESTS
