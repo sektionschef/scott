@@ -1,19 +1,19 @@
 class Grid {
     constructor(data) {
-        this.stripeHeight = data.stripeHeight;
-        this.vectorMagnitude = data.vectorMagnitude;
-        this.marginRelative = data.marginRelative;
+        this.stripeHeight = data.stripeHeight;  // rows with odd and even
+        this.vectorMagnitude = data.vectorMagnitude;  // length of the vecotr/drawn strokes
+        this.marginRelative = data.marginRelative;  // margin relative to the height of the stripes (stripeHeight)
 
-        this.stepCountRes = data.stepCountRes; // 350 // how many strokePaths per stripe
+        this.stepCountRes = data.stepCountRes; // 350 // how many vectors/drawn strokes per stripe
         this.angleRadiansStart = data.angleRadiansStart;  // starting angle
         this.angleRadiansGain = data.angleRadiansGain;  // adding/reducing each line
         this.strokeColor = data.strokeColor;
         this.strokeWidth = data.strokeWidth;
-        this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side
+        this.shortBoxCount = data.shortBoxCount; // boxes on the shorter side - the resolution of the 
         this.longSide = data.longSide;
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
-        this.group = data.group;
+        this.group = data.group;  // where to draw the things
 
         if (this.marginRelative == 0) {
             this.marginBoxCount = 0;
@@ -79,9 +79,9 @@ class Grid {
 
     createBoxes() {
 
-        var index = 0;
+        var index = 0;  // index of the box
         var stripeIndex = 0;  // which stripe - default 2 boxes height -> 1 stripe
-        var inactive = true;
+        var margin = true;  // boxes positioned in the margin
 
         // h = long, w = short
 
@@ -90,17 +90,13 @@ class Grid {
             for (var w = 0; w < (this.widthBoxCount); w++) {
 
                 var center = { x: this.widthMargin + w * this.boxSize + this.boxSize / 2, y: this.heightMargin + h * this.boxSize + this.boxSize / 2 };
+                margin = this.checkMargin(h, w)
 
                 // corners of the box
                 var A = { x: this.widthMargin + w * this.boxSize, y: this.heightMargin + h * this.boxSize };
                 var B = vectorAdd(A, { x: this.boxSize, y: 0 });
                 var C = vectorAdd(A, { x: this.boxSize, y: this.boxSize });
                 var D = vectorAdd(A, { x: 0, y: this.boxSize });
-
-                // var polygonA = insidePolygon([center.x, center.y], polyPoints);
-                // var polygonLeft = insidePolygon([center.x, center.y], polyPointsLeft);
-
-                inactive = this.drawSkipMargin(h, w)
 
                 this.boxes.push({
                     "center": center,
@@ -111,7 +107,7 @@ class Grid {
                     "height": h,
                     "width": w,
                     "index": index,
-                    "inactive": inactive,
+                    "margin": margin,
                     "stripeIndex": stripeIndex,
                     "stripeA": false,
                     "stripeB": false,
@@ -129,7 +125,13 @@ class Grid {
         // console.log(this.boxes);
     }
 
-    drawSkipMargin(h, w) {
+    checkMargin(h, w) {
+
+        if (this.marginBoxCount == 0) {
+            return false;
+        }
+
+
         if (this.landscape == false) {
             return h < (this.marginBoxCount) ||
                 w < (this.marginBoxCount) ||
@@ -148,7 +150,7 @@ class Grid {
 
             var colory = "#f06"
 
-            if (this.boxes[i].inactive == true) {
+            if (this.boxes[i].margin == true) {
                 colory = "#a8a8a8"
             }
 
@@ -199,51 +201,66 @@ class Grid {
                 };
             }
 
-            // A
+            // A - box representing upper left of stripe
             if (
-                i != 0 &&
-                this.boxes[i - 1].inactive == true &&
-                this.boxes[i].inactive == false &&
-                this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
+                (
+                    i != 0 &&
+                    this.boxes[i - 1].margin == true &&
+                    this.boxes[i].margin == false &&
+                    this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
+                ) || (i == 0 && this.boxes[i].margin == false)
             ) {
                 this.boxes[i].stripeA = true;
             }
 
             // B
             if (
-                this.boxes[i].inactive == false &&
-                this.boxes[i + 1].inactive == true &&
-                this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
+                i + 1 != this.boxes.length &&
+                i != 0 // &&
+                // i - this.widthBoxCount >= 0
             ) {
-                this.boxes[i].stripeB = true;
+                if (
+                    (this.boxes[i].margin == false && this.boxes[i + 1].margin == true ||
+                        this.boxes[i].width == this.widthBoxCount - 1 && this.marginBoxCount == 0) &&
+                    (i == this.widthBoxCount - 1 || this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex)
+                ) {
+                    console.log(this.boxes[i]);
+                    this.boxes[i].stripeB = true;
+                }
             }
 
-            // C
-            if (
-                i != 0 &&
-                this.boxes[i - 1].inactive == true &&
-                this.boxes[i].inactive == false &&
-                this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
-            ) {
-                this.boxes[i].stripeC = true;
+            // (this.boxes[i].width == this.widthBoxCount) || (
+            //     // )
+            // ) {
+            //     console.log(this.boxes[i]);
+            // }
 
-                // calc the absolute position
-                this.lineVectors[this.boxes[i].stripeIndex].C.x = this.boxes[i].width * this.boxSize;
-                this.lineVectors[this.boxes[i].stripeIndex].C.y = this.boxes[i].height * this.boxSize + this.boxSize;
-            }
+            // // C
+            // if (
+            //     i != 0 &&
+            //     this.boxes[i - 1].margin == true &&
+            //     this.boxes[i].margin == false &&
+            //     this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
+            // ) {
+            //     this.boxes[i].stripeC = true;
 
-            // D
-            if (
-                this.boxes[i].inactive == false &&
-                this.boxes[i + 1].inactive == true &&
-                this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
-            ) {
-                this.boxes[i].stripeD = true;
+            //     // calc the absolute position
+            //     this.lineVectors[this.boxes[i].stripeIndex].C.x = this.boxes[i].width * this.boxSize;
+            //     this.lineVectors[this.boxes[i].stripeIndex].C.y = this.boxes[i].height * this.boxSize + this.boxSize;
+            // }
 
-                // calc the absolute position
-                this.lineVectors[this.boxes[i].stripeIndex].D.x = this.boxes[i].width * this.boxSize + this.boxSize;
-                this.lineVectors[this.boxes[i].stripeIndex].D.y = this.boxes[i].height * this.boxSize + this.boxSize;
-            }
+            // // D
+            // if (
+            //     this.boxes[i].margin == false &&
+            //     this.boxes[i + 1].margin == true &&
+            //     this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
+            // ) {
+            //     this.boxes[i].stripeD = true;
+
+            //     // calc the absolute position
+            //     this.lineVectors[this.boxes[i].stripeIndex].D.x = this.boxes[i].width * this.boxSize + this.boxSize;
+            //     this.lineVectors[this.boxes[i].stripeIndex].D.y = this.boxes[i].height * this.boxSize + this.boxSize;
+            // }
 
         }
 
@@ -254,15 +271,15 @@ class Grid {
 
         for (var v = 0; v < this.boxes.length; v++) {
 
-            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v].inactive == false) {
+            if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v].margin == false) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
                 rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
                 rect.setAttributeNS(null, 'height', this.boxSize);
                 rect.setAttributeNS(null, 'width', this.boxSize);
-                // rect.setAttributeNS(null, 'stroke', '#1100ff');
+                rect.setAttributeNS(null, 'stroke', 'None');
                 // rect.setAttributeNS(null, 'stroke-width', '0.5');
-                rect.setAttributeNS(null, 'fill', 'blue');
+                rect.setAttributeNS(null, 'fill', '#0000ff21');
                 // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
 
                 const svgNode = document.getElementById('svgNode');

@@ -1,9 +1,10 @@
 // REACTIVATE PENCIL FILTER
 
 // ########################################
+TEST = true;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
-var RESOLUTIONBOXCOUNT = 80;
+RESOLUTIONBOXCOUNT = 80;
 // let RESOLUTIONBOXCOUNT = 60;
 // let RESOLUTIONBOXCOUNT = 40;
 // ########################################
@@ -242,26 +243,28 @@ function main() {
   // });
 
 
-  showBackground();
+  if (TEST) {
+    // testFilledPath()
+    testGrid();
+  } else {
 
-  // showGroupA();
-  showGroupB();
-  // showGroupC();
+    showBackground();
 
-
-  // showBlur();
-
-
-  new noiseDotFilter();
-
-  // bigPaper.showBigPaperDEBUG();
-  paperLight.showLayer();
-  // paper.showPaperDEBUG();
+    // showGroupA();
+    showGroupB();
+    // showGroupC();
 
 
-  // TESTS
-  // testFilledPath()
+    // showBlur();
 
+
+    new noiseDotFilter();
+
+    // bigPaper.showBigPaperDEBUG();
+    paperLight.showLayer();
+    // paper.showPaperDEBUG();
+
+  }
 
   setTagsHTML({
     "title": TITLE,
