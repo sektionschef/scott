@@ -203,28 +203,31 @@ class Grid {
 
             // A - box representing upper left of stripe
             if (
-                (
-                    i != 0 &&
-                    this.boxes[i - 1].margin == true &&
-                    this.boxes[i].margin == false &&
-                    this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
-                ) || (i == 0 && this.boxes[i].margin == false)
+                i != 0
             ) {
+                if (
+                    (
+                        (this.boxes[i - 1].margin == true && this.boxes[i].margin == false ||  // check for margin
+                            this.boxes[i].width == 0 && this.marginBoxCount == 0) &&  // check if no margin
+                        this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex
+                    )
+                ) {
+                    this.boxes[i].stripeA = true;
+                }
+            } else if (i == 0 && this.boxes[i].margin == false) {
                 this.boxes[i].stripeA = true;
             }
 
             // B
             if (
                 i + 1 != this.boxes.length &&
-                i != 0 // &&
-                // i - this.widthBoxCount >= 0
+                i != 0
             ) {
                 if (
-                    (this.boxes[i].margin == false && this.boxes[i + 1].margin == true ||
-                        this.boxes[i].width == this.widthBoxCount - 1 && this.marginBoxCount == 0) &&
+                    (this.boxes[i].margin == false && this.boxes[i + 1].margin == true ||  // check for margin
+                        this.boxes[i].width == this.widthBoxCount - 1 && this.marginBoxCount == 0) &&  // or for no margin and end of row
                     (i == this.widthBoxCount - 1 || this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex)
                 ) {
-                    console.log(this.boxes[i]);
                     this.boxes[i].stripeB = true;
                 }
             }

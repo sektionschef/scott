@@ -19,7 +19,7 @@ function testGrid() {
         stepCountRes: 200,
         stripeHeight: 4,
         vectorMagnitude: 55,
-        marginRelative: 0,
+        marginRelative: 1,
         strokeColor: "#222222ff",
         strokeWidth: 1,
         angleRadiansStart: Math.PI / 2,
