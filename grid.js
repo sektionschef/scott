@@ -80,7 +80,7 @@ class Grid {
     createBoxes() {
 
         var index = 0;  // index of the box
-        var stripeIndex = 0;  // which stripe - default 2 boxes height -> 1 stripe
+        this.stripeIndex = 0;  // which stripe - default 2 boxes height -> 1 stripe
         var margin = true;  // boxes positioned in the margin
 
         // h = long, w = short
@@ -108,7 +108,7 @@ class Grid {
                     "width": w,
                     "index": index,
                     "margin": margin,
-                    "stripeIndex": stripeIndex,
+                    "stripeIndex": this.stripeIndex,
                     "stripeA": false,
                     "stripeB": false,
                     "stripeC": false,
@@ -119,10 +119,12 @@ class Grid {
 
             // make sure it the first row is not skipped
             if (h % this.stripeHeight == (this.stripeHeight - 1)) {
-                stripeIndex += 1;
+                this.stripeIndex += 1;
             }
         }
         // console.log(this.boxes);
+
+        // console.log(this.stripeIndex);
     }
 
     checkMargin(h, w) {
@@ -170,11 +172,18 @@ class Grid {
     }
 
     loopCategorize() {
+
+        // var debugLineIndex = 0;
+
         for (var i = 0; i < this.boxes.length; i++) {
 
             // add coordinates for 
-            if (i > 0 && this.boxes[i].stripeIndex != this.boxes[i - 1].stripeIndex) {
-
+            if (
+                // i > 0 && (
+                i == 0 ||
+                this.boxes[i].stripeIndex != this.boxes[i - 1].stripeIndex
+                // )
+            ) {
                 var even = false;
                 if (this.boxes[i].stripeIndex % 2 == 0) {
                     even = true;
@@ -199,11 +208,14 @@ class Grid {
                     },
                     even: even
                 };
+
+                // console.log(debugLineIndex)
+                // debugLineIndex += 1;
             }
 
             // A - box representing upper left of stripe
             if (
-                i != 0
+                i != 0  // making sure i-1 throws no error
             ) {
                 if (
                     (
@@ -218,7 +230,7 @@ class Grid {
                 this.boxes[i].stripeA = true;
             }
 
-            // B
+            // B upper right of stripe
             if (
                 i + 1 != this.boxes.length &&
                 i != 0
@@ -232,25 +244,29 @@ class Grid {
                 }
             }
 
-            // (this.boxes[i].width == this.widthBoxCount) || (
-            //     // )
-            // ) {
-            //     console.log(this.boxes[i]);
-            // }
+            // C - lower left of row
+            if (
+                i > 0 &&
+                i <= (this.boxes.length - this.widthBoxCount)
+            ) {
+                if (
+                    (
+                        this.boxes[i - 1].margin == true && this.boxes[i].margin == false ||
+                        this.boxes[i].width == 0 && this.marginBoxCount == 0
+                    ) && (
+                        i == this.boxes.length - this.widthBoxCount ||
+                        this.boxes[i + this.widthBoxCount].stripeIndex != this.boxes[i].stripeIndex
+                    )
+                ) {
+                    this.boxes[i].stripeC = true;
 
-            // // C
-            // if (
-            //     i != 0 &&
-            //     this.boxes[i - 1].margin == true &&
-            //     this.boxes[i].margin == false &&
-            //     this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
-            // ) {
-            //     this.boxes[i].stripeC = true;
-
-            //     // calc the absolute position
-            //     this.lineVectors[this.boxes[i].stripeIndex].C.x = this.boxes[i].width * this.boxSize;
-            //     this.lineVectors[this.boxes[i].stripeIndex].C.y = this.boxes[i].height * this.boxSize + this.boxSize;
-            // }
+                    // console.log(this.boxes[i].stripeIndex)
+                    // console.log(this.lineVectors[this.boxes[i].stripeIndex]);
+                    // calc the absolute position
+                    this.lineVectors[this.boxes[i].stripeIndex].C.x = this.boxes[i].width * this.boxSize;
+                    this.lineVectors[this.boxes[i].stripeIndex].C.y = this.boxes[i].height * this.boxSize + this.boxSize;
+                }
+            }
 
             // // D
             // if (
@@ -274,6 +290,7 @@ class Grid {
 
         for (var v = 0; v < this.boxes.length; v++) {
 
+            // even lines
             if (this.boxes[v].stripeIndex % 2 == 0 && this.boxes[v].margin == false) {
                 var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
                 rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
@@ -283,6 +300,22 @@ class Grid {
                 rect.setAttributeNS(null, 'stroke', 'None');
                 // rect.setAttributeNS(null, 'stroke-width', '0.5');
                 rect.setAttributeNS(null, 'fill', '#0000ff21');
+                // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
+
+                const svgNode = document.getElementById('svgNode');
+                svgNode.appendChild(rect);
+            }
+
+            // odd lines
+            if (this.boxes[v].stripeIndex % 2 == 1 && this.boxes[v].margin == false) {
+                var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttributeNS(null, 'x', this.boxes[v].A.x);
+                rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
+                rect.setAttributeNS(null, 'height', this.boxSize);
+                rect.setAttributeNS(null, 'width', this.boxSize);
+                rect.setAttributeNS(null, 'stroke', 'None');
+                // rect.setAttributeNS(null, 'stroke-width', '0.5');
+                rect.setAttributeNS(null, 'fill', '#ffe60021');
                 // rect.setAttributeNS(null, 'fill', getRandomFromList(['#f06', "#37ad37ff", "#528bd6ff"]));
 
                 const svgNode = document.getElementById('svgNode');
