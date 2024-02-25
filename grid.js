@@ -236,8 +236,10 @@ class Grid {
                 i != 0
             ) {
                 if (
-                    (this.boxes[i].margin == false && this.boxes[i + 1].margin == true ||  // check for margin
-                        this.boxes[i].width == this.widthBoxCount - 1 && this.marginBoxCount == 0) &&  // or for no margin and end of row
+                    (
+                        this.boxes[i].margin == false && this.boxes[i + 1].margin == true ||  // check for margin
+                        this.boxes[i].width == this.widthBoxCount - 1 && this.marginBoxCount == 0
+                    ) &&  // or for no margin and end of row
                     (i == this.widthBoxCount - 1 || this.boxes[i].stripeIndex != this.boxes[i - this.widthBoxCount].stripeIndex)
                 ) {
                     this.boxes[i].stripeB = true;
@@ -268,18 +270,26 @@ class Grid {
                 }
             }
 
-            // // D
-            // if (
-            //     this.boxes[i].margin == false &&
-            //     this.boxes[i + 1].margin == true &&
-            //     this.boxes[i].stripeIndex == this.boxes[i - this.widthBoxCount].stripeIndex
-            // ) {
-            //     this.boxes[i].stripeD = true;
+            // D
+            if (
+                i >= this.widthBoxCount + 1
+            ) {
+                if (
+                    (
+                        this.boxes[i].width == this.widthBoxCount - 1 && this.marginBoxCount == 0 ||
+                        this.boxes[i].margin == false && this.boxes[i + 1].margin == true
+                    ) && (
+                        i + 1 == this.boxes.length ||
+                        this.boxes[i + this.widthBoxCount].stripeIndex != this.boxes[i].stripeIndex
+                    )
+                ) {
+                    this.boxes[i].stripeD = true;
 
-            //     // calc the absolute position
-            //     this.lineVectors[this.boxes[i].stripeIndex].D.x = this.boxes[i].width * this.boxSize + this.boxSize;
-            //     this.lineVectors[this.boxes[i].stripeIndex].D.y = this.boxes[i].height * this.boxSize + this.boxSize;
-            // }
+                    // calc the absolute position
+                    this.lineVectors[this.boxes[i].stripeIndex].D.x = this.boxes[i].width * this.boxSize + this.boxSize;
+                    this.lineVectors[this.boxes[i].stripeIndex].D.y = this.boxes[i].height * this.boxSize + this.boxSize;
+                }
+            }
 
         }
 
@@ -368,7 +378,7 @@ class Grid {
                 rect.setAttributeNS(null, 'y', this.boxes[v].A.y);
                 rect.setAttributeNS(null, 'height', this.boxSize);
                 rect.setAttributeNS(null, 'width', this.boxSize);
-                rect.setAttributeNS(null, 'fill', '#eeff00');
+                rect.setAttributeNS(null, 'fill', '#1100ff');
 
                 const svgNode = document.getElementById('svgNode');
                 svgNode.appendChild(rect);
