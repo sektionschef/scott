@@ -1,7 +1,5 @@
-// REACTIVATE PENCIL FILTER
-
 // ########################################
-TEST = false;
+TEST = true;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
 RESOLUTIONBOXCOUNT = 80;
@@ -47,6 +45,7 @@ CANVASFORMATS = {
 }
 
 canvasFormatChosen = CANVASFORMATS["16:9"];
+// canvasFormatChosen = CANVASFORMATS["1:1"];
 // var canvasFormatChosen = CANVASFORMATS[$fx.getParam("format_id")];
 // console.log("Canvas Format: " + canvasFormatChosen);
 

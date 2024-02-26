@@ -1,5 +1,13 @@
 function testGrid() {
 
+    // test grid for 
+    // * marginRelative - already done
+    // * different aspect ratios
+    // * stripe height - relative to small size boxcount
+    // * resolutionboxcount
+
+    // const resolutionBoxCount = 80;
+
     // create background
     var group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.setAttribute("id", "debugGridGroup");
@@ -13,7 +21,6 @@ function testGrid() {
     const defs = document.getElementById('defs');
     defs.appendChild(group);
 
-    // const resolutionBoxCount = 80;
 
     data1 = {
         stepCountRes: 100,
