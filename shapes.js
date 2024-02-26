@@ -185,6 +185,58 @@ class shapes {
                 shapeValues.ShadAAY = shapeValues.mainWidthCY + 1;
             }
         }
+
+        this.restructureShapeData();
+    }
+
+    restructureShapeData() {
+
+        // reformat for displaying correct hierarchy
+        this.loopMaterial = {
+        };
+
+        for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
+            for (const [key, value] of Object.entries(shapeValues)) {
+
+                if (["background"].includes(key)) {
+                    var newValue = value;
+                    newValue.shapeId = shapeId;
+                    newValue.side = "background";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
+                }
+                // filter out other keys
+                if (["front"].includes(key)) {
+                    var newValue = value;
+                    newValue.shapeId = shapeId;
+                    newValue.side = "front";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
+                }
+                if (["down"].includes(key)) {
+                    var newValue = value;
+                    newValue.shapeId = shapeId;
+                    newValue.side = "down";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
+                }
+                if (["right"].includes(key)) {
+                    var newValue = value;
+                    newValue.shapeId = shapeId;
+                    newValue.side = "right";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
+                }
+                if (["shadow"].includes(key)) {
+                    var newValue = value;
+                    newValue.shapeId = shapeId;
+                    newValue.side = "shadow";
+                    // this.loopMaterial[key].push(newValue);
+                    this.loopMaterial[value.order] = newValue;
+                }
+            }
+        }
+        // console.log(this.loopMaterial);
     }
 
     defineBorders(boxes) {

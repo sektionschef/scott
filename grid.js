@@ -63,12 +63,14 @@ class Grid {
             this.canvasWidth,
             this.canvasHeight
         );
+        // really NEEDED???
         this.shapes.defineBorders(this.boxes);
         // this.shapes.debugShowShape();
         // this.shapes.fillShape();
 
         this.strokeSystem = new strokeSystem({
-            allShapes: this.shapes.allShapes,
+            // allShapes: this.shapes.allShapes,
+            allShapes: this.shapes
         });
 
 

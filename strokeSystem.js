@@ -1,18 +1,13 @@
-// 
 class strokeSystem {
     constructor(data) {
-        // this.posStd = 0.8; // 0.6;// 1  // misplacmente standard deviation
-        // this.posStdCon = 1; // 0.4;  // control points
-        // this.posStdShiftX = 0; // add variance to x so no total overlap
-        // this.minLength = 5; // 5;  // a line should have a length of at least
         this.filledPath = true;
 
         this.allShapes = data.allShapes;
 
         this.paths = [];
-        this.loopMaterial = []; // restructured shape data
+        // this.loopMaterial = []; // restructured shape data
 
-        this.restructureShapeData();
+        // this.restructureShapeData();
     }
 
     add(data) {
@@ -66,7 +61,7 @@ class strokeSystem {
         // first run
         for (const path of this.paths) {
             for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-                path.divideFullVsSplit(i, this.loopMaterial[i])
+                path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
             }
         }
 
@@ -80,7 +75,7 @@ class strokeSystem {
         for (const path of this.paths) {
             if (path.rerun) {
                 for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-                    path.divideFullVsSplit(i, this.loopMaterial[i])
+                    path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
                 }
             }
         }
@@ -96,7 +91,7 @@ class strokeSystem {
         for (const path of this.paths) {
             if (path.rerun) {
                 for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-                    path.divideFullVsSplit(i, this.loopMaterial[i])
+                    path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
                 }
             }
         }

@@ -1,5 +1,5 @@
 // ########################################
-TEST = true;
+TEST = false;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
 RESOLUTIONBOXCOUNT = 80;
@@ -244,7 +244,8 @@ function main() {
 
   if (TEST) {
     // testFilledPath()
-    testGrid();
+    // testGrid();
+    // testStrokeSystem();
   } else {
 
     showBackground();
