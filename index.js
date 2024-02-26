@@ -1,7 +1,7 @@
 // REACTIVATE PENCIL FILTER
 
 // ########################################
-TEST = true;
+TEST = false;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
 RESOLUTIONBOXCOUNT = 80;
@@ -205,24 +205,24 @@ function main() {
   //   group: "groupA",
   // });
 
-  // // GRID
-  // let grid = new Grid({
-  //   stepCountRes: 200,  // 400
-  //   stripeHeight: 4,  // 2
-  //   vectorMagnitude: 55,  // 50
-  //   marginRelative: 1,  // 1
-  //   // strokeColor: "#222222ff",
-  //   strokeColor: "#4e4e4eff",
-  //   strokeWidth: 1,
-  //   angleRadiansStart: Math.PI / 2,
-  //   angleRadiansGain: Math.PI / 5,
-  //   // angleRadiansGain: 0,
-  //   shortBoxCount: RESOLUTIONBOXCOUNT,
-  //   longSide: LONGSIDE,
-  //   shortSide: SHORTSIDE,
-  //   landscape: LANDSCAPE,
-  //   group: "groupB",
-  // });
+  // GRID
+  let grid = new Grid({
+    stepCountRes: 200,  // 400
+    stripeHeight: 4,  // 2
+    vectorMagnitude: 55,  // 50
+    marginRelative: 1,  // 1
+    // strokeColor: "#222222ff",
+    strokeColor: "#4e4e4eff",
+    strokeWidth: 1,
+    angleRadiansStart: Math.PI / 2,
+    angleRadiansGain: Math.PI / 5,
+    // angleRadiansGain: 0,
+    shortBoxCount: RESOLUTIONBOXCOUNT,
+    longSide: LONGSIDE,
+    shortSide: SHORTSIDE,
+    landscape: LANDSCAPE,
+    group: "groupB",
+  });
 
   // let grid2 = new Grid({
   //   stepCountRes: 200,  // 400

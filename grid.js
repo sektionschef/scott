@@ -56,7 +56,7 @@ class Grid {
         this.createBoxes();
         // this.showDebugBoxes();
         this.loopCategorize();
-        // this.loopdebugCategory();
+        // this.debugShowCategory();
 
         this.shapes = new shapes(
             this.stripeHeight,
@@ -179,10 +179,8 @@ class Grid {
 
             // add coordinates for 
             if (
-                // i > 0 && (
                 i == 0 ||
                 this.boxes[i].stripeIndex != this.boxes[i - 1].stripeIndex
-                // )
             ) {
                 var even = false;
                 if (this.boxes[i].stripeIndex % 2 == 0) {
@@ -262,15 +260,13 @@ class Grid {
                 ) {
                     this.boxes[i].stripeC = true;
 
-                    // console.log(this.boxes[i].stripeIndex)
-                    // console.log(this.lineVectors[this.boxes[i].stripeIndex]);
                     // calc the absolute position
                     this.lineVectors[this.boxes[i].stripeIndex].C.x = this.boxes[i].width * this.boxSize;
                     this.lineVectors[this.boxes[i].stripeIndex].C.y = this.boxes[i].height * this.boxSize + this.boxSize;
                 }
             }
 
-            // D
+            // D - lower right
             if (
                 i >= this.widthBoxCount + 1
             ) {
@@ -296,7 +292,7 @@ class Grid {
         // console.log(this.lineVectors)
     }
 
-    loopdebugCategory() {
+    debugShowCategory() {
 
         for (var v = 0; v < this.boxes.length; v++) {
 
@@ -388,21 +384,19 @@ class Grid {
 
     createStrokeLines() {
 
-        var loopMax = 2;
+        var loopMax = 2;  // how many runs, for cross-hatching
         var boxIndex = 0;
 
         // loop through the lines
         for (const [key, value] of Object.entries(this.lineVectors)) {
 
-            var angleRadians = this.angleRadiansStart;
-            // var angleRadiansStart = Math.PI / 2;
             var angleRadians = 0;
 
             // change per line
             if (value.even == true) {
-                angleRadians = this.angleRadiansStart + this.angleRadiansGain;//+ Math.PI / 5;
+                angleRadians = this.angleRadiansStart + this.angleRadiansGain;
             } else {
-                angleRadians = this.angleRadiansStart - this.angleRadiansGain;//- Math.PI / 5;
+                angleRadians = this.angleRadiansStart - this.angleRadiansGain;
             }
 
             // skip empty entries, margin

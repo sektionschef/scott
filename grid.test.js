@@ -15,9 +15,9 @@ function testGrid() {
 
     // const resolutionBoxCount = 80;
 
-    data = {
-        stepCountRes: 200,
-        stripeHeight: 4,
+    data1 = {
+        stepCountRes: 100,
+        stripeHeight: 4,  // 2- or 4
         vectorMagnitude: 55,
         marginRelative: 0,
         strokeColor: "#222222ff",
@@ -31,10 +31,44 @@ function testGrid() {
         group: "debugGridGroup",
     }
 
-    let grid = new Grid(data);
+    data2 = {
+        stepCountRes: 100,
+        stripeHeight: 4,  // 2- or 4
+        vectorMagnitude: 55,
+        marginRelative: 1,
+        strokeColor: "#222222ff",
+        strokeWidth: 1,
+        angleRadiansStart: Math.PI / 2,
+        angleRadiansGain: Math.PI / 5,
+        shortBoxCount: RESOLUTIONBOXCOUNT,
+        longSide: LONGSIDE,
+        shortSide: SHORTSIDE,
+        landscape: LANDSCAPE,
+        group: "debugGridGroup",
+    }
+
+    data3 = {
+        stepCountRes: 100,
+        stripeHeight: 4,  // 2- or 4
+        vectorMagnitude: 55,
+        marginRelative: 2,
+        strokeColor: "#222222ff",
+        strokeWidth: 1,
+        angleRadiansStart: Math.PI / 2,
+        angleRadiansGain: Math.PI / 5,
+        shortBoxCount: RESOLUTIONBOXCOUNT,
+        longSide: LONGSIDE,
+        shortSide: SHORTSIDE,
+        landscape: LANDSCAPE,
+        group: "debugGridGroup",
+    }
+
+    let grid = new Grid(data1);
+    // let grid = new Grid(data2);
+    // let grid = new Grid(data3);
 
     grid.showDebugBoxes();
-    grid.loopdebugCategory();
+    grid.debugShowCategory();
 
     const svgNode = document.getElementById('svgNode');
     svgNode.appendChild(group);
