@@ -58,21 +58,10 @@ class Grid {
         this.loopCategorize();
         // this.debugShowCategory();
 
-        this.shapes = new shapes(
-            this.stripeHeight,
-            this.canvasWidth,
-            this.canvasHeight
-        );
-        // really NEEDED???
-        this.shapes.defineBorders(this.boxes);
-        // this.shapes.debugShowShape();
-        // this.shapes.fillShape();
-
+        // GLOBAL
         this.strokeSystem = new strokeSystem({
-            // allShapes: this.shapes.allShapes,
-            allShapes: this.shapes
+            allShapes: SHAPES,
         });
-
 
         this.createStrokeLines();
         this.strokeSystem.run();

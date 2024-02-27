@@ -5,6 +5,9 @@ var BULK = false; // bulk export images - and use direct not lense
 RESOLUTIONBOXCOUNT = 80;
 // let RESOLUTIONBOXCOUNT = 60;
 // let RESOLUTIONBOXCOUNT = 40;
+
+STRIPEHEIGHT = 4;  // height of row in boxes
+MARGINRELATIVE = 1; // margin relative to stripeheight
 // ########################################
 
 var TITLE = "Scott";
@@ -59,6 +62,12 @@ if (canvasFormatChosen.canvasWidth <= canvasFormatChosen.canvasHeight) {
   LANDSCAPE = true;
 }
 
+SHAPES = new shapes(
+  STRIPEHEIGHT,
+  MARGINRELATIVE,
+  SHORTSIDE,
+  RESOLUTIONBOXCOUNT,
+);
 
 // this is how to define parameters
 $fx.params([
@@ -188,7 +197,7 @@ function main() {
   // GRID 2
   // let grid2 = new Grid({
   //   stepCount: 100,
-  // stripeHeight: 4,
+  // stripeHeight: STRIPEHEIGHT,
   // vectorMagnitude: 50,
   // marginRelative: 2,
   //   // strokeColor: "#222222ff",
@@ -207,7 +216,7 @@ function main() {
   // GRID
   let grid = new Grid({
     stepCountRes: 200,  // 400
-    stripeHeight: 4,  // 2
+    stripeHeight: STRIPEHEIGHT,  // 2
     vectorMagnitude: 55,  // 50
     marginRelative: 1,  // 1
     // strokeColor: "#222222ff",
@@ -225,7 +234,7 @@ function main() {
 
   // let grid2 = new Grid({
   //   stepCountRes: 200,  // 400
-  //   stripeHeight: 4,  // 2
+  //   stripeHeight: STRIPEHEIGHT,  // 2
   //   vectorMagnitude: 55,  // 50
   //   marginRelative: 1,  // 1
   //   // strokeColor: "#222222ff",
@@ -246,9 +255,10 @@ function main() {
     // testFilledPath()
     // testGrid();
     // testStrokeSystem();
+    testShapes();
   } else {
 
-    showBackground();
+    // showBackground();  // REMOVE FOR DEBUGGING SHAPES
 
     // showGroupA();
     showGroupB();
