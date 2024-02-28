@@ -1,5 +1,5 @@
 // ########################################
-TEST = false;
+TEST = true;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
 RESOLUTIONBOXCOUNT = 80;
@@ -62,12 +62,14 @@ if (canvasFormatChosen.canvasWidth <= canvasFormatChosen.canvasHeight) {
   LANDSCAPE = true;
 }
 
-SHAPES = new shapes(
+// if (TEST == false) {
+SHAPES = new Shapes(
   STRIPEHEIGHT,
   MARGINRELATIVE,
   SHORTSIDE,
   RESOLUTIONBOXCOUNT,
 );
+// }
 
 // this is how to define parameters
 $fx.params([
@@ -181,75 +183,77 @@ function main() {
   defs.setAttributeNS(null, 'id', 'defs');
   svgNode.appendChild(defs);
 
-  var paper = new paperFilter();
-  var paperLight = new paperLightFilter();
-  new pencilFilter();
+  if (TEST == false) {
 
-  // createBlur();
-  // createBrightness();
+    var paper = new paperFilter();
+    var paperLight = new paperLightFilter();
+    new pencilFilter();
 
-  createBackground();
-  // createGroupA();
-  createGroupB();
-  // createGroupC();
+    // createBlur();
+    // createBrightness();
+
+    createBackground();
+    // createGroupA();
+    createGroupB();
+    // createGroupC();
 
 
-  // GRID 2
-  // let grid2 = new Grid({
-  //   stepCount: 100,
-  // stripeHeight: STRIPEHEIGHT,
-  // vectorMagnitude: 50,
-  // marginRelative: 2,
-  //   // strokeColor: "#222222ff",
-  //   strokeColor: "#8f8f8fff",
-  //   strokeWidth: 1,
-  //   angleRadiansStart: Math.PI / 2,
-  //   // angleRadiansGain: Math.PI / 5,
-  //   angleRadiansGain: 0,
-  //   shortBoxCount: RESOLUTIONBOXCOUNT,
-  //   longSide: LONGSIDE,
-  //   shortSide: SHORTSIDE,
-  //   landscape: LANDSCAPE,
-  //   group: "groupA",
-  // });
+    // GRID 2
+    // let grid2 = new Grid({
+    //   stepCount: 100,
+    // stripeHeight: STRIPEHEIGHT,
+    // vectorMagnitude: 50,
+    // marginRelative: 2,
+    //   // strokeColor: "#222222ff",
+    //   strokeColor: "#8f8f8fff",
+    //   strokeWidth: 1,
+    //   angleRadiansStart: Math.PI / 2,
+    //   // angleRadiansGain: Math.PI / 5,
+    //   angleRadiansGain: 0,
+    //   shortBoxCount: RESOLUTIONBOXCOUNT,
+    //   longSide: LONGSIDE,
+    //   shortSide: SHORTSIDE,
+    //   landscape: LANDSCAPE,
+    //   group: "groupA",
+    // });
 
-  // GRID
-  let grid = new Grid({
-    stepCountRes: 200,  // 400
-    stripeHeight: STRIPEHEIGHT,  // 2
-    vectorMagnitude: 55,  // 50
-    marginRelative: 1,  // 1
-    // strokeColor: "#222222ff",
-    strokeColor: "#4e4e4eff",
-    strokeWidth: 1,
-    angleRadiansStart: Math.PI / 2,
-    angleRadiansGain: Math.PI / 5,
-    // angleRadiansGain: 0,
-    shortBoxCount: RESOLUTIONBOXCOUNT,
-    longSide: LONGSIDE,
-    shortSide: SHORTSIDE,
-    landscape: LANDSCAPE,
-    group: "groupB",
-  });
+    // GRID
+    let grid = new Grid({
+      stepCountRes: 200,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 55,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+    });
 
-  // let grid2 = new Grid({
-  //   stepCountRes: 200,  // 400
-  //   stripeHeight: STRIPEHEIGHT,  // 2
-  //   vectorMagnitude: 55,  // 50
-  //   marginRelative: 1,  // 1
-  //   // strokeColor: "#222222ff",
-  //   strokeColor: "#4e4e4eff",
-  //   strokeWidth: 1,
-  //   angleRadiansStart: 0,
-  //   angleRadiansGain: Math.PI / 4,
-  //   // angleRadiansGain: 0,
-  //   shortBoxCount: RESOLUTIONBOXCOUNT,
-  //   longSide: LONGSIDE,
-  //   shortSide: SHORTSIDE,
-  //   landscape: LANDSCAPE,
-  //   group: "groupB",
-  // });
-
+    // let grid2 = new Grid({
+    //   stepCountRes: 200,  // 400
+    //   stripeHeight: STRIPEHEIGHT,  // 2
+    //   vectorMagnitude: 55,  // 50
+    //   marginRelative: 1,  // 1
+    //   // strokeColor: "#222222ff",
+    //   strokeColor: "#4e4e4eff",
+    //   strokeWidth: 1,
+    //   angleRadiansStart: 0,
+    //   angleRadiansGain: Math.PI / 4,
+    //   // angleRadiansGain: 0,
+    //   shortBoxCount: RESOLUTIONBOXCOUNT,
+    //   longSide: LONGSIDE,
+    //   shortSide: SHORTSIDE,
+    //   landscape: LANDSCAPE,
+    //   group: "groupB",
+    // });
+  }
 
   if (TEST) {
     // testFilledPath()
@@ -258,7 +262,7 @@ function main() {
     testShapes();
   } else {
 
-    // showBackground();  // REMOVE FOR DEBUGGING SHAPES
+    showBackground();  // REMOVE FOR DEBUGGING SHAPES
 
     // showGroupA();
     showGroupB();

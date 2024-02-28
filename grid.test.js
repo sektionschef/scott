@@ -70,8 +70,8 @@ function testGrid() {
         group: "debugGridGroup",
     }
 
-    let grid = new Grid(data1);
-    // let grid = new Grid(data2);
+    // let grid = new Grid(data1);
+    let grid = new Grid(data2);
     // let grid = new Grid(data3);
 
     grid.showDebugBoxes();

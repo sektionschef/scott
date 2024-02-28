@@ -1,6 +1,6 @@
 class Grid {
     constructor(data) {
-        this.stripeHeight = data.stripeHeight;  // rows with odd and even
+        this.stripeHeight = data.stripeHeight;  // rows with odd and even, in boxes
         this.vectorMagnitude = data.vectorMagnitude;  // length of the vecotr/drawn strokes
         this.marginRelative = data.marginRelative;  // margin relative to the height of the stripes (stripeHeight)
 
@@ -14,6 +14,8 @@ class Grid {
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
         this.group = data.group;  // where to draw the things
+        // REMOVE PROBABLY
+        this.shapes = data.shapes;  // shape info
 
         if (this.marginRelative == 0) {
             this.marginBoxCount = 0;
@@ -60,6 +62,7 @@ class Grid {
 
         // GLOBAL
         this.strokeSystem = new strokeSystem({
+            // allShapes: this.shapes,
             allShapes: SHAPES,
         });
 

@@ -4,7 +4,7 @@ function testShapes() {
     var shortSide = SHORTSIDE
     var resolutionBoxCount = RESOLUTIONBOXCOUNT;
 
-    var shapes_ = new shapes(
+    var shapes_ = new Shapes(
         stripeHeight, marginRelative, shortSide, resolutionBoxCount
     );
 

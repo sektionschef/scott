@@ -1,9 +1,10 @@
-class shapes {
+class Shapes {
     constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount) {
 
         // needs connection to marginrelative of grid - no hard coded margin
-        // restructured really needed
         // remove the canvasWidth, canvasHeight
+        // remove A, B, C, D in the shapes
+        // maybe remove the box == things in grid and use coords
         this.marginBackgroundShape = 92;
         this.colory = "#222222";
         this.canvasWidth = 1600;
@@ -12,6 +13,12 @@ class shapes {
         this.stripeHeight = stripeHeight;
         this.marginRelative = marginRelative;
         this.boxSize = shortSide / resolutionBoxCount;
+
+        if (this.marginRelative == 0) {
+            this.margin = 0;
+        } else {
+            this.margin = Math.round(this.stripeHeight * this.marginRelative) * this.boxSize;
+        }
 
         this.allShapes = {
             shapeBackground: {
@@ -22,16 +29,13 @@ class shapes {
                     // colorAction: "#5c5c5c",
                     colorAction: this.colory,
                     // colorAction: this.strokeColor,
-                    fillColor: "#afafaf",
-                    A: { x: this.marginBackgroundShape, y: this.marginBackgroundShape },
-                    B: { x: this.canvasWidth - this.marginBackgroundShape, y: this.marginBackgroundShape },
-                    C: { x: this.canvasWidth - this.marginBackgroundShape, y: this.canvasHeight - this.marginBackgroundShape },
-                    D: { x: this.marginBackgroundShape, y: this.canvasHeight - this.marginBackgroundShape },
+                    // fillColor: "#afafafff",
+                    fillColor: "None",
                     pointList: [
-                        [this.marginBackgroundShape, this.marginBackgroundShape],
-                        [this.canvasWidth - this.marginBackgroundShape, this.marginBackgroundShape],
-                        [this.canvasWidth - this.marginBackgroundShape, this.canvasHeight - this.marginBackgroundShape],
-                        [this.marginBackgroundShape, this.canvasHeight - this.marginBackgroundShape],
+                        [this.margin, this.margin],
+                        [this.canvasWidth - this.margin, this.margin],
+                        [this.canvasWidth - this.margin, this.canvasHeight - this.margin],
+                        [this.margin, this.canvasHeight - this.margin],
                     ]
                 }
             },
@@ -192,14 +196,13 @@ class shapes {
         }
 
         this.calcCoords();
-        this.restructureShapeData();
+        this.sortForLoop();
     }
 
 
     // define the borders by turning boxes and boxcounts in coords
     calcCoords() {
 
-        // for (var i = 0; i < boxes.length; i++) {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             if (shapeId != "shapeBackground") {
 
@@ -229,48 +232,11 @@ class shapes {
                 shapeValues.front.D = { x: shapeValues.mainBoxPos.x * this.boxSize, y: shapeValues.mainWidthCY * this.boxSize + this.boxSize }
             }
         }
-        // }
-
-        // DEFAULT VALUES
-        // for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
-        //     if (shapeId != "shapeBackground") {
-        //         if (!shapeValues.shadow.hasOwnProperty('E')) {
-        //             shapeValues.shadow.E = this.allShapes.shapeBackground.background.C;
-        //         }
-        //         // shapeValues.shadow.E = ;
-        //     }
-        // }
 
         // for (const shape of this.allShapes) {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             if (shapeId != "shapeBackground") {
                 // console.log(shapeValues);
-
-                shapeValues.front.pointString = `
-                ${shapeValues.front.A.x}, ${shapeValues.front.A.y}
-                ${shapeValues.front.B.x}, ${shapeValues.front.B.y}
-                ${shapeValues.front.C.x}, ${shapeValues.front.C.y}
-                ${shapeValues.front.D.x}, ${shapeValues.front.D.y}
-            `;
-                shapeValues.down.pointString = `
-                ${shapeValues.down.A.x}, ${shapeValues.down.A.y}
-                ${shapeValues.down.B.x}, ${shapeValues.down.B.y}
-                ${shapeValues.down.C.x}, ${shapeValues.down.C.y}
-                ${shapeValues.down.D.x}, ${shapeValues.down.D.y}
-            `;
-                shapeValues.right.pointString = `
-                ${shapeValues.right.A.x}, ${shapeValues.right.A.y}
-                ${shapeValues.right.B.x}, ${shapeValues.right.B.y}
-                ${shapeValues.right.C.x}, ${shapeValues.right.C.y}
-                ${shapeValues.right.D.x}, ${shapeValues.right.D.y}
-            `;
-                shapeValues.shadow.pointString = `
-                ${shapeValues.shadow.A.x}, ${shapeValues.shadow.A.y}
-                ${shapeValues.shadow.B.x}, ${shapeValues.shadow.B.y}
-                ${shapeValues.shadow.C.x}, ${shapeValues.shadow.C.y}
-                ${shapeValues.shadow.D.x}, ${shapeValues.shadow.D.y}
-                ${shapeValues.shadow.E.x}, ${shapeValues.shadow.E.y}
-            `;
 
                 shapeValues.front.pointList = [
                     [shapeValues.front.A.x, shapeValues.front.A.y],
@@ -301,7 +267,7 @@ class shapes {
         }
     }
 
-    restructureShapeData() {
+    sortForLoop() {
 
         // reformat for displaying correct hierarchy
         this.loopMaterial = {
@@ -356,74 +322,39 @@ class shapes {
         var colory = "orange";
         const svgNode = document.getElementById('svgNode');
 
-        // for (const shape of this.allShapes) {
-        for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
-            if (shapeId != "shapeBackground") {
+        for (const [shapeOrder, shapeValues] of Object.entries(this.loopMaterial)) {
 
-                // console.log(shapeValues.front.pointList);
-
-                var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                shapsn.setAttributeNS(null, 'points', shapeValues.front.pointList);
-                shapsn.setAttributeNS(null, 'fill', "none");
-                shapsn.setAttributeNS(null, "stroke-width", 2);
-                shapsn.setAttributeNS(null, 'stroke', colory);
-
-                // shapsn.setAttributeNS(null, 'stroke', "none");
-                // shapsn.setAttributeNS(null, 'fill', "#c2c2c281");
-
-                svgNode.appendChild(shapsn);
-
-                var shadnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                shadnA.setAttributeNS(null, 'points', shapeValues.down.pointList);
-                shadnA.setAttributeNS(null, 'fill', "none");
-                shadnA.setAttributeNS(null, 'stroke', colory);
-                shadnA.setAttributeNS(null, "stroke-width", 2);
-
-                svgNode.appendChild(shadnA);
-
-                var shadnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                shadnB.setAttributeNS(null, 'points', shapeValues.right.pointList);
-                shadnB.setAttributeNS(null, 'fill', "none");
-                shadnB.setAttributeNS(null, 'stroke', colory);
-                shadnB.setAttributeNS(null, "stroke-width", 2);
-
-                svgNode.appendChild(shadnB);
-
-                var superShadow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                superShadow.setAttributeNS(null, 'points', shapeValues.shadow.pointList);
-                superShadow.setAttributeNS(null, 'fill', "none");
-                superShadow.setAttributeNS(null, 'stroke', colory);
-                superShadow.setAttributeNS(null, "stroke-width", 2);
-
-                svgNode.appendChild(superShadow);
-            }
+            var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            shapsn.setAttributeNS(null, 'points', shapeValues.pointList);
+            shapsn.setAttributeNS(null, 'fill', "none");
+            shapsn.setAttributeNS(null, "stroke-width", 2);
+            shapsn.setAttributeNS(null, 'stroke', colory);
+            svgNode.appendChild(shapsn);
         }
 
     }
 
     fillShape() {
 
-        for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
-            for (const [key, value] of Object.entries(shapeValues)) {
-                // for (const [key, value] of Object.entries(this.shapes.allShapes)) {
+        const svgNode = document.getElementById('svgNode');
 
-                if (["front", "down", "right", "shadow"].includes(key)) {
-                    // console.log(value.pointList);
-                    const svgNode = document.getElementById('svgNode');
+        for (const [shapeOrder, shapeValues] of Object.entries(this.loopMaterial)) {
 
-                    var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-                    shapsn.setAttributeNS(null, 'points', value.pointList);
-                    shapsn.setAttributeNS(null, 'points', value.pointList);
-                    // shapsn.setAttributeNS(null, 'fill', "none");
-                    // shapsn.setAttributeNS(null, "stroke-width", 1);
-                    // shapsn.setAttributeNS(null, 'stroke', colory);
+            // console.log(value.pointList);
 
-                    shapsn.setAttributeNS(null, 'stroke', "none");
-                    shapsn.setAttributeNS(null, 'fill', value.fillColor);
+            var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            shapsn.setAttributeNS(null, 'points', shapeValues.pointList);
+            // shapsn.setAttributeNS(null, 'points', value.pointList);
+            // shapsn.setAttributeNS(null, 'fill', "none");
+            // shapsn.setAttributeNS(null, "stroke-width", 1);
+            // shapsn.setAttributeNS(null, 'stroke', colory);
 
-                    svgNode.appendChild(shapsn);
-                }
-            }
+            shapsn.setAttributeNS(null, 'stroke', "none");
+            shapsn.setAttributeNS(null, 'fill', shapeValues.fillColor);
+
+            svgNode.appendChild(shapsn);
         }
+        // }
+        // }
     }
 }
