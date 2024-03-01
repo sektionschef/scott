@@ -47,18 +47,18 @@ CANVASFORMATS = {
   },
 }
 
-canvasFormatChosen = CANVASFORMATS["16:9"];
-// canvasFormatChosen = CANVASFORMATS["1:1"];
-// var canvasFormatChosen = CANVASFORMATS[$fx.getParam("format_id")];
-// console.log("Canvas Format: " + canvasFormatChosen);
+CANVASFORMATCHOSEN = CANVASFORMATS["16:9"];
+// CANVASFORMATCHOSEN = CANVASFORMATS["1:1"];
+// var CANVASFORMATCHOSEN = CANVASFORMATS[$fx.getParam("format_id")];
+// console.log("Canvas Format: " + CANVASFORMATCHOSEN);
 
-if (canvasFormatChosen.canvasWidth <= canvasFormatChosen.canvasHeight) {
-  SHORTSIDE = canvasFormatChosen.canvasWidth;
-  LONGSIDE = canvasFormatChosen.canvasHeight;
+if (CANVASFORMATCHOSEN.canvasWidth <= CANVASFORMATCHOSEN.canvasHeight) {
+  SHORTSIDE = CANVASFORMATCHOSEN.canvasWidth;
+  LONGSIDE = CANVASFORMATCHOSEN.canvasHeight;
   LANDSCAPE = false;
 } else {
-  SHORTSIDE = canvasFormatChosen.canvasHeight;
-  LONGSIDE = canvasFormatChosen.canvasWidth;
+  SHORTSIDE = CANVASFORMATCHOSEN.canvasHeight;
+  LONGSIDE = CANVASFORMATCHOSEN.canvasWidth;
   LANDSCAPE = true;
 }
 
@@ -68,6 +68,8 @@ SHAPES = new Shapes(
   MARGINRELATIVE,
   SHORTSIDE,
   RESOLUTIONBOXCOUNT,
+  CANVASFORMATCHOSEN.canvasWidth,
+  CANVASFORMATCHOSEN.canvasHeight,
 );
 // }
 
@@ -175,7 +177,7 @@ function main() {
 
   const targetDiv = document.getElementById('badAssCanvas');
   const svgNode = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svgNode.setAttributeNS(null, 'viewBox', '0 0 ' + canvasFormatChosen.canvasWidth + " " + canvasFormatChosen.canvasHeight);
+  svgNode.setAttributeNS(null, 'viewBox', '0 0 ' + CANVASFORMATCHOSEN.canvasWidth + " " + CANVASFORMATCHOSEN.canvasHeight);
   svgNode.setAttributeNS(null, 'id', 'svgNode');
   targetDiv.appendChild(svgNode);
 

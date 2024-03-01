@@ -1,14 +1,11 @@
 class Shapes {
-    constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount) {
+    constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight) {
 
-        // needs connection to marginrelative of grid - no hard coded margin
-        // remove the canvasWidth, canvasHeight
         // remove A, B, C, D in the shapes
         // maybe remove the box == things in grid and use coords
-        this.marginBackgroundShape = 92;
         this.colory = "#222222";
-        this.canvasWidth = 1600;
-        this.canvasHeight = 900;
+        this.canvasWidth = canvasWidth; // 1600;
+        this.canvasHeight = canvasHeight; // 900;
 
         this.stripeHeight = stripeHeight;
         this.marginRelative = marginRelative;
