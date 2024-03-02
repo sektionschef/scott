@@ -1,205 +1,28 @@
 class Shapes {
-    constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight) {
+    // constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight, blueprint) {
+    constructor(blueprint) {
 
         // remove A, B, C, D in the shapes
         // maybe remove the box == things in grid and use coords
-        this.colory = "#00a7d1";
-        this.canvasWidth = canvasWidth; // 1600;
-        this.canvasHeight = canvasHeight; // 900;
+        // this.colory = "#00a7d1";
+        // this.canvasWidth = canvasWidth; // 1600;
+        // this.canvasHeight = canvasHeight; // 900;
 
-        this.stripeHeight = stripeHeight;
-        this.marginRelative = marginRelative;
-        this.boxSize = shortSide / resolutionBoxCount;
+        // this.stripeHeight = stripeHeight;
+        // this.marginRelative = marginRelative;
+        // this.boxSize = shortSide / resolutionBoxCount;
 
-        this.blueprint();
+
+        this.allShapes = blueprint.data;
+        // console.log(this.allShapes);
+        this.boxSize = blueprint.boxSize;
+        this.stripeHeight = blueprint.stripeHeight;
+
         this.calcCoords();
 
         this.sortForLoop();
     }
 
-
-    blueprint() {
-        if (this.marginRelative == 0) {
-            this.margin = 0;
-        } else {
-            this.margin = Math.round(this.stripeHeight * this.marginRelative) * this.boxSize;
-        }
-
-        this.allShapes = {
-            shapeBackground: {
-                background: {
-                    shapeLoop: 1,
-                    order: 13,
-                    density: 2, // density factor - 0 is full
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    // colorAction: this.strokeColor,
-                    // fillColor: "#afafafff",
-                    fillColor: "None",
-                    pointList: [
-                        [this.margin, this.margin],
-                        [this.canvasWidth - this.margin, this.margin],
-                        [this.canvasWidth - this.margin, this.canvasHeight - this.margin],
-                        [this.margin, this.canvasHeight - this.margin],
-                    ]
-                }
-            },
-            shapeA: {
-                mainBoxPos: {  // where to start to draw in box count
-                    x: 34,
-                    y: 12,
-                },
-                MainHeightLine: 2, // height of main shape in lineheights
-                MainWidth: 70,  // width of the shape in boxes
-                shadHeightLine: 1,  // height of main shape in lineheights
-                superShadowShiftX: 25,  //  shift in boxes on x axis
-                superShadowShiftY: 1,  // shift in boxes on y axis
-                superShadowHeightMax: 15, // 25, // heigt in boxes on y axis
-                front: {
-                    shapeLoop: 2,
-                    order: 1,
-                    density: 1,
-                    // colorAction: "#5c5c5c",
-                    // colorAction: "red",
-                    colorAction: this.colory,
-                    fillColor: "#e2e2e2",
-                },
-                down: {  // shadow beneath
-                    shapeLoop: 2,
-                    order: 4,
-                    density: 0,
-                    // colorAction: "green",
-                    colorAction: this.colory,
-                    fillColor: "#757575",
-                },
-                right: {  // shadow beneath
-                    shapeLoop: 2,
-                    order: 7,
-                    density: 0,
-                    // colorAction: "#3daf3d",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#a3a3a3",
-                },
-                shadow: {  // shadow
-                    shapeLoop: 1,
-                    order: 10,
-                    density: 0,
-                    // colorAction: "#a937c0",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#929292",
-                }
-            },
-            shapeB: {
-                mainBoxPos: {  // where to start to draw in box count
-                    x: 34,
-                    y: 32,
-                },
-                MainHeightLine: 2, // height of main shape in lineheights
-                MainWidth: 70,  // width of the shape in boxes
-                shadHeightLine: 1,  // height of main shape in lineheights
-                superShadowShiftX: 25,  //  shift in boxes on x axis
-                superShadowShiftY: 1,  // shift in boxes on y axis
-                superShadowHeightMax: 15, // heigt in boxes on y axis
-                front: {
-                    shapeLoop: 2,
-                    order: 2,
-                    density: 1,
-                    // colorAction: "#5c5c5c",
-                    // colorAction: "red",
-                    colorAction: this.colory,
-                    fillColor: "#e2e2e2",
-                },
-                down: {  // shadow beneath
-                    shapeLoop: 2,
-                    order: 5,
-                    density: 0,
-                    // colorAction: "green",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#757575",
-                },
-                right: {  // shadow beneath
-                    shapeLoop: 2,
-                    order: 8,
-                    density: 0,
-                    // colorAction: "#3daf3d",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#a3a3a3",
-                },
-                shadow: {  // shadow
-                    shapeLoop: 1,
-                    order: 11,
-                    density: 0,
-                    // colorAction: "#a937c0",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#929292",
-                }
-            },
-            shapeC: {
-                mainBoxPos: {  // where to start to draw in box count
-                    x: 34,
-                    y: 52,
-                },
-                MainHeightLine: 2, // height of main shape in lineheights
-                MainWidth: 70,  // width of the shape in boxes
-                shadHeightLine: 1,  // height of main shape in lineheights
-                superShadowShiftX: 25,  //  shift in boxes on x axis
-                superShadowShiftY: 1,  // shift in boxes on y axis
-                superShadowHeightMax: 15, // heigt in boxes on y axis
-                front: {
-                    shapeLoop: 2,
-                    order: 3,
-                    density: 1,
-                    // colorAction: "#5c5c5c",
-                    // colorAction: "red",
-                    colorAction: this.colory,
-                    fillColor: "#e2e2e2",
-                },
-                down: {  // shadow beneath
-                    shapeLoop: 2,
-                    order: 6,
-                    density: 0,
-                    // colorAction: "green",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#757575",
-                },
-                right: {  // shadow beneath
-                    shapeLoop: 2,
-                    order: 9,
-                    density: 0,
-                    // colorAction: "#3daf3d",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#a3a3a3",
-                },
-                shadow: {  // shadow
-                    shapeLoop: 1,
-                    order: 12,
-                    density: 0,
-                    // colorAction: "#a937c0",
-                    // colorAction: "#5c5c5c",
-                    colorAction: this.colory,
-                    fillColor: "#929292",
-                }
-            }
-        }
-
-        for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
-            if (shapeId != "shapeBackground") {
-                shapeValues.shapeMainHeight = this.stripeHeight * shapeValues.MainHeightLine - 1;  // height of main shape in boxes
-                shapeValues.shadAheight = this.stripeHeight * shapeValues.shadHeightLine - 1;  //
-                shapeValues.shadAshift = this.stripeHeight * shapeValues.shadHeightLine - 1;
-                shapeValues.mainWidthCX = shapeValues.mainBoxPos.x + shapeValues.MainWidth;
-                shapeValues.mainWidthCY = shapeValues.mainBoxPos.y + shapeValues.shapeMainHeight;
-                shapeValues.ShadAAY = shapeValues.mainWidthCY + 1;
-            }
-        }
-    }
 
     // define the borders by turning boxes and boxcounts in coords
     calcCoords() {
@@ -207,6 +30,8 @@ class Shapes {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             if (shapeId != "shapeBackground") {
 
+                // console.log(shapeId);
+                // console.log(shapeValues);
                 // shadow
                 shapeValues.shadow.A = { x: (shapeValues.mainBoxPos.x + shapeValues.shadAshift) * this.boxSize, y: (shapeValues.ShadAAY + shapeValues.shadAheight + 1) * this.boxSize }
                 shapeValues.shadow.B = { x: (shapeValues.mainWidthCX + 1 + shapeValues.shadAshift) * this.boxSize, y: (shapeValues.ShadAAY + shapeValues.shadAheight) * this.boxSize + this.boxSize }
@@ -231,6 +56,8 @@ class Shapes {
                 shapeValues.front.B = { x: shapeValues.mainWidthCX * this.boxSize + this.boxSize, y: shapeValues.mainBoxPos.y * this.boxSize };
                 shapeValues.front.C = { x: shapeValues.mainWidthCX * this.boxSize + this.boxSize, y: shapeValues.mainWidthCY * this.boxSize + this.boxSize }
                 shapeValues.front.D = { x: shapeValues.mainBoxPos.x * this.boxSize, y: shapeValues.mainWidthCY * this.boxSize + this.boxSize }
+
+                // console.log(shapeValues.shadow.A);
             }
         }
 
@@ -332,7 +159,6 @@ class Shapes {
             shapsn.setAttributeNS(null, 'stroke', colory);
             svgNode.appendChild(shapsn);
         }
-
     }
 
     fillShape() {
@@ -341,7 +167,9 @@ class Shapes {
 
         for (const [shapeOrder, shapeValues] of Object.entries(this.loopMaterial)) {
 
-            // console.log(value.pointList);
+            // console.log(shapeOrder);
+            // console.log(shapeValues);
+            // console.log(shapeValues.pointList);
 
             var shapsn = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             shapsn.setAttributeNS(null, 'points', shapeValues.pointList);

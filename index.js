@@ -1,5 +1,5 @@
 // ########################################
-TEST = true;
+TEST = false;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
 RESOLUTIONBOXCOUNT = 80;
@@ -62,16 +62,20 @@ if (CANVASFORMATCHOSEN.canvasWidth <= CANVASFORMATCHOSEN.canvasHeight) {
   LANDSCAPE = true;
 }
 
-// if (TEST == false) {
-SHAPES = new Shapes(
-  STRIPEHEIGHT,
-  MARGINRELATIVE,
-  SHORTSIDE,
-  RESOLUTIONBOXCOUNT,
-  CANVASFORMATCHOSEN.canvasWidth,
-  CANVASFORMATCHOSEN.canvasHeight,
-);
-// }
+if (TEST == false) {
+  blueprint = new Blueprint(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+  );
+
+  SHAPES = new Shapes(
+    blueprint
+  );
+}
 
 // this is how to define parameters
 $fx.params([
@@ -199,6 +203,8 @@ function main() {
     createGroupB();
     // createGroupC();
 
+    // var blueprint = new Blueprint();
+
 
     // GRID 2
     // let grid2 = new Grid({
@@ -261,6 +267,7 @@ function main() {
     // testFilledPath()
     // testGrid();
     // testStrokeSystem();
+    testBlueprint();
     testShapes();
   } else {
 
