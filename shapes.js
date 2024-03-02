@@ -3,7 +3,7 @@ class Shapes {
 
         // remove A, B, C, D in the shapes
         // maybe remove the box == things in grid and use coords
-        this.colory = "#222222";
+        this.colory = "#00a7d1";
         this.canvasWidth = canvasWidth; // 1600;
         this.canvasHeight = canvasHeight; // 900;
 
@@ -11,6 +11,14 @@ class Shapes {
         this.marginRelative = marginRelative;
         this.boxSize = shortSide / resolutionBoxCount;
 
+        this.blueprint();
+        this.calcCoords();
+
+        this.sortForLoop();
+    }
+
+
+    blueprint() {
         if (this.marginRelative == 0) {
             this.margin = 0;
         } else {
@@ -191,11 +199,7 @@ class Shapes {
                 shapeValues.ShadAAY = shapeValues.mainWidthCY + 1;
             }
         }
-
-        this.calcCoords();
-        this.sortForLoop();
     }
-
 
     // define the borders by turning boxes and boxcounts in coords
     calcCoords() {
@@ -266,7 +270,7 @@ class Shapes {
 
     sortForLoop() {
 
-        // reformat for displaying correct hierarchy
+        // reformat for displaying correct hierarchy - order of elements, background to front
         this.loopMaterial = {
         };
 

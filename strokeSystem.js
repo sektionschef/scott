@@ -1,9 +1,7 @@
 class strokeSystem {
     constructor(data) {
         this.filledPath = true;
-
         this.allShapes = data.allShapes;
-
         this.paths = [];
     }
 
