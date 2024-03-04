@@ -1,5 +1,5 @@
 // ########################################
-TEST = false;
+TEST = true;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
 RESOLUTIONBOXCOUNT = 80;
@@ -75,6 +75,8 @@ if (TEST == false) {
   SHAPES = new Shapes(
     blueprint
   );
+
+  STROKESYSTEM = new strokeSystem(SHAPES);
 }
 
 // this is how to define parameters
@@ -242,6 +244,7 @@ function main() {
       shortSide: SHORTSIDE,
       landscape: LANDSCAPE,
       group: "groupB",
+      strokeSystem: STROKESYSTEM,
     });
 
     // let grid2 = new Grid({
@@ -264,11 +267,11 @@ function main() {
   }
 
   if (TEST) {
-    // testFilledPath()
     // testGrid();
-    // testStrokeSystem();
-    testBlueprint();
-    testShapes();
+    // testBlueprint();
+    // testShapes();
+    testStrokeSystem();
+    // testFilledPath()
   } else {
 
     showBackground();  // REMOVE FOR DEBUGGING SHAPES

@@ -5,6 +5,13 @@
 
 Aktuell ein Paperfilter für Grundstruktr als Hintergrund. Papierknitter, Grain und Dirt kommen dann auf den Hintergrund und das gezeichnete Material. Mit Opacity, damit sich das alles gewichten lässt.
 
+* grid - creating the boxes, irrespective to the format chosen
+* blueprint - desigend coordinates of the shapes defined in count of boxes. here the design of the shapes can be changed.
+* shapes - redefining the blueprint to create a dict with ordering of elements
+* strokesystem
+* contained path
+* filledp path
+
 
 
 # fx(hash) boilerplate

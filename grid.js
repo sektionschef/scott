@@ -14,8 +14,9 @@ class Grid {
         this.shortSide = data.shortSide;
         this.landscape = data.landscape;
         this.group = data.group;  // where to draw the things
-        // REMOVE PROBABLY
-        this.shapes = data.shapes;  // shape info
+
+        // this.shapes = data.shapes;  // shape info
+        this.strokeSystem = data.strokeSystem;
 
         if (this.marginRelative == 0) {
             this.marginBoxCount = 0;
@@ -59,12 +60,6 @@ class Grid {
         // this.showDebugBoxes();
         this.loopCategorize();
         // this.debugShowCategory();
-
-        // GLOBAL
-        this.strokeSystem = new strokeSystem({
-            // allShapes: this.shapes,
-            allShapes: SHAPES,
-        });
 
         this.createStrokeLines();
         this.strokeSystem.run();

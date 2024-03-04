@@ -12,6 +12,7 @@ class containedPath {
         this.order = data.order;
         this.density = data.density;
         this.strokeColor = data.strokeColor;
+        this.strokeWidth = data.strokeWidth;
         this.currentLoop = data.currentLoop;
         this.angleRadians = data.angleRadians;
         this.shapeLoop = 0;
@@ -189,7 +190,7 @@ class containedPath {
 
     drawDebugLine(groupString) {
 
-        this.strokeWidth = 0.5;
+        // this.strokeWidth = 0.5;
         var jitter = 1;
 
         // const svgNode = document.getElementById('svgNode');

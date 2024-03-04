@@ -1,7 +1,11 @@
 class strokeSystem {
-    constructor(data) {
-        this.filledPath = true;
-        this.allShapes = data.allShapes;
+    constructor(allShapes) {
+        this.debugPath = false;
+        this.shapeStartPosition = 1; // 0 for background, 1 for first
+        this.shapeCount = 13;  // 9
+
+        this.allShapes = allShapes;
+        // console.log(this.allShapes);
         this.paths = [];
     }
 
@@ -34,8 +38,9 @@ class strokeSystem {
             start: this.start,
             end: this.end,
             order: 0,
-            oida: "",
-            strokeColor: "black",
+            // strokeColor: "black",
+            strokeColor: this.strokeColor,
+            strokeWidth: this.strokeWidth,
             boxIndex: this.boxIndex,
             angleRadians: this.angleRadians,
             currentLoop: this.currentLoop,
@@ -50,8 +55,6 @@ class strokeSystem {
     }
 
     run() {
-        this.shapeStartPosition = 1; // 0 for background, 1 for first
-        this.shapeCount = 13;  // 9
 
         // first run
         for (const path of this.paths) {
@@ -94,25 +97,6 @@ class strokeSystem {
 
     sortPaths() {
 
-        // FILTER
-        // this.paths = this.paths.filter(function (path) { return path.readyToDraw })
-
-        // EASY
-        // this.paths = this.paths.sort(function (a, b) {
-        //     return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600)
-        // });
-
-        // DEPENDING ON ANGLE
-        // this.paths = this.paths.sort(function (a, b) {
-        //     // console.log(angleBetweenPoints(a.end, a.start));
-        //     if (angleBetweenPoints(a.end, a.start) < Math.PI / 2) {
-        //         return (a.end.x + a.end.y * 1600) - (b.end.x + b.end.y * 1600)
-        //     } else {
-        //         return (a.start.x + a.start.y * 1600) - (b.start.x + b.start.y * 1600)
-        //     }
-        // });
-
-        // SAVE ANGLE
         this.paths = this.paths.sort(function (a, b) {
             // console.log(a.boxIndex)
             // return (a.boxIndex + a.angleRadians - b.boxIndex + b.angleRadians)
@@ -133,10 +117,11 @@ class strokeSystem {
                     continue;
                 }
 
-                if (this.filledPath) {
-                    path.drawFilledPath(group);
-                } else {
+
+                if (this.debugPath) {
                     path.drawDebugLine(group);
+                } else {
+                    path.drawFilledPath(group);
                 }
             }
         }
