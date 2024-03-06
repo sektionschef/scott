@@ -39,8 +39,10 @@ class containedPath {
             var loopLegal = this.checkShapeLoopNotExceeded(value);
 
             if (full && loopLegal) {
+                // console.log("full");
                 this.updateFull(key, value);
             } else if (split && loopLegal) {
+                // console.log("split");
                 this.intersectSingleShape(key, value);
             }
         }

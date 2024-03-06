@@ -1,8 +1,10 @@
 class strokeSystem {
     constructor(allShapes) {
         this.debugPath = false;
+        // is this true??
         this.shapeStartPosition = 1; // 0 for background, 1 for first
-        this.shapeCount = 13;  // 9
+        // this.shapeCount = 13; 
+        this.shapeCount = Object.keys(allShapes.loopMaterial).length;
 
         this.allShapes = allShapes;
         // console.log(this.allShapes);
