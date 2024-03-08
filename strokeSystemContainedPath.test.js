@@ -87,7 +87,6 @@ function testStrokeSystem() {
     // debug line 
     system.debugPath = true;
 
-    // STILL MISSINGs
     system.run();
 
     system.showPaths("svgNode");

@@ -119,12 +119,13 @@ class strokeSystem {
                     continue;
                 }
 
-
                 if (this.debugPath) {
                     path.drawDebugLine(group);
                 } else {
                     path.drawFilledPath(group);
+                    path.drawDebugCenter(group);
                 }
+
             }
         }
     }

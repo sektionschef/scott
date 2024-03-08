@@ -3,7 +3,7 @@ class containedPath {
         this.uncertaintyShift = 3; // shift inward for pointinpolygon better results
 
         this.readyToDraw = data.readyToDraw; // ready to draw,
-        this.selected = data.selected;
+        this.selected = data.selected;  // chosen by specific shape
         this.split = false; // one part is in a shape
         this.full = false; // full in a shape
         this.rerun = data.rerun;
@@ -25,13 +25,12 @@ class containedPath {
 
         this.uncertaintyAdder = vectorFromAngle(this.angle, this.uncertaintyShift)
         this.startShift = vectorAdd(this.start, this.uncertaintyAdder);
-        // console.log(this.startShift);
         this.endShift = vectorSub(this.uncertaintyAdder, this.end);
     }
 
     divideFullVsSplit(key, value) {
 
-        // selected in shape previously
+        // selected in shape previously, order important
         if (this.selected == false) {
             // split or full in order
             var full = this.check3PointsIn(value.pointList);
@@ -86,7 +85,7 @@ class containedPath {
     }
 
     intersectSingleShape(key, value) {
-        var intersectionPoint
+        var intersectionPoint;
 
         // if there is an intersection point with any shape, closest selected
         // get all sides
@@ -101,7 +100,6 @@ class containedPath {
                 this.shapeA = { x: value.pointList[0][0], y: value.pointList[0][1] };
                 this.shapeB = { x: value.pointList[i][0], y: value.pointList[i][1] };
             }
-
 
             // find intersection point for the loop
             this.interPointCandidate = intersect(this.shapeA.x, this.shapeA.y, this.shapeB.x, this.shapeB.y, this.start.x, this.start.y, this.end.x, this.end.y);
@@ -214,6 +212,24 @@ class containedPath {
 
         // svgNode.appendChild(this.newPath);
         group.appendChild(line);
+    }
+
+    drawDebugCenter(groupString) {
+
+        this.debugPoint = document.createElementNS('http://www.w3.org/2000/svg', "circle");
+        this.debugPoint.setAttributeNS(null, "id", "");
+        this.debugPoint.setAttributeNS(null, "cx", this.center.x);
+        this.debugPoint.setAttributeNS(null, "cy", this.center.y);
+        this.debugPoint.setAttributeNS(null, "r", "1");
+        this.debugPoint.setAttributeNS(null, "stroke", "none");
+        this.debugPoint.setAttributeNS(null, "fill", "#ad0000");
+        this.debugPoint.setAttributeNS(null, "stroke-width", 1);
+        this.debugPoint.setAttributeNS(null, "opacity", 1);
+
+        // var svgNode = document.getElementById("svgNode");
+        const group = document.getElementById(groupString);
+        // svgNode.appendChild(this.debugPoint);
+        group.appendChild(this.debugPoint);
     }
 
     drawFilledPath(group) {
