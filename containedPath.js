@@ -1,3 +1,5 @@
+// what is looplegal
+
 class containedPath {
     constructor(data) {
         this.uncertaintyShift = 3; // shift inward for pointinpolygon better results
@@ -6,7 +8,7 @@ class containedPath {
         this.selected = data.selected;  // chosen by specific shape
         this.split = false; // one part is in a shape
         this.full = false; // full in a shape
-        this.rerun = data.rerun;
+        this.rerun = data.rerun;  // needs a rerun for full or split
         this.start = data.start;
         this.end = data.end;
         this.order = data.order;
@@ -43,6 +45,8 @@ class containedPath {
             } else if (split && loopLegal) {
                 // console.log("split");
                 this.intersectSingleShape(key, value);
+            } else {
+                this.rerun = false;
             }
         }
     }
@@ -77,6 +81,7 @@ class containedPath {
         this.order = key;
         this.density = value.density;
         this.full = true;
+        this.rerun = false;
         this.strokeColor = value.colorAction;
         this.shapeLoop = value.shapeLoop;  // RENAME with MAX
         this.points = [this.start, this.end];
@@ -142,6 +147,7 @@ class containedPath {
             this.pointList = value.pointList;
             this.key = key;
             this.selected = true;  // is matched to a shape
+            this.rerun = false;
         }
     }
 
