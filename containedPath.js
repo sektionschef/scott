@@ -1,9 +1,10 @@
+// what is shapeloop
 // what is looplegal
 
 class containedPath {
     constructor(data) {
         this.uncertaintyShift = 3; // shift inward for pointinpolygon better results
-        this.minimalLength = 10; // the minimal length of a path to be accepted.
+        this.minimalFactor = 0.1;  // minimal amout for a path to exist, relative to the default length of vector
 
         this.readyToDraw = data.readyToDraw; // ready to draw,
         this.selected = data.selected;  // chosen by specific shape
@@ -12,12 +13,13 @@ class containedPath {
         this.rerun = data.rerun;  // needs a rerun for full or split
         this.start = data.start;
         this.end = data.end;
-        this.order = data.order;
-        this.density = data.density;
+        this.order = data.order;  // hierarchy
+        this.density = data.density;  // skip level
         this.strokeColor = data.strokeColor;
         this.strokeWidth = data.strokeWidth;
         this.currentLoop = data.currentLoop;
         this.angleRadians = data.angleRadians;
+        this.vectorMagnitude = data.vectorMagnitude; // default length or vector -> minimal length check
         this.shapeLoop = 0;
         this.points = data.points;
         this.boxIndex = data.boxIndex;
@@ -29,12 +31,15 @@ class containedPath {
         this.uncertaintyAdder = vectorFromAngle(this.angle, this.uncertaintyShift)
         this.startShift = vectorAdd(this.start, this.uncertaintyAdder);
         this.endShift = vectorSub(this.uncertaintyAdder, this.end);
+
+        this.minimalLength = this.vectorMagnitude * this.minimalFactor; // the minimal length of a path to be accepted.
     }
 
     divideFullVsSplit(key, value) {
 
         // selected in shape previously, order important
         if (this.selected == false) {
+
             // split or full in order
             var full = this.check3PointsIn(value.pointList);
             var split = this.check1PointIn(value.pointList);
@@ -59,8 +64,6 @@ class containedPath {
     // at least one point of start, center, end in one shape?
     check1PointIn(pointList) {
 
-        // console.log(pointInPolygon(pointList, [this.start.x, this.start.y]))
-        // console.log(`${this.start.x}, ${this.start.y}`)
         // showDebugPoint(this.start.x, this.start.y, "green");
 
         return (
@@ -80,8 +83,6 @@ class containedPath {
             pointInPolygon(pointList, [this.center.x, this.center.y]) &&
             // pointInPolygon(pointList, [this.end.x, this.end.y])
             pointInPolygon(pointList, [this.endShift.x, this.endShift.y])
-
-            // pointInPolygon(pointList, [this.center.x, this.center.y])
         )
     }
 
@@ -109,13 +110,14 @@ class containedPath {
                 this.shapeA = { x: value.pointList[i][0], y: value.pointList[i][1] };
                 this.shapeB = { x: value.pointList[i + 1][0], y: value.pointList[i + 1][1] }
             } else {
-                // closing the loop
+                // closing the loop, with last and first points
                 this.shapeA = { x: value.pointList[0][0], y: value.pointList[0][1] };
                 this.shapeB = { x: value.pointList[i][0], y: value.pointList[i][1] };
             }
 
             // find intersection point for the loop
             this.interPointCandidate = intersect(this.shapeA.x, this.shapeA.y, this.shapeB.x, this.shapeB.y, this.start.x, this.start.y, this.end.x, this.end.y);
+            // skip if nothing found
             if (this.interPointCandidate === undefined || this.interPointCandidate == false) {
                 continue;
             }
@@ -124,10 +126,12 @@ class containedPath {
             var shapeLineLength = vectorLength(vectorSub(this.shapeA, this.shapeB));
             var startEndLength = vectorLength(vectorSub(this.start, this.end));
 
+            // skip if too short
             if (startEndLength < this.minimalLength) {
                 continue;
             }
 
+            // check if intersection is beyond the shape and the  vector since only angles are used
             this.checkIntersectionShapePath = (
                 shapeLineLength > vectorLength(vectorSub(this.shapeA, this.interPointCandidate))
             ) && (
@@ -148,25 +152,27 @@ class containedPath {
                         this.split = true;
                     };
                 } else {
-                    // set it once
+                    // set it for the first time
                     intersectionPoint = this.interPointCandidate;
                     this.split = true;
                 }
             }
         }
 
+        // set the best intersectionpoint as result
         if (intersectionPoint != undefined) {
             this.points = [this.start, intersectionPoint, this.end];
             this.pointList = value.pointList;
             this.key = key;
             this.selected = true;  // is matched to a shape
-            this.rerun = false;
+            this.rerun = false;  // needs no rerun
 
             // showDebugPoint(intersectionPoint.x, intersectionPoint.y, "green");
         }
 
     }
 
+    // both parts of the original path are pushed for rerun
     createPathFromIntersection() {
         if (this.points.length > 2) {
             var newPath = new containedPath({
@@ -177,6 +183,7 @@ class containedPath {
                 end: this.points[1],
                 boxIndex: (this.boxIndex),
                 angleRadians: this.angleRadians,
+                vectorMagnitude: this.vectorMagnitude,
                 order: this.key,
                 density: this.density,
                 strokeColor: "orange",
@@ -195,6 +202,7 @@ class containedPath {
                 end: this.points[2],
                 boxIndex: (this.boxIndex),
                 angleRadians: this.angleRadians,
+                vectorMagnitude: this.vectorMagnitude,
                 order: "",
                 density: this.density,
                 strokeColor: "blue",
@@ -255,7 +263,6 @@ class containedPath {
     }
 
     drawFilledPath(group) {
-        // this.strokeWidth = 0.5;
 
         new filledPath({
             start: this.start,

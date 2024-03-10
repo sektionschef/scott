@@ -1,8 +1,6 @@
 class filledPath {
     constructor(data) {
         this.strokeWidth = 1.3; // deprecatd
-        // this.colory = "#0000006e"
-        // this.colory = "#00000041"
         this.colory = "#3a3a3aff"
         // this.profile = "vanilla";
         this.profile = "swingspitz";
