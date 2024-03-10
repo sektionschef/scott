@@ -1,13 +1,12 @@
 class strokeSystem {
     constructor(allShapes) {
         this.debugPath = false;
-        // is this true??
-        this.shapeStartPosition = 1; // 0 for background, 1 for first
-        // this.shapeCount = 13; 
-        this.shapeCount = Object.keys(allShapes.loopMaterial).length;
 
+        // IS THIS TRUE??
+        this.shapeStartPosition = 1; // 0 for background, 1 for first
         this.allShapes = allShapes;
-        // console.log(this.allShapes);
+        this.shapeCount = Object.keys(this.allShapes.loopMaterial).length;
+
         this.paths = [];
     }
 
@@ -20,8 +19,6 @@ class strokeSystem {
         this.currentLoop = data.currentLoop;
         this.group = data.group;
         this.boxIndex = data.boxIndex;
-
-        // console.log(this.boxIndex);
 
         // X = Cx + (r * cosine(angle))
         // Y = Cy + (r * sine(angle))
@@ -56,55 +53,21 @@ class strokeSystem {
         this.paths.push(path);
     }
 
-    debugCountSplit(path) {
-        if (path.split) {
-            this.countSplit += 1;
-        }
-    }
-
-    debugCountRerun(path) {
-        if (path.rerun) {
-            this.countRerun += 1;
-        }
-    }
-
-    debugCountReady(path) {
-
-        if (path.readyToDraw) {
-            this.countReady += 1;
-        }
-    }
-
-    debugBlock() {
-
-        for (const path of this.paths) {
-            this.debugCountReady(path);
-            this.debugCountSplit(path);
-            this.debugCountRerun(path);
-        }
-        console.log(`split: ${this.countSplit}`);
-        console.log(`rerun: ${this.countRerun}`);
-        console.log(`ready: ${this.countReady}`);
-        console.log(`total: ${this.paths.length}`);
-        console.log('\n');
-    }
-
     run() {
 
-        this.countReady = 0;
-        this.countSplit = 0;
-        var indexo = 0
+        var loopCount = 0;
+        var loopCountMax = 10;
 
+        // run as long as there is no intersections left
         do {
             this.countRerun = 0;
 
-            // first run - if full ready, if not recycle
+
+            // if full everythint is done, if not recycle
             for (const path of this.paths) {
                 for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
                     path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
-                    // this.countSplit += 1;
                 }
-
             }
 
             for (const path of this.paths) {
@@ -119,138 +82,13 @@ class strokeSystem {
                 }
             }
             console.log(`rerun: ${this.countRerun}`);
-            indexo += 1;
-            // } while (this.countRerun > 0 && indexo < 10)  // if true repeat
-        } while (this.countRerun > 0)  // if true repeat
+            loopCount += 1;
+            // } while (this.countRerun > 0)  // if true repeat
+        } while (this.countRerun > 0 && loopCount < 10)  // if true repeat
 
-        console.log(indexo);
-        // this.debugBlock();
-
-        // var indexa = 0;
-        // // while (this.countReady == 0 || this.countSplit > 0 || this.countRerun != 0) {
-        // while ((this.countReady == 0 || this.countSplit > 0) && indexa < 10000) {
-        // }
-
-        // this.debugBlock();
-
-        // this.countReady = 0;
-        // this.countRerun = 0;
-        // this.countSplit = 0;
-
-
-        // // second run - the intersections are checked, if they are fully in shape
-        // for (const path of this.paths) {
-        //     if (path.rerun) {
-        //         for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-        //             path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
-        //         }
-        //     }
-        // }
-
-        // // this.debugBlock();
-
-        // // added - while selected and not drawn.
-        // for (const path of this.paths) {
-        //     if (path.split) {
-        //         this.paths = this.paths.concat(path.createPathFromIntersection());
-        //     }
-        // }
-
-        // this.debugBlock();
-
-        // this.countReady = 0;
-        // this.countRerun = 0;
-        // this.countSplit = 0;
-
-        // // third run - the last intersections are checked, if they are fully in shape
-        // for (const path of this.paths) {
-        //     if (path.rerun) {
-        //         for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-        //             path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
-        //         }
-        //     }
-        // }
-
-        // for (const path of this.paths) {
-        //     if (path.split) {
-        //         this.paths = this.paths.concat(path.createPathFromIntersection());
-        //     }
-        // }
-        // //////
-
-        // this.debugBlock();
-
-        // // third run - the last intersections are checked, if they are fully in shape
-        // for (const path of this.paths) {
-        //     if (path.rerun) {
-        //         for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-        //             path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
-        //         }
-        //     }
-        // }
-
-        // this.debugBlock();
-
-        // for (const path of this.paths) {
-        //     if (path.split) {
-        //         this.paths = this.paths.concat(path.createPathFromIntersection());
-        //     }
-        // }
-
-        // // third run - the last intersections are checked, if they are fully in shape
-        // for (const path of this.paths) {
-        //     if (path.rerun) {
-        //         for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-        //             path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
-        //         }
-        //     }
-        // }
-
-        // this.debugBlock();
-
-        // for (const path of this.paths) {
-        //     if (path.split) {
-        //         this.paths = this.paths.concat(path.createPathFromIntersection());
-        //     }
-        // }
-
-        // this.debugBlock();
-
-        // for (const path of this.paths) {
-        //     if (path.rerun) {
-        //         for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-        //             path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
-        //         }
-        //     }
-        // }
-
-        // this.debugBlock();
-
-        // for (const path of this.paths) {
-        //     if (path.split) {
-        //         this.paths = this.paths.concat(path.createPathFromIntersection());
-        //     }
-        // }
-
-        // this.debugBlock();
-
-        // for (const path of this.paths) {
-        //     if (path.rerun) {
-        //         for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
-        //             path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
-        //         }
-        //     }
-        // }
-
-        // this.debugBlock();
-
-        // for (const path of this.paths) {
-        //     if (path.split) {
-        //         this.paths = this.paths.concat(path.createPathFromIntersection());
-        //     }
-        // }
-
-        // this.debugBlock();
+        if (loopCount == loopCountMax) {
+            console.error(`reached the maximum amount of loops: ${loopCount}`);
+        }
     }
 
     // sort so the right paths with the correct angle is drawn
@@ -258,7 +96,6 @@ class strokeSystem {
 
         this.paths = this.paths.sort(function (a, b) {
             // console.log(a.boxIndex)
-            // return (a.boxIndex + a.angleRadians - b.boxIndex + b.angleRadians)
             return (a.boxIndex - b.boxIndex)
         });
 
@@ -271,7 +108,6 @@ class strokeSystem {
         for (const path of this.paths) {
             if (path.readyToDraw == true) {
 
-                // if (index % 0 == 0) {
                 if (path.boxIndex % path.density == 0) {
                     continue;
                 }

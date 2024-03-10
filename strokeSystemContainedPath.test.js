@@ -31,18 +31,18 @@ function testStrokeSystem() {
     var system = new strokeSystem(allShapes);
 
     // out
-    system.add({
-        center: { x: 100, y: 100 },
-        strokeWidth: 4,
-        strokeColor: "#c70c0c",
-        angleRadians: 1,
-        vectorMagnitude: 150,
-        currentLoop: 0,
-        group: "groupB",
-        boxIndex: 1,
-    });
+    // system.add({
+    //     center: { x: 100, y: 100 },
+    //     strokeWidth: 4,
+    //     strokeColor: "#c70c0c",
+    //     angleRadians: 1,
+    //     vectorMagnitude: 150,
+    //     currentLoop: 0,
+    //     group: "groupB",
+    //     boxIndex: 1,
+    // });
 
-    // in
+    // in - culprit
     system.add({
         center: { x: 400, y: 100 },
         strokeWidth: 4,
@@ -55,32 +55,32 @@ function testStrokeSystem() {
     });
 
     // in 2
-    system.add({
-        center: { x: 600, y: 250 },
-        strokeWidth: 4,
-        strokeColor: "#9b0cc7",
-        angleRadians: 1,
-        vectorMagnitude: 150,
-        currentLoop: 0,
-        group: "groupB",
-        boxIndex: 3,
-    });
+    // system.add({
+    //     center: { x: 600, y: 250 },
+    //     strokeWidth: 4,
+    //     strokeColor: "#9b0cc7",
+    //     angleRadians: 1,
+    //     vectorMagnitude: 150,
+    //     currentLoop: 0,
+    //     group: "groupB",
+    //     boxIndex: 3,
+    // });
 
     // full in shape
-    system.add({
-        center: { x: 800, y: 180 },
-        strokeWidth: 4,
-        strokeColor: "#9b0cc7",
-        angleRadians: 1,
-        vectorMagnitude: 50,
-        currentLoop: 0,
-        group: "groupB",
-        boxIndex: 4,
-    });
+    // system.add({
+    //     center: { x: 800, y: 180 },
+    //     strokeWidth: 4,
+    //     strokeColor: "#9b0cc7",
+    //     angleRadians: 1,
+    //     vectorMagnitude: 50,
+    //     currentLoop: 0,
+    //     group: "groupB",
+    //     boxIndex: 4,
+    // });
 
     // make active - SHORTCUT FOR MAKING VISIBLE
     // system.paths[0].readyToDraw = true;
-    // system.paths[1].readyToDraw = true;
+    // system.paths[1].readyToDraw = true;  // culprit
     // system.paths[2].readyToDraw = true;
     // system.paths[3].readyToDraw = true;
 

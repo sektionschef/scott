@@ -3,6 +3,7 @@
 class containedPath {
     constructor(data) {
         this.uncertaintyShift = 3; // shift inward for pointinpolygon better results
+        this.minimalLength = 10; // the minimal length of a path to be accepted.
 
         this.readyToDraw = data.readyToDraw; // ready to draw,
         this.selected = data.selected;  // chosen by specific shape
@@ -57,10 +58,17 @@ class containedPath {
 
     // at least one point of start, center, end in one shape?
     check1PointIn(pointList) {
+
+        // console.log(pointInPolygon(pointList, [this.start.x, this.start.y]))
+        // console.log(`${this.start.x}, ${this.start.y}`)
+        // showDebugPoint(this.start.x, this.start.y, "green");
+
         return (
-            pointInPolygon(pointList, [this.start.x, this.start.y]) ||
+            // pointInPolygon(pointList, [this.start.x, this.start.y]) ||
+            pointInPolygon(pointList, [this.startShift.x, this.startShift.y]) ||
             pointInPolygon(pointList, [this.center.x, this.center.y]) ||
-            pointInPolygon(pointList, [this.end.x, this.end.y])
+            // pointInPolygon(pointList, [this.end.x, this.end.y])
+            pointInPolygon(pointList, [this.endShift.x, this.endShift.y])
         )
     }
 
@@ -115,6 +123,11 @@ class containedPath {
             // if the intersection point lies between the points of the line and the shape's side. (vector is endless)
             var shapeLineLength = vectorLength(vectorSub(this.shapeA, this.shapeB));
             var startEndLength = vectorLength(vectorSub(this.start, this.end));
+
+            if (startEndLength < this.minimalLength) {
+                continue;
+            }
+
             this.checkIntersectionShapePath = (
                 shapeLineLength > vectorLength(vectorSub(this.shapeA, this.interPointCandidate))
             ) && (
@@ -148,7 +161,10 @@ class containedPath {
             this.key = key;
             this.selected = true;  // is matched to a shape
             this.rerun = false;
+
+            // showDebugPoint(intersectionPoint.x, intersectionPoint.y, "green");
         }
+
     }
 
     createPathFromIntersection() {
