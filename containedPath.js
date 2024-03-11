@@ -1,4 +1,4 @@
-// what is shapeloop
+// what is shapeMaxLoop
 // what is looplegal
 
 class containedPath {
@@ -20,7 +20,7 @@ class containedPath {
         this.currentLoop = data.currentLoop;
         this.angleRadians = data.angleRadians;
         this.vectorMagnitude = data.vectorMagnitude; // default length or vector -> minimal length check
-        this.shapeLoop = 0;
+        this.shapeMaxLoop = 0;
         this.points = data.points;
         this.boxIndex = data.boxIndex;
 
@@ -58,7 +58,7 @@ class containedPath {
     }
 
     checkShapeLoopNotExceeded(value) {
-        return (this.currentLoop <= value.shapeLoop)
+        return (this.currentLoop <= value.shapeMaxLoop)
     }
 
     // at least one point of start, center, end in one shape?
@@ -92,7 +92,7 @@ class containedPath {
         this.full = true;
         this.rerun = false;
         this.strokeColor = value.colorAction;
-        this.shapeLoop = value.shapeLoop;  // RENAME with MAX
+        this.shapeMaxLoop = value.shapeMaxLoop;  // RENAME with MAX
         this.points = [this.start, this.end];
         this.readyToDraw = true;
         this.selected = true;  // matched with a shape
@@ -188,7 +188,7 @@ class containedPath {
                 density: this.density,
                 strokeColor: "orange",
                 currentLoop: this.currentLoop,
-                shapeLoop: 0,
+                shapeMaxLoop: 0,
                 full: false,
                 split: false,
                 points: [],
@@ -207,7 +207,7 @@ class containedPath {
                 density: this.density,
                 strokeColor: "blue",
                 currentLoop: this.currentLoop,
-                shapeLoop: 0,
+                shapeMaxLoop: 0,
                 full: false,
                 split: false,
                 points: [],

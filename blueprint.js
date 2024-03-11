@@ -17,7 +17,7 @@ class Blueprint {
         this.data = {
             shapeBackground: {
                 background: {
-                    shapeLoop: 1,
+                    shapeMaxLoop: 1,  // maximum loop to draw in this shape
                     order: 13,
                     density: 2, // density factor - 0 is full
                     // colorAction: "#5c5c5c",
@@ -45,7 +45,7 @@ class Blueprint {
                 superShadowShiftY: 1,  // shift in boxes on y axis
                 superShadowHeightMax: 15, // 25, // heigt in boxes on y axis
                 front: {
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 1,
                     density: 1,
                     // colorAction: "#5c5c5c",
@@ -54,7 +54,7 @@ class Blueprint {
                     fillColor: "#e2e2e2",
                 },
                 down: {  // shadow beneath
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 4,
                     density: 0,
                     // colorAction: "green",
@@ -62,7 +62,7 @@ class Blueprint {
                     fillColor: "#757575",
                 },
                 right: {  // shadow beneath
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 7,
                     density: 0,
                     // colorAction: "#3daf3d",
@@ -71,7 +71,7 @@ class Blueprint {
                     fillColor: "#a3a3a3",
                 },
                 shadow: {  // shadow
-                    shapeLoop: 1,
+                    shapeMaxLoop: 1,
                     order: 10,
                     density: 0,
                     // colorAction: "#a937c0",
@@ -92,7 +92,7 @@ class Blueprint {
                 superShadowShiftY: 1,  // shift in boxes on y axis
                 superShadowHeightMax: 15, // heigt in boxes on y axis
                 front: {
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 2,
                     density: 1,
                     // colorAction: "#5c5c5c",
@@ -101,7 +101,7 @@ class Blueprint {
                     fillColor: "#e2e2e2",
                 },
                 down: {  // shadow beneath
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 5,
                     density: 0,
                     // colorAction: "green",
@@ -110,7 +110,7 @@ class Blueprint {
                     fillColor: "#757575",
                 },
                 right: {  // shadow beneath
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 8,
                     density: 0,
                     // colorAction: "#3daf3d",
@@ -119,7 +119,7 @@ class Blueprint {
                     fillColor: "#a3a3a3",
                 },
                 shadow: {  // shadow
-                    shapeLoop: 1,
+                    shapeMaxLoop: 1,
                     order: 11,
                     density: 0,
                     // colorAction: "#a937c0",
@@ -140,7 +140,7 @@ class Blueprint {
                 superShadowShiftY: 1,  // shift in boxes on y axis
                 superShadowHeightMax: 15, // heigt in boxes on y axis
                 front: {
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 3,
                     density: 1,
                     // colorAction: "#5c5c5c",
@@ -149,7 +149,7 @@ class Blueprint {
                     fillColor: "#e2e2e2",
                 },
                 down: {  // shadow beneath
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 6,
                     density: 0,
                     // colorAction: "green",
@@ -158,7 +158,7 @@ class Blueprint {
                     fillColor: "#757575",
                 },
                 right: {  // shadow beneath
-                    shapeLoop: 2,
+                    shapeMaxLoop: 2,
                     order: 9,
                     density: 0,
                     // colorAction: "#3daf3d",
@@ -167,7 +167,7 @@ class Blueprint {
                     fillColor: "#a3a3a3",
                 },
                 shadow: {  // shadow
-                    shapeLoop: 1,
+                    shapeMaxLoop: 1,
                     order: 12,
                     density: 0,
                     // colorAction: "#a937c0",

@@ -1,5 +1,5 @@
 // STARTPOSITION = 1???
-// shapeloop ??
+// shapeMaxLoop ??
 
 class strokeSystem {
     constructor(allShapes) {
@@ -47,7 +47,7 @@ class strokeSystem {
             angleRadians: this.angleRadians,
             vectorMagnitude: this.vectorMagnitude,
             currentLoop: this.currentLoop,
-            shapeLoop: 0,  // remove her - fit with shape neeeded
+            shapeMaxLoop: 0,  // dummy value
             full: false,
             split: false,
             rerun: false,

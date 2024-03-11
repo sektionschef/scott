@@ -27,25 +27,25 @@ function testShapes() {
                     density: 1,
                     fillColor: "#e2e2e2",
                     order: 1,
-                    shapeLoop: 2
+                    shapeMaxLoop: 2
                 },
                 down: {
                     density: 1,
                     fillColor: "#e2e2e2",
                     order: 2,
-                    shapeLoop: 2
+                    shapeMaxLoop: 2
                 },
                 right: {
                     density: 1,
                     fillColor: "#e2e2e2",
                     order: 3,
-                    shapeLoop: 2
+                    shapeMaxLoop: 2
                 },
                 shadow: {
                     density: 1,
                     fillColor: "#e2e2e2",
                     order: 4,
-                    shapeLoop: 2
+                    shapeMaxLoop: 2
                 }
             },
             shapeBackground: {
@@ -60,7 +60,7 @@ function testShapes() {
                         [1555, 855],
                         [45, 855]
                     ],
-                    shapeLoop: 1,
+                    shapeMaxLoop: 1,
                 }
             }
         }

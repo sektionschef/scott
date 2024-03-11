@@ -1,4 +1,4 @@
-// what is shapeloop
+// what is shapeMaxLoop
 
 function testStrokeSystem() {
 
@@ -12,8 +12,7 @@ function testStrokeSystem() {
                     [1181.25, 225],
                     [382.5, 225]
                 ],
-                // shapeLoop: 0,  // what is it??????
-                shapeLoop: 2,
+                shapeMaxLoop: 2,
                 order: 4,
                 density: 0,
                 colorAction: "#f8688c",
