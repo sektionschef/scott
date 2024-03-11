@@ -1,6 +1,3 @@
-// what is shapeMaxLoop
-// what is looplegal
-
 class containedPath {
     constructor(data) {
         this.uncertaintyShift = 3; // shift inward for pointinpolygon better results
@@ -43,12 +40,12 @@ class containedPath {
             // split or full in order
             var full = this.check3PointsIn(value.pointList);
             var split = this.check1PointIn(value.pointList);
-            var loopLegal = this.checkShapeLoopNotExceeded(value);
+            var loopActive = this.checkShapeLoopNotExceeded(value);
 
-            if (full && loopLegal) {
+            if (full && loopActive) {
                 // console.log("full");
                 this.updateFull(key, value);
-            } else if (split && loopLegal) {
+            } else if (split && loopActive) {
                 // console.log("split");
                 this.intersectSingleShape(key, value);
             } else {

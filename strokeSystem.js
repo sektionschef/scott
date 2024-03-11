@@ -1,11 +1,8 @@
-// STARTPOSITION = 1???
-// shapeMaxLoop ??
-
 class strokeSystem {
     constructor(allShapes) {
         this.debugPath = false;
-        // IS THIS TRUE??
-        this.shapeStartPosition = 1; // 0 for background, 1 for first
+
+        this.shapeStartPosition = 1; // where the order starts
 
         this.allShapes = allShapes;
         this.shapeCount = Object.keys(this.allShapes.loopMaterial).length;

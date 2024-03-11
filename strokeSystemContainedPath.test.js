@@ -1,5 +1,3 @@
-// what is shapeMaxLoop
-
 function testStrokeSystem() {
 
     // simple rect
