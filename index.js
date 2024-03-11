@@ -270,8 +270,8 @@ function main() {
     // testGrid();
     // testBlueprint();
     // testShapes();
-    testStrokeSystem();
-    // testFilledPath()
+    // testStrokeSystem();
+    // testFilledPath();
   } else {
 
     showBackground();  // REMOVE FOR DEBUGGING SHAPES

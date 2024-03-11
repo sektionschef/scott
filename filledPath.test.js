@@ -4,7 +4,7 @@ function testFilledPath() {
         start: { x: 25, y: 90 },
         end: { x: 60, y: 45 },
         strokeWidth: 30,
-        group: "groupA",
+        group: "svgNode",
     }
 
     new filledPath(data).showDebugStroke();
