@@ -1,3 +1,9 @@
+// algorithm of combining https://stackoverflow.com/questions/2667748/how-do-i-combine-complex-polygons 
+// https://stackoverflow.com/questions/66066287/how-to-find-the-intersect-points-in-a-polygon-object 
+
+// center and sort: https://stackoverflow.com/questions/54719326/sorting-points-in-a-clockwise-direction 
+// again: https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript 
+
 function testShapes() {
 
     var blueprint = {};
@@ -74,5 +80,72 @@ function testShapes() {
 
     shapes_.fillShape();
     shapes_.debugShowShape();
+}
 
+function testShapeMerge() {
+    const polyA = {
+        pointList: [
+            [300, 400],
+            [600, 400],
+            [400, 800],
+        ]
+    }
+
+    const polyB = {
+        pointList: [
+            [800, 400],
+            [400, 600],
+            [800, 800],
+        ]
+    }
+
+    const thePolygons = [polyA, polyB];
+
+    // DEBUGGING
+    const svgNode = document.getElementById('svgNode');
+
+    var shapsnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    shapsnA.setAttributeNS(null, 'points', polyA.pointList);
+    shapsnA.setAttributeNS(null, 'stroke', "none");
+    shapsnA.setAttributeNS(null, 'fill', "#0000ff69");
+    svgNode.appendChild(shapsnA);
+
+    var shapsnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    shapsnB.setAttributeNS(null, 'points', polyB.pointList);
+    shapsnB.setAttributeNS(null, 'stroke', "none");
+    shapsnB.setAttributeNS(null, 'fill', "#ff7b0069");
+    svgNode.appendChild(shapsnB);
+
+    var result;
+
+    for (var i = 0; i < (thePolygons.length - 1); i++) {
+
+        for (var j = 0; j < (thePolygons[i].pointList.length - 1); j++) {
+
+            // console.log(thePolygons[i].pointList[v])
+
+            for (var k = 0; k < (thePolygons[i + 1].pointList.length - 1); k++) {
+
+                // console.log(j)
+                // console.log(k)
+
+                result = intersect(
+                    thePolygons[i].pointList[j][0],
+                    thePolygons[i].pointList[j][1],
+                    thePolygons[i].pointList[j + 1][0],
+                    thePolygons[i].pointList[j + 1][1],
+                    thePolygons[i + 1].pointList[k][0],
+                    thePolygons[i + 1].pointList[k][1],
+                    thePolygons[i + 1].pointList[k + 1][0],
+                    thePolygons[i + 1].pointList[k + 1][1],
+                )
+
+                if (result) {
+                    console.log(result);
+
+                    showDebugPoint(result.x, result.y, "red")
+                }
+            }
+        }
+    }
 }

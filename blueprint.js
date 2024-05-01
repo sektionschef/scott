@@ -41,8 +41,8 @@ class Blueprint {
                 MainHeightLine: 2, // height of main shape in lineheights
                 MainWidth: 70,  // width of the shape in boxes
                 shadHeightLine: 1,  // height of main shape in lineheights
-                superShadowShiftX: 25,  //  shift in boxes on x axis
-                superShadowShiftY: 1,  // shift in boxes on y axis
+                superShadowShiftX: 35,  //  shift in boxes on x axis
+                superShadowShiftY: 20,  // shift in boxes on y axis
                 superShadowHeightMax: 15, // 25, // heigt in boxes on y axis
                 front: {
                     shapeMaxLoop: 2,

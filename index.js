@@ -1,5 +1,5 @@
 // ########################################
-TEST = false;
+TEST = true;
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
 RESOLUTIONBOXCOUNT = 80;
@@ -270,6 +270,7 @@ function main() {
     // testGrid();
     // testBlueprint();
     // testShapes();
+    testShapeMerge();
     // testStrokeSystem();
     // testFilledPath();
   } else {
