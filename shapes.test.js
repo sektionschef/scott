@@ -141,11 +141,14 @@ function testShapeMerge() {
                 )
 
                 if (result) {
-                    console.log(result);
+                    // console.log(result);
 
                     showDebugPoint(result.x, result.y, "red")
                 }
             }
         }
     }
+
+    center = getCenter(transformToCoordinates(thePolygons[0].pointList));
+    showDebugPoint(center.x, center.y, "purple")
 }
