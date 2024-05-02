@@ -149,6 +149,17 @@ function testShapeMerge() {
         }
     }
 
-    center = getCenter(transformToCoordinates(thePolygons[0].pointList));
+    // dfs
+    points = transformToCoordinates(thePolygons[0].pointList)
+    center = getCenter(points);
     showDebugPoint(center.x, center.y, "purple")
+
+    // Add an angle property to each point using tan(angle) = y/x
+    const angles = points.map(({ x, y }) => {
+        return { x, y, angle: Math.atan2(y - center.y, x - center.x) * 180 / Math.PI };
+    });
+
+    // Sort your points by angle
+    const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
+    console.log(pointsSorted);
 }

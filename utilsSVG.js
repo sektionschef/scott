@@ -400,13 +400,12 @@ function transformToCoordinates(list) {
 function getCenter(points) {
     // Get the center (mean value) using reduce - https://stackoverflow.com/questions/54719326/sorting-points-in-a-clockwise-direction 
 
-    console.log(points)
     const center = points.reduce((acc, { x, y }) => {
         acc.x += x / points.length;
         acc.y += y / points.length;
         return acc;
     }, { x: 0, y: 0 });
-    console.log(center)
+
     return center
 }
 
