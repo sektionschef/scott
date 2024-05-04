@@ -116,6 +116,28 @@ function testShapeMerge() {
     shapsnB.setAttributeNS(null, 'fill', "#ff7b0069");
     svgNode.appendChild(shapsnB);
 
+    console.log(pointInPolygon([[300, 400], [600, 400], [400, 800],], [400, 600]));
+
+    for (var i = 0; i < (thePolygons.length); i++) {
+
+        for (var j = 0; j < (thePolygons[i].pointList.length); j++) {
+
+            for (var k = 0; k < (thePolygons.length); k++) {
+
+                var point = thePolygons[i].pointList[j];
+                var polygon = thePolygons[k].pointList;
+                console.log(point)
+                console.log(polygon)
+
+                // if (i == k) { continue }
+
+                console.log(pointInPolygon(polygon, point));
+
+            }
+        }
+    }
+
+
     var result;
 
     for (var i = 0; i < (thePolygons.length - 1); i++) {
@@ -149,8 +171,8 @@ function testShapeMerge() {
         }
     }
 
-    // dfs
-    points = transformToCoordinates(thePolygons[0].pointList)
+    // transform to x: and y: per point format
+    points = transformToXY(thePolygons[0].pointList)
     center = getCenter(points);
     showDebugPoint(center.x, center.y, "purple")
 
@@ -161,5 +183,5 @@ function testShapeMerge() {
 
     // Sort your points by angle
     const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
-    console.log(pointsSorted);
+    // console.log(pointsSorted);
 }

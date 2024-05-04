@@ -387,7 +387,7 @@ const pointInPolygon = function (polygon, point) {
     return odd;
 };
 
-function transformToCoordinates(list) {
+function transformToXY(list) {
     var result = []
     for (var i = 0; i < list.length; i++) {
         result.push({ x: list[i][0], y: list[i][1] })
