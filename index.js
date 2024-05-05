@@ -270,7 +270,7 @@ function main() {
     // testGrid();
     // testBlueprint();
     // testShapes();
-    testShapeMerge();
+    // testShapeMerge();
     // testStrokeSystem();
     // testFilledPath();
   } else {
