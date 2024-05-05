@@ -12,6 +12,11 @@ Aktuell ein Paperfilter für Grundstruktr als Hintergrund. Papierknitter, Grain 
 * contained path
 * filledp path
 
+## library for merging polygons
+
+https://www.npmjs.com/package/polygon-clipping - from: https://stackoverflow.com/questions/33502767/merging-intersecting-polygons-to-single-polygon 
+
+
 
 
 # fx(hash) boilerplate

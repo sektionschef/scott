@@ -102,8 +102,8 @@ function testShapeMerge() {
     const thePolygons = [polyA, polyB];
 
     // debugging
-    showDebugPolygon(polyA.pointList, "#0000ff69", "none");
-    showDebugPolygon(polyB.pointList, "#ff7b0069", "none");
+    // showDebugPolygon(polyA.pointList, "#0000ff69", "none");
+    // showDebugPolygon(polyB.pointList, "#ff7b0069", "none");
 
     let mergedPolygon = []
 
@@ -176,5 +176,23 @@ function testShapeMerge() {
     // transform to plain list, no x: y: dict
     const pointsSortedList = transformToXYLess(pointsSorted);
 
-    showDebugPolygon(pointsSortedList, "#00000067", "#000000ff");
+    // showDebugPolygon(pointsSortedList, "#00000067", "#000000ff");
+
+
+    mergedPolygon = polygonClipping.union([[
+        [300, 400],
+        [600, 400],
+        [400, 800],
+    ]], [[
+        [800, 400],
+        [400, 600],
+        [800, 800],
+    ]]);
+    console.log(mergedPolygon[0][0]);
+
+    showDebugPolygon(mergedPolygon, "#00000067", "#000000ff");
+
+    // const poly1 = [[[0, 0], [2, 0], [0, 2], [0, 0]]]
+    // const poly2 = [[[-1, 0], [1, 0], [0, 1], [-1, 0]]]
+    // console.log(polygonClipping.union(poly1, poly2 /* , poly3, ... */))
 }
