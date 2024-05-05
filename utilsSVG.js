@@ -387,10 +387,23 @@ const pointInPolygon = function (polygon, point) {
     return odd;
 };
 
+// from [[11, 12],] to [{x: 11, y: 12},]
 function transformToXY(list) {
     var result = []
+
     for (var i = 0; i < list.length; i++) {
         result.push({ x: list[i][0], y: list[i][1] })
+    }
+
+    return result
+}
+
+// from [{x: 11, y: 12},] to [[11, 12],] 
+function transformToXYLess(list) {
+    var result = []
+
+    for (var i = 0; i < list.length; i++) {
+        result.push([list[i].x, list[i].y])
     }
 
     return result
@@ -425,4 +438,14 @@ function showDebugPoint(x, y, colory) {
 
     const svgNode = document.getElementById('svgNode');
     svgNode.appendChild(debugPoint);
+}
+
+function showDebugPolygon(pointList, color, strokeColor) {
+    const svgNode = document.getElementById('svgNode');
+
+    var shape = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    shape.setAttributeNS(null, 'points', pointList);
+    shape.setAttributeNS(null, 'stroke', strokeColor);
+    shape.setAttributeNS(null, 'fill', color);
+    svgNode.appendChild(shape);
 }

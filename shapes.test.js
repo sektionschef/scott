@@ -101,45 +101,14 @@ function testShapeMerge() {
 
     const thePolygons = [polyA, polyB];
 
-    // DEBUGGING
-    const svgNode = document.getElementById('svgNode');
+    // debugging
+    showDebugPolygon(polyA.pointList, "#0000ff69", "none");
+    showDebugPolygon(polyB.pointList, "#ff7b0069", "none");
 
-    var shapsnA = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    shapsnA.setAttributeNS(null, 'points', polyA.pointList);
-    shapsnA.setAttributeNS(null, 'stroke', "none");
-    shapsnA.setAttributeNS(null, 'fill', "#0000ff69");
-    svgNode.appendChild(shapsnA);
+    let mergedPolygon = []
 
-    var shapsnB = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    shapsnB.setAttributeNS(null, 'points', polyB.pointList);
-    shapsnB.setAttributeNS(null, 'stroke', "none");
-    shapsnB.setAttributeNS(null, 'fill', "#ff7b0069");
-    svgNode.appendChild(shapsnB);
-
-    console.log(pointInPolygon([[300, 400], [600, 400], [400, 800],], [400, 600]));
-
-    for (var i = 0; i < (thePolygons.length); i++) {
-
-        for (var j = 0; j < (thePolygons[i].pointList.length); j++) {
-
-            for (var k = 0; k < (thePolygons.length); k++) {
-
-                var point = thePolygons[i].pointList[j];
-                var polygon = thePolygons[k].pointList;
-                console.log(point)
-                console.log(polygon)
-
-                // if (i == k) { continue }
-
-                console.log(pointInPolygon(polygon, point));
-
-            }
-        }
-    }
-
-
+    // check for intersections of sides to add new vertices
     var result;
-
     for (var i = 0; i < (thePolygons.length - 1); i++) {
 
         for (var j = 0; j < (thePolygons[i].pointList.length - 1); j++) {
@@ -164,16 +133,35 @@ function testShapeMerge() {
 
                 if (result) {
                     // console.log(result);
-
                     showDebugPoint(result.x, result.y, "red")
+                    mergedPolygon.push([result.x, result.y]);
                 }
             }
         }
     }
 
+    // check if points of a polygon is in any other polygon
+    // select the points for the merged polygin by skipping points inside
+    for (var i = 0; i < (thePolygons.length); i++) {
+        for (var j = 0; j < (thePolygons[i].pointList.length); j++) {
+            for (var k = 0; k < (thePolygons.length); k++) {
+
+                var point = thePolygons[i].pointList[j];
+                var polygon = thePolygons[k].pointList;
+
+                if (i == k) { continue }
+
+                if (pointInPolygon(polygon, point) == false) {
+                    mergedPolygon.push(point);
+                }
+            }
+        }
+    }
+    // console.log(mergedPolygon);
+
     // transform to x: and y: per point format
-    points = transformToXY(thePolygons[0].pointList)
-    center = getCenter(points);
+    points = transformToXY(mergedPolygon)
+    center = getCenter(points);  // improvement mean center not real centroid!
     showDebugPoint(center.x, center.y, "purple")
 
     // Add an angle property to each point using tan(angle) = y/x
@@ -183,5 +171,10 @@ function testShapeMerge() {
 
     // Sort your points by angle
     const pointsSorted = angles.sort((a, b) => a.angle - b.angle);
-    // console.log(pointsSorted);
+    console.log(pointsSorted);
+
+    // transform to plain list, no x: y: dict
+    const pointsSortedList = transformToXYLess(pointsSorted);
+
+    showDebugPolygon(pointsSortedList, "#00000067", "#000000ff");
 }
