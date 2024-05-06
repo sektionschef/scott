@@ -104,6 +104,8 @@ class Shapes {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             for (const [key, value] of Object.entries(shapeValues)) {
 
+                // console.log(key)
+
                 if (["background"].includes(key)) {
                     var newValue = value;
                     newValue.shapeId = shapeId;
