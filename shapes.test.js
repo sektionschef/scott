@@ -207,6 +207,7 @@ function testShapeUnion() {
 
 }
 
+// example for showing the merge of polygon works
 function testShapeMerge() {
 
     var blueprint = {};
@@ -327,4 +328,27 @@ function testShapeMerge() {
 
     shapes_.fillShape();
     shapes_.debugShowShape();
+
+
+    // VERWORFEN - GESAMTDINGSI
+    // strokesystem_ = new strokeSystem(shapes_);
+
+    // let grid = new Grid({
+    //     stepCountRes: 200,  // 400
+    //     stripeHeight: STRIPEHEIGHT,  // 2
+    //     vectorMagnitude: 55,  // 50
+    //     marginRelative: 1,  // 1
+    //     // strokeColor: "#222222ff",
+    //     strokeColor: "#4e4e4eff",
+    //     strokeWidth: 1,
+    //     angleRadiansStart: Math.PI / 2,
+    //     angleRadiansGain: Math.PI / 5,
+    //     // angleRadiansGain: 0,
+    //     shortBoxCount: RESOLUTIONBOXCOUNT,
+    //     longSide: LONGSIDE,
+    //     shortSide: SHORTSIDE,
+    //     landscape: LANDSCAPE,
+    //     group: "groupB",
+    //     strokeSystem: strokesystem_,
+    // });
 }

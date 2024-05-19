@@ -63,7 +63,6 @@ class strokeSystem {
         do {
             this.countRerun = 0;
 
-
             // if full everything is done, if not recycle
             for (const path of this.paths) {
                 for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {

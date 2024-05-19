@@ -21,6 +21,8 @@ class Shapes {
         this.calcCoords();
 
         this.sortForLoop();
+
+        // console.log(this.loopMaterial);
     }
 
 
@@ -104,7 +106,7 @@ class Shapes {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             for (const [key, value] of Object.entries(shapeValues)) {
 
-                // console.log(key)
+                console.log(key)
 
                 if (["background"].includes(key)) {
                     var newValue = value;
@@ -144,7 +146,7 @@ class Shapes {
                 }
             }
         }
-        // console.log(this.loopMaterial);
+        console.log(this.loopMaterial);
     }
 
     debugShowShape() {
