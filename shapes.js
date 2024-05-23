@@ -182,6 +182,7 @@ class Shapes {
         // console.log(this.loopMaterial)
     }
 
+    // reorganize after removing entries 
     reindex() {
         // console.log(this.loopMaterial);
         // console.log(Object.keys(this.loopMaterial).length);
@@ -191,12 +192,9 @@ class Shapes {
         var newLoopMaterial = {}
         var newIndex = startPosition;
         for (var i = startPosition; i <= (Object.keys(this.loopMaterial).length + startPosition); i++) {
-            // console.log(this.loopMaterial[i]);
-
-            console.log(newIndex);
 
             if (this.loopMaterial[i] == undefined) {
-                console.log("removed entry")
+                // console.log("removed entry")
                 continue;
             } else {
                 newLoopMaterial[newIndex] = this.loopMaterial[i];
@@ -206,7 +204,6 @@ class Shapes {
 
         this.loopMaterial = newLoopMaterial;
         // console.log(this.loopMaterial);
-        // for (const [shapeOrderA, shapeValuesA] of Object.entries(this.loopMaterial)) {
     }
 
     debugShowShape() {
