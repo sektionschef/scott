@@ -21,6 +21,8 @@ class Shapes {
         this.calcCoords();
 
         this.sortForLoop();
+        this.treatIntersections();
+        this.reindex();
 
         // console.log(this.loopMaterial);
     }
@@ -106,7 +108,7 @@ class Shapes {
         for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
             for (const [key, value] of Object.entries(shapeValues)) {
 
-                console.log(key)
+                // console.log(key)
 
                 if (["background"].includes(key)) {
                     var newValue = value;
@@ -146,7 +148,65 @@ class Shapes {
                 }
             }
         }
-        console.log(this.loopMaterial);
+        // console.log(this.loopMaterial);
+    }
+
+
+    treatIntersections() {
+
+        var removeCandidates = {};  // store for elements to be deleted
+        // this.loopMaterialMerged = {}
+
+        for (const [shapeOrderA, shapeValuesA] of Object.entries(this.loopMaterial)) {
+            for (const [shapeOrderB, shapeValuesB] of Object.entries(this.loopMaterial)) {
+                if (shapeOrderA == shapeOrderB || shapeValuesA.side != shapeValuesB.side || shapeOrderA in removeCandidates) {
+                    continue;
+                }
+                // console.log(shapeValuesB.side);
+                // console.log(shapeValuesA);
+
+                var mergedPolygon = polygonClipping.union([shapeValuesA.pointList], [shapeValuesB.pointList]);
+                if (mergedPolygon.length == 1) {
+                    // console.log(shapeValuesA.side + shapeValuesB.side);
+                    // console.log(mergedPolygon[0][0]);
+                    this.loopMaterial[shapeOrderA].pointList = mergedPolygon[0][0];
+                    // console.log(this.loopMaterial[shapeOrderA].pointList);
+                    removeCandidates[shapeOrderB] = shapeValuesB
+                    delete this.loopMaterial[shapeOrderB];
+
+                }
+            }
+        }
+
+        // console.log(removeCandidates)
+        // console.log(this.loopMaterial)
+    }
+
+    reindex() {
+        // console.log(this.loopMaterial);
+        // console.log(Object.keys(this.loopMaterial).length);
+
+        var startPosition = 1;
+
+        var newLoopMaterial = {}
+        var newIndex = startPosition;
+        for (var i = startPosition; i <= (Object.keys(this.loopMaterial).length + startPosition); i++) {
+            // console.log(this.loopMaterial[i]);
+
+            console.log(newIndex);
+
+            if (this.loopMaterial[i] == undefined) {
+                console.log("removed entry")
+                continue;
+            } else {
+                newLoopMaterial[newIndex] = this.loopMaterial[i];
+                newIndex += 1;
+            }
+        }
+
+        this.loopMaterial = newLoopMaterial;
+        // console.log(this.loopMaterial);
+        // for (const [shapeOrderA, shapeValuesA] of Object.entries(this.loopMaterial)) {
     }
 
     debugShowShape() {

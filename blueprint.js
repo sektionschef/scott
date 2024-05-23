@@ -14,6 +14,7 @@ class Blueprint {
             this.margin = Math.round(this.stripeHeight * this.marginRelative) * this.boxSize;
         }
 
+        // layer needed for intersection calculation
         this.data = {
             shapeBackground: {
                 background: {
@@ -94,6 +95,7 @@ class Blueprint {
                 front: {
                     shapeMaxLoop: 2,
                     order: 2,
+                    layer: 1,
                     density: 1,
                     // colorAction: "#5c5c5c",
                     // colorAction: "red",

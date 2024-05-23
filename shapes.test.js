@@ -207,7 +207,7 @@ function testShapeUnion() {
 
 }
 
-// example for showing the merge of polygon works
+// example for showing the merge of polygon works - THIS STILL NEEDED??
 function testShapeMerge() {
 
     var blueprint = {};

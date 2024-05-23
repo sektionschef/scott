@@ -271,7 +271,6 @@ function main() {
     // testGrid();
     // testBlueprint();
     // testShapes();
-    testShapeMerge();
     // testStrokeSystem();
     // testFilledPath();
   } else {
