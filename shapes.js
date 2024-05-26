@@ -152,45 +152,43 @@ class Shapes {
     }
 
 
+    // check for intersections between shapes, merge and remove elements
     treatIntersections() {
 
         var removeCandidates = {};  // store for elements to be deleted
-        // this.loopMaterialMerged = {}
 
         for (const [shapeOrderA, shapeValuesA] of Object.entries(this.loopMaterial)) {
             for (const [shapeOrderB, shapeValuesB] of Object.entries(this.loopMaterial)) {
+
+                // same layer, but not identical, not already treated
                 if (shapeOrderA == shapeOrderB || shapeValuesA.side != shapeValuesB.side || shapeOrderA in removeCandidates) {
                     continue;
                 }
-                // console.log(shapeValuesB.side);
-                // console.log(shapeValuesA);
 
                 var mergedPolygon = polygonClipping.union([shapeValuesA.pointList], [shapeValuesB.pointList]);
+
                 if (mergedPolygon.length == 1) {
                     // console.log(shapeValuesA.side + shapeValuesB.side);
-                    // console.log(mergedPolygon[0][0]);
+
                     this.loopMaterial[shapeOrderA].pointList = mergedPolygon[0][0];
-                    // console.log(this.loopMaterial[shapeOrderA].pointList);
                     removeCandidates[shapeOrderB] = shapeValuesB
                     delete this.loopMaterial[shapeOrderB];
 
                 }
             }
         }
-
         // console.log(removeCandidates)
         // console.log(this.loopMaterial)
     }
 
-    // reorganize after removing entries 
+    // reorganize after removing entries that have been merged
     reindex() {
-        // console.log(this.loopMaterial);
-        // console.log(Object.keys(this.loopMaterial).length);
 
-        var startPosition = 1;
+        var startPosition = 1;  // order value to start with
 
         var newLoopMaterial = {}
         var newIndex = startPosition;
+
         for (var i = startPosition; i <= (Object.keys(this.loopMaterial).length + startPosition); i++) {
 
             if (this.loopMaterial[i] == undefined) {
@@ -203,7 +201,6 @@ class Shapes {
         }
 
         this.loopMaterial = newLoopMaterial;
-        // console.log(this.loopMaterial);
     }
 
     debugShowShape() {
