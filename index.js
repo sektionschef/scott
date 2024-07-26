@@ -11,7 +11,7 @@ STRIPEHEIGHT = 4;  // height of row in boxes
 MARGINRELATIVE = 1; // margin relative to stripeheight
 // ########################################
 
-var TITLE = "Scott";
+var TITLE = "Camogli";
 var ARTIST = "Stefan Schwaha, @sektionschef";
 var DESCRIPTION = "javascript on html canvas";
 var WEBSITE = "https://digitalitility.com";
