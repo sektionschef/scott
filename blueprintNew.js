@@ -1,6 +1,5 @@
 class BlueprintNew {
     constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight) {
-        console.log("jo");
 
         this.stripeHeight = stripeHeight;
         this.marginRelative = marginRelative;
@@ -14,15 +13,16 @@ class BlueprintNew {
             this.margin = Math.round(this.stripeHeight * this.marginRelative) * this.boxSize;
         }
 
-        var heightAB = 192; // 
+        // fixed
+        var marginAX = this.margin - this.boxSize * 4;
+        var marginAY = this.margin - this.boxSize * 4;
+        var heightAB = 15 * this.boxSize; // 
         var widthAB = heightAB * 2 / 3;
         var cornerHeightAB = heightAB / 2;
         var cornerWidthAB = widthAB / 2;
-        var marginAX = 100;
-        var marginAY = 100;
+        var totalTileWidth = widthAB * 2;
+        var totalTileHeight = heightAB + cornerHeightAB;
 
-
-        // layer needed for intersection calculation
         this.data = {
             shapeBackground: {
                 background: {
@@ -32,8 +32,8 @@ class BlueprintNew {
                     // colorAction: "#5c5c5c",
                     colorAction: this.colory,
                     // colorAction: this.strokeColor,
-                    // fillColor: "#afafafff",
-                    fillColor: "None",
+                    fillColor: "#7e7e7eff",
+                    // fillColor: "None",
                     pointList: [
                         [this.margin, this.margin],
                         [this.canvasWidth - this.margin, this.margin],
@@ -42,69 +42,117 @@ class BlueprintNew {
                     ]
                 }
             },
-            tile: {
-                A: {
-                    shapeMaxLoop: 1,
-                    order: 1,
-                    density: 1,
-                    colorAction: "blue",
-                    fillColor: "#ff0000",
-                    pointList: [
-                        [marginAX, marginAY],
-                        [marginAX + cornerWidthAB, marginAY - cornerHeightAB],
-                        [marginAX + widthAB, marginAY],
-                        [marginAX + widthAB, marginAY + heightAB],
-                        [marginAX, marginAY + heightAB],
-                    ]
-                },
-                B: {
-                    shapeMaxLoop: 1,
-                    order: 1,
-                    density: 1,
-                    colorAction: "blue",
-                    fillColor: "#00ff0d",
-                    pointList: [
-                        [marginAX + widthAB, marginAY],
-                        [marginAX + widthAB * 2, marginAY],
-                        [marginAX + widthAB * 2, marginAY + heightAB],
-                        [marginAX + widthAB * 2 - cornerWidthAB, marginAY + heightAB + cornerHeightAB],
-                        [marginAX + widthAB, marginAY + heightAB],
-                    ]
-                },
-                C: {
-                    shapeMaxLoop: 1,
-                    order: 1,
-                    density: 1,
-                    colorAction: "blue",
-                    fillColor: "#0066ff",
-                    pointList: [
-                        [marginAX + cornerWidthAB, marginAY - cornerHeightAB],
-                        [marginAX + cornerWidthAB * 2, marginAY - cornerHeightAB],
-                        [marginAX + widthAB + cornerWidthAB, marginAY],
-                        [marginAX + widthAB, marginAY],
-                    ]
-                },
-                D: {
-                    shapeMaxLoop: 1,
-                    order: 1,
-                    density: 1,
-                    colorAction: "blue",
-                    fillColor: "#ff00ea",
-                    pointList: [
-                        [marginAX + widthAB + cornerWidthAB, marginAY],
-                        [marginAX + widthAB + cornerWidthAB * 2, marginAY - cornerHeightAB],
-                        [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB, marginAY - cornerHeightAB],
-                        [marginAX + widthAB + widthAB, marginAY],
-                    ]
-                },
-            },
+            tile: {},
+            shapes: [],
         }
 
-        // showDebugPolygon(this.data.shapeBackground.background.pointList, this.data.shapeBackground.background.fillColor, "none");
+        for (var y = 0; y < 4; y++) {
+            for (var x = 0; x < 8; x++) {
 
-        showDebugPolygon(this.data.tile.A.pointList, this.data.tile.A.fillColor, "none");
-        showDebugPolygon(this.data.tile.B.pointList, this.data.tile.B.fillColor, "none");
-        showDebugPolygon(this.data.tile.C.pointList, this.data.tile.C.fillColor, "none");
-        showDebugPolygon(this.data.tile.D.pointList, this.data.tile.D.fillColor, "none");
+
+                var dataEntry = {
+                    A: {
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#d3d3d3",
+                        pointList: [
+                            [marginAX + totalTileWidth * x, marginAY + totalTileHeight * y],
+                            [marginAX + cornerWidthAB + totalTileWidth * x, marginAY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + totalTileWidth * x, marginAY + totalTileHeight * y],
+                            [marginAX + widthAB + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                            [marginAX + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                        ]
+                    },
+                    B: {
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#b8b8b8",
+                        pointList: [
+                            [marginAX + widthAB + totalTileWidth * x, marginAY + totalTileHeight * y],
+                            [marginAX + widthAB * 2 + totalTileWidth * x, marginAY + totalTileHeight * y],
+                            [marginAX + widthAB * 2 + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                            [marginAX + widthAB * 2 - cornerWidthAB + totalTileWidth * x, marginAY + heightAB + cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                        ]
+                    },
+                    C: {
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#707070",
+                        pointList: [
+                            [marginAX + cornerWidthAB + totalTileWidth * x, marginAY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + cornerWidthAB * 2 + totalTileWidth * x, marginAY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB + totalTileWidth * x, marginAY + totalTileHeight * y],
+                            [marginAX + widthAB + totalTileWidth * x, marginAY + totalTileHeight * y],
+                        ]
+                    },
+                    D: {
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#eeeded",
+                        pointList: [
+                            [marginAX + widthAB + cornerWidthAB + totalTileWidth * x, marginAY + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB * 2 + totalTileWidth * x, marginAY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB + totalTileWidth * x, marginAY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + widthAB + totalTileWidth * x, marginAY + totalTileHeight * y],
+                        ]
+                    },
+                    E: {
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#eeeded",
+                        pointList: [
+                            [marginAX - cornerWidthAB + totalTileWidth * x, marginAY + heightAB + cornerHeightAB + totalTileHeight * y],
+                            [marginAX + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                            [marginAX + cornerWidthAB + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                            [marginAX + totalTileWidth * x, marginAY + heightAB + cornerHeightAB + totalTileHeight * y],
+                        ]
+                    },
+                    F: {
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "#e4e4e4",
+                        fillColor: "#707070",
+                        pointList: [
+                            [marginAX + cornerWidthAB + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                            [marginAX + widthAB + totalTileWidth * x, marginAY + heightAB + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB + totalTileWidth * x, marginAY + heightAB + cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + totalTileWidth * x, marginAY + heightAB + cornerHeightAB + totalTileHeight * y],
+                        ]
+                    },
+                }
+
+                this.data.shapes.push(dataEntry)
+            }
+        }
+
+
+
+
+
+
+        showDebugPolygon(this.data.shapeBackground.background.pointList, this.data.shapeBackground.background.fillColor, "none");
+
+
+        // DISPLAY SHAPES
+        for (var i = 0; i < this.data.shapes.length; i++) {
+            showDebugPolygon(this.data.shapes[i].A.pointList, this.data.shapes[i].A.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].C.pointList, this.data.shapes[i].C.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].D.pointList, this.data.shapes[i].D.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none");
+        }
     }
 }
