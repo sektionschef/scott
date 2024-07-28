@@ -424,16 +424,16 @@ function getCenter(points) {
 
 
 // DEBUG
-function showDebugPoint(x, y, colory) {
+function showDebugPoint(x, y, colory, r = "2") {
 
     var debugPoint = document.createElementNS('http://www.w3.org/2000/svg', "circle");
     debugPoint.setAttributeNS(null, "id", "");
     debugPoint.setAttributeNS(null, "cx", x);
     debugPoint.setAttributeNS(null, "cy", y);
-    debugPoint.setAttributeNS(null, "r", "2");
+    debugPoint.setAttributeNS(null, "r", r);
     debugPoint.setAttributeNS(null, "stroke", "none");
     debugPoint.setAttributeNS(null, "fill", colory);
-    debugPoint.setAttributeNS(null, "stroke-width", 0.1);
+    // debugPoint.setAttributeNS(null, "stroke-width", 0.1);
     debugPoint.setAttributeNS(null, "opacity", 1);
 
     const svgNode = document.getElementById('svgNode');
