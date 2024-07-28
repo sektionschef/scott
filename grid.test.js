@@ -36,6 +36,7 @@ function testGrid() {
         shortSide: SHORTSIDE,
         landscape: LANDSCAPE,
         group: "debugGridGroup",
+        strokeSystem: STROKESYSTEM,
     }
 
     data2 = {
@@ -52,6 +53,7 @@ function testGrid() {
         shortSide: SHORTSIDE,
         landscape: LANDSCAPE,
         group: "debugGridGroup",
+        strokeSystem: STROKESYSTEM,
     }
 
     data3 = {
@@ -68,6 +70,7 @@ function testGrid() {
         shortSide: SHORTSIDE,
         landscape: LANDSCAPE,
         group: "debugGridGroup",
+        strokeSystem: STROKESYSTEM,
     }
 
     // let grid = new Grid(data1);
