@@ -424,7 +424,7 @@ function getCenter(points) {
 
 
 // DEBUG
-function showDebugPoint(x, y, colory, r = "2") {
+function showDebugPoint(x, y, colory, r = "2", label_name = "none") {
 
     var debugPoint = document.createElementNS('http://www.w3.org/2000/svg', "circle");
     debugPoint.setAttributeNS(null, "id", "");
@@ -436,11 +436,21 @@ function showDebugPoint(x, y, colory, r = "2") {
     // debugPoint.setAttributeNS(null, "stroke-width", 0.1);
     debugPoint.setAttributeNS(null, "opacity", 1);
 
+
     const svgNode = document.getElementById('svgNode');
     svgNode.appendChild(debugPoint);
+    if (label_name != "none") {
+        var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', (x + 10));
+        label.setAttribute('y', (y + 10));
+        label.setAttribute('fill', '#000');
+        label.appendChild(document.createTextNode(label_name));
+
+        svgNode.appendChild(label);
+    }
 }
 
-function showDebugPolygon(pointList, color, strokeColor) {
+function showDebugPolygon(pointList, color, strokeColor, label_name = "none") {
     const svgNode = document.getElementById('svgNode');
 
     var shape = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
@@ -448,4 +458,14 @@ function showDebugPolygon(pointList, color, strokeColor) {
     shape.setAttributeNS(null, 'stroke', strokeColor);
     shape.setAttributeNS(null, 'fill', color);
     svgNode.appendChild(shape);
+
+    if (label_name != "none") {
+        var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', pointList[0][0]);
+        label.setAttribute('y', pointList[0][0]);
+        label.setAttribute('fill', '#000');
+        label.appendChild(document.createTextNode(label_name));
+
+        svgNode.appendChild(label);
+    }
 }

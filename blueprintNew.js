@@ -59,6 +59,7 @@ class BlueprintNew {
 
                 var dataEntry = {
                     A: {
+                        label: "A",
                         shapeMaxLoop: 1,
                         order: 1,
                         density: 1,
@@ -73,6 +74,7 @@ class BlueprintNew {
                         ]
                     },
                     B: {
+                        label: "B",
                         shapeMaxLoop: 1,
                         order: 1,
                         density: 1,
@@ -87,6 +89,7 @@ class BlueprintNew {
                         ]
                     },
                     C: {
+                        label: "C",
                         shapeMaxLoop: 1,
                         order: 1,
                         density: 1,
@@ -100,6 +103,7 @@ class BlueprintNew {
                         ]
                     },
                     D: {
+                        label: "D",
                         shapeMaxLoop: 1,
                         order: 1,
                         density: 1,
@@ -154,7 +158,7 @@ class BlueprintNew {
 
         // DISPLAY SHAPES
         for (var i = 0; i < this.data.shapes.length; i++) {
-            showDebugPolygon(this.data.shapes[i].A.pointList, this.data.shapes[i].A.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].A.pointList, this.data.shapes[i].A.fillColor, "none", this.data.shapes[i].A.label);
             showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].C.pointList, this.data.shapes[i].C.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].D.pointList, this.data.shapes[i].D.fillColor, "none");
@@ -162,5 +166,7 @@ class BlueprintNew {
             // showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none");
             // showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none");
         }
+
+        showDebugPoint(100, 100, "black", "2", "oida")
     }
 }
