@@ -54,6 +54,7 @@ class BlueprintNew {
                 //     for (var x = 0; x < this.canvasWidth / totalTileWidth; x++) {
 
                 var columnOffsetX = totalTileWidth * x;
+                // var columnOffsetY = 0; 
                 var columnOffsetY = 2 * shapeOffsetY * x; // for reach column a corection down, perspective
 
                 var dataEntry = {
@@ -65,9 +66,9 @@ class BlueprintNew {
                         fillColor: "#d3d3d3",
                         pointList: [
                             [marginAX + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
-                            [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + shapeOffsetY * 0.5 + totalTileHeight * y],
-                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + totalTileHeight * y],
-                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + heightAB + totalTileHeight * y],
+                            [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
+                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y],
                             [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y],
                         ]
                     },
@@ -78,11 +79,11 @@ class BlueprintNew {
                         colorAction: "blue",
                         fillColor: "#b8b8b8",
                         pointList: [
-                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + totalTileHeight * y],
-                            [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 2 + totalTileHeight * y],
-                            [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 2 + heightAB + totalTileHeight * y],
-                            [marginAX + widthAB * 2 - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 1.5 + heightAB + cornerHeightAB + totalTileHeight * y],
-                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + heightAB + totalTileHeight * y],
+                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
+                            [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
+                            [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y],
+                            [marginAX + widthAB * 2 - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y],
                         ]
                     },
                     C: {
@@ -92,10 +93,10 @@ class BlueprintNew {
                         colorAction: "blue",
                         fillColor: "#707070",
                         pointList: [
-                            [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY / 2 - cornerHeightAB + totalTileHeight * y],
-                            [marginAX + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY - cornerHeightAB + totalTileHeight * y],
-                            [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 1.5 + totalTileHeight * y],
-                            [marginAX + widthAB + columnOffsetX, marginAY + shapeOffsetY + columnOffsetY + totalTileHeight * y],
+                            [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
+                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
                         ]
                     },
                     D: {
@@ -105,38 +106,38 @@ class BlueprintNew {
                         colorAction: "blue",
                         fillColor: "#eeeded",
                         pointList: [
-                            [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 1.5 + totalTileHeight * y],
-                            [marginAX + widthAB + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 2 - cornerHeightAB + totalTileHeight * y],
-                            [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 2.5 - cornerHeightAB + totalTileHeight * y],
-                            [marginAX + widthAB + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 2 + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y],
+                            [marginAX + widthAB + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y],
                         ]
                     },
-                    E: {
-                        shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
-                        colorAction: "blue",
-                        fillColor: "#eeeded",
-                        pointList: [
-                            [marginAX - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - shapeOffsetY / 2 + heightAB + cornerHeightAB + totalTileHeight * y],
-                            [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y],
-                            [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY / 2 + heightAB + totalTileHeight * y],
-                            [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + cornerHeightAB + totalTileHeight * y],
-                        ]
-                    },
-                    F: {
-                        shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
-                        colorAction: "#e4e4e4",
-                        fillColor: "#707070",
-                        pointList: [
-                            [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY / 2 + heightAB + totalTileHeight * y],
-                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + heightAB + totalTileHeight * y],
-                            [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 1.5 + heightAB + cornerHeightAB + totalTileHeight * y],
-                            [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + heightAB + cornerHeightAB + totalTileHeight * y],
-                        ]
-                    },
+                    // E: {
+                    //     shapeMaxLoop: 1,
+                    //     order: 1,
+                    //     density: 1,
+                    //     colorAction: "blue",
+                    //     fillColor: "#eeeded",
+                    //     pointList: [
+                    //         [marginAX - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - shapeOffsetY / 2 + heightAB + cornerHeightAB + totalTileHeight * y],
+                    //         [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y],
+                    //         [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY / 2 + heightAB + totalTileHeight * y],
+                    //         [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + cornerHeightAB + totalTileHeight * y],
+                    //     ]
+                    // },
+                    // F: {
+                    //     shapeMaxLoop: 1,
+                    //     order: 1,
+                    //     density: 1,
+                    //     colorAction: "#e4e4e4",
+                    //     fillColor: "#707070",
+                    //     pointList: [
+                    //         [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY / 2 + heightAB + totalTileHeight * y],
+                    //         [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + heightAB + totalTileHeight * y],
+                    //         [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY * 1.5 + heightAB + cornerHeightAB + totalTileHeight * y],
+                    //         [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY + heightAB + cornerHeightAB + totalTileHeight * y],
+                    //     ]
+                    // },
                 }
 
                 this.data.shapes.push(dataEntry)
@@ -157,6 +158,7 @@ class BlueprintNew {
             showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].C.pointList, this.data.shapes[i].C.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].D.pointList, this.data.shapes[i].D.fillColor, "none");
+
             // showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none");
             // showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none");
         }
