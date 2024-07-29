@@ -17,13 +17,14 @@ class BlueprintNew {
         var marginAX = this.margin + this.boxSize * 4;
         var marginAY = this.margin + this.boxSize * 4;
         var heightAB = 15 * this.boxSize; // 
-        var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
+        var shapeOffsetY = 0 * this.boxSize; // for perspective, relative to widthAB
+        // var shapeOffsetY = 2 * this.boxSize; // for perspective, relative to widthAB
 
         var widthAB = heightAB * 2 / 3;
         var cornerHeightAB = heightAB / 2;
         var cornerWidthAB = widthAB / 2;
         var totalTileWidth = widthAB * 2;
-        var totalTileHeight = heightAB + cornerHeightAB;
+        var totalTileHeight = (heightAB + cornerHeightAB) * 2;
 
         this.data = {
             shapeBackground: {
@@ -48,29 +49,42 @@ class BlueprintNew {
             shapes: [],
         }
 
-        for (var y = 0; y < 3; y++) {
-            for (var x = 0; x < 3; x++) {
+        for (var y = 0; y < 2; y++) {
+            for (var x = 0; x < 2; x++) {
                 // for (var y = 0; y < this.canvasHeight / totalTileHeight; y++) {
                 //     for (var x = 0; x < this.canvasWidth / totalTileWidth; x++) {
 
                 var columnOffsetX = totalTileWidth * x;
-                // var columnOffsetY = 0; 
-                var columnOffsetY = 2 * shapeOffsetY * x; // for reach column a corection down, perspective
+                var columnOffsetY = 0;
+                // var columnOffsetY = 2 * shapeOffsetY * x; // for reach column a corection down, perspective
 
                 // calc all the coordinates
                 var P1 = [marginAX + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
-                var P2 = [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y];
-                var P3 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
-                var P4 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y];
+                var P2 = [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
+                var P3 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y + shapeOffsetY];
+                var P4 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y + shapeOffsetY];
                 var P5 = [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y];
 
                 var P6 = [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
                 var P7 = [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y];
-                var P8 = [marginAX + widthAB * 2 - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + cornerHeightAB + totalTileHeight * y];
-                var P9 = [marginAX + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y];
-                var P10 = [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
+                var P8 = [marginAX + widthAB * 2 - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
+                var P9 = [marginAX + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY];
+                var P10 = [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y + shapeOffsetY / 2];
                 var P11 = [marginAX + widthAB + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y];
-                var P12 = [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y];
+                var P12 = [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
+
+                var P13 = [P1[0], P1[1] + (heightAB + cornerHeightAB)];
+                var P14 = [P2[0], P2[1] + (heightAB + cornerHeightAB)];
+                var P15 = [P3[0], P3[1] + (heightAB + cornerHeightAB)];
+                var P16 = [P4[0], P4[1] + (heightAB + cornerHeightAB)];
+                var P17 = [P5[0], P5[1] + (heightAB + cornerHeightAB)];
+
+                var P18 = [P6[0], P6[1] + (heightAB + cornerHeightAB)];
+                var P19 = [P7[0], P7[1] + (heightAB + cornerHeightAB)];
+                var P20 = [P8[0], P8[1] + (heightAB + cornerHeightAB)];
+
+                var P21 = [P12[0], P12[1] + (heightAB + cornerHeightAB)];
+
 
                 var dataEntry = {
                     A: {
@@ -131,6 +145,64 @@ class BlueprintNew {
                             P6,
                         ]
                     },
+                    E: {
+                        label: "E",
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#b8b8b8",
+                        pointList: [
+                            P13,
+                            P14,
+                            P15,
+                            P16,
+                            P17,
+                        ]
+                    },
+                    F: {
+                        label: "F",
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#d3d3d3",
+                        pointList: [
+                            P15,
+                            P18,
+                            P19,
+                            P20,
+                            P16,
+                        ]
+                    },
+                    G: {
+                        label: "G",
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#eeeded",
+                        pointList: [
+                            P14,
+                            P4,
+                            P8,
+                            P15,
+                        ]
+                    },
+                    H: {
+                        label: "H",
+                        shapeMaxLoop: 1,
+                        order: 1,
+                        density: 1,
+                        colorAction: "blue",
+                        fillColor: "#707070",
+                        pointList: [
+                            P8,
+                            P7,
+                            P21,
+                            P18,
+                        ]
+                    },
                 }
 
                 this.data.shapes.push(dataEntry)
@@ -152,9 +224,10 @@ class BlueprintNew {
             showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].C.pointList, this.data.shapes[i].C.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].D.pointList, this.data.shapes[i].D.fillColor, "none");
-
-            // showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none");
-            // showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].G.pointList, this.data.shapes[i].G.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].H.pointList, this.data.shapes[i].H.fillColor, "none");
         }
 
         showDebugPoint(P1[0], P1[1], "black", "2", "P1")
@@ -169,5 +242,18 @@ class BlueprintNew {
         showDebugPoint(P10[0], P10[1], "black", "2", "P10")
         showDebugPoint(P11[0], P11[1], "black", "2", "P11")
         showDebugPoint(P12[0], P12[1], "black", "2", "P12")
+
+        showDebugPoint(P13[0], P13[1], "black", "2", "P13")
+        showDebugPoint(P14[0], P14[1], "black", "2", "P14")
+        showDebugPoint(P15[0], P15[1], "black", "2", "P15")
+        showDebugPoint(P16[0], P16[1], "black", "2", "P16")
+        showDebugPoint(P17[0], P17[1], "black", "2", "P17")
+
+        showDebugPoint(P18[0], P18[1], "black", "2", "P18")
+        showDebugPoint(P19[0], P19[1], "black", "2", "P19")
+        showDebugPoint(P20[0], P20[1], "black", "2", "P20")
+
+        showDebugPoint(P21[0], P21[1], "black", "2", "P21")
+
     }
 }
