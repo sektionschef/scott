@@ -26,8 +26,8 @@ class BlueprintNew {
         var marginAX = this.margin + this.boxSize * 4;
         var marginAY = this.margin + this.boxSize * 4;
         var heightAB = 15 * this.boxSize; // 
-        var shapeOffsetY = 0 * this.boxSize; // for perspective, relative to widthAB
-        // var shapeOffsetY = 2 * this.boxSize; // for perspective, relative to widthAB
+        // var shapeOffsetY = 0 * this.boxSize; // for perspective, relative to widthAB
+        var shapeOffsetY = 2 * this.boxSize; // for perspective, relative to widthAB
 
         var widthAB = heightAB * 2 / 3;
         var cornerHeightAB = heightAB / 2;
@@ -58,42 +58,80 @@ class BlueprintNew {
             shapes: [],
         }
 
-        for (var y = 0; y < 1; y++) {
-            for (var x = 0; x < 1; x++) {
+        for (var y = 0; y < 2; y++) {
+            for (var x = 0; x < 3; x++) {
                 // for (var y = 0; y < this.canvasHeight / totalTileHeight; y++) {
                 //     for (var x = 0; x < this.canvasWidth / totalTileWidth; x++) {
 
                 var columnOffsetX = totalTileWidth * x;
-                var columnOffsetY = 0;
-                // var columnOffsetY = 2 * shapeOffsetY * x; // for reach column a corection down, perspective
+                var columnOffsetY = totalTileHeight * y;
+                // var columnOffsetY = shapeOffsetY * x; // for reach column a corection down, perspective
 
                 // calc all the coordinates
-                var P1 = [marginAX + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
-                var P2 = [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
-                var P3 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y + shapeOffsetY];
-                var P4 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y + shapeOffsetY];
-                var P5 = [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y];
+                // var P1 = [marginAX + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
+                // var P2 = [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
+                // var P3 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y + shapeOffsetY];
+                // var P4 = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y + shapeOffsetY];
+                // var P5 = [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y];
 
-                var P6 = [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
-                var P7 = [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y];
-                var P8 = [marginAX + widthAB * 2 - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
-                var P9 = [marginAX + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY];
-                var P10 = [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y + shapeOffsetY / 2];
-                var P11 = [marginAX + widthAB + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y];
-                var P12 = [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
+                // var P6 = [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y];
+                // var P7 = [marginAX + widthAB * 2 + columnOffsetX, marginAY + columnOffsetY + heightAB + totalTileHeight * y];
+                // var P8 = [marginAX + widthAB * 2 - cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + heightAB + cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
+                // var P9 = [marginAX + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY];
+                // var P10 = [marginAX + widthAB + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY + totalTileHeight * y + shapeOffsetY / 2];
+                // var P11 = [marginAX + widthAB + cornerWidthAB * 2 + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y];
+                // var P12 = [marginAX + widthAB + cornerWidthAB * 2 + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB + totalTileHeight * y + shapeOffsetY / 2];
 
-                var P13 = [P1[0], P1[1] + (heightAB + cornerHeightAB)];
-                var P14 = [P2[0], P2[1] + (heightAB + cornerHeightAB)];
-                var P15 = [P3[0], P3[1] + (heightAB + cornerHeightAB)];
-                var P16 = [P4[0], P4[1] + (heightAB + cornerHeightAB)];
-                var P17 = [P5[0], P5[1] + (heightAB + cornerHeightAB)];
+                var P1ur = [marginAX + columnOffsetX, marginAY + columnOffsetY];
+                var P2ur = [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB];
+                var P3ur = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY];
+                var P4ur = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB];
+                var P5ur = [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB];
 
-                var P18 = [P6[0], P6[1] + (heightAB + cornerHeightAB)];
-                var P19 = [P7[0], P7[1] + (heightAB + cornerHeightAB)];
-                var P20 = [P8[0], P8[1] + (heightAB + cornerHeightAB)];
+                var P6ur = [P3ur[0] + widthAB, P3ur[1]];
+                var P7ur = [P6ur[0], P6ur[1] + heightAB];
+                var P8ur = [P4ur[0] + widthAB / 2, P4ur[1] + cornerHeightAB];
+                var P9ur = [P3ur[0], P2ur[1]];
+                var P10ur = [P8ur[0], P3ur[1]];
+                var P11ur = [P6ur[0], P9ur[1]];
+                var P12ur = [P11ur[0] + widthAB / 2, P11ur[1]];
+                var P13ur = [P1ur[0], P1ur[1] + (heightAB + cornerHeightAB)];
+                var P14ur = [P2ur[0], P2ur[1] + (heightAB + cornerHeightAB)];
+                var P15ur = [P3ur[0], P3ur[1] + (heightAB + cornerHeightAB)];
+                var P16ur = [P4ur[0], P4ur[1] + (heightAB + cornerHeightAB)];
+                var P17ur = [P5ur[0], P5ur[1] + (heightAB + cornerHeightAB)];
+                var P18ur = [P6ur[0], P6ur[1] + (heightAB + cornerHeightAB)];
+                var P19ur = [P7ur[0], P7ur[1] + (heightAB + cornerHeightAB)];
+                var P20ur = [P8ur[0], P8ur[1] + (heightAB + cornerHeightAB)];
+                var P21ur = [P12ur[0], P12ur[1] + (heightAB + cornerHeightAB)];
 
-                var P21 = [P12[0], P12[1] + (heightAB + cornerHeightAB)];
+                // dynamic
+                var P1 = [P1ur[0], P1ur[1] - shapeOffsetY];
+                var P2 = [P2ur[0] + shapeOffsetY / 2, P2ur[1] - shapeOffsetY / 2];
+                var P3 = [P3ur[0], P3ur[1]];
+                var P4 = [P4ur[0], P4ur[1]];
+                var P5 = [P5ur[0], P5ur[1] - shapeOffsetY];
+                var P6 = [P6ur[0], P6ur[1] - shapeOffsetY];
+                var P7 = [P7ur[0], P7ur[1] - shapeOffsetY];
+                var P8 = [P8ur[0] - shapeOffsetY / 2, P8ur[1] + shapeOffsetY / 2];
+                var P9 = [P9ur[0], P9ur[1]];
+                // var P10 = [P10ur[0], P10ur[1]];
+                // var P11 = [P11ur[0], P11ur[1]];
+                // var P12 = [P12ur[0], P12ur[1]];
+                var P13 = [P13ur[0], P13ur[1] - shapeOffsetY];
+                var P14 = [P14ur[0] + shapeOffsetY / 2, P14ur[1] - shapeOffsetY / 2];
+                var P15 = [P15ur[0], P15ur[1]];
+                var P16 = [P16ur[0], P16ur[1]];
+                var P17 = [P17ur[0], P17ur[1] - shapeOffsetY];
+                var P18 = [P18ur[0], P18ur[1] - shapeOffsetY];
+                var P19 = [P19ur[0], P19ur[1] - shapeOffsetY];
+                var P20 = [P20ur[0] - shapeOffsetY / 2, P20ur[1] + shapeOffsetY / 2];
+                var P21 = [P21ur[0], P21ur[1]];
 
+                var P10 = [P20[0], P20[1] - totalTileHeight]; // dirty hack
+                var P11 = [P17[0] + widthAB * 2, P17[1] - totalTileHeight];  // dirty hack
+                var P12 = [P2[0] + widthAB * 2, P2[1]]  // dirty hack
+                // var P5 = [P7[0] - widthAB * 2, P7[1]]  // dirty hack
 
                 var dataEntry = {
                     A: {
