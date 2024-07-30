@@ -84,7 +84,7 @@ class BlueprintNew {
 
                 var P1ur = [marginAX + columnOffsetX, marginAY + columnOffsetY];
                 var P2ur = [marginAX + cornerWidthAB + columnOffsetX, marginAY + columnOffsetY - cornerHeightAB];
-                var P3ur = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + shapeOffsetY];
+                var P3ur = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY];
                 var P4ur = [marginAX + widthAB + columnOffsetX, marginAY + columnOffsetY + heightAB];
                 var P5ur = [marginAX + columnOffsetX, marginAY + columnOffsetY + heightAB];
 
@@ -128,9 +128,9 @@ class BlueprintNew {
                 var P20 = [P20ur[0] - shapeOffsetY / 2, P20ur[1] + shapeOffsetY / 2];
                 var P21 = [P21ur[0], P21ur[1]];
 
-                // var P10 = [P20[0], P20[1] - totalTileHeight]; // dirty hack
-                // var P11 = [P17[0] + widthAB * 2, P17[1] - totalTileHeight];  // dirty hack
-                // var P12 = [P2[0] + widthAB * 2, P2[1]]  // dirty hack
+                var P10 = [P20[0], P20[1] - totalTileHeight]; // dirty hack
+                var P11 = [P17[0] + widthAB * 2, P17[1] - totalTileHeight];  // dirty hack
+                var P12 = [P2[0] + widthAB * 2, P2[1]]  // dirty hack
                 // // var P5 = [P7[0] - widthAB * 2, P7[1]]  // dirty hack
 
                 var dataEntry = {
