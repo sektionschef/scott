@@ -27,7 +27,7 @@ class BlueprintNew {
         var marginAY = this.margin + this.boxSize * 4;
         var heightAB = 15 * this.boxSize; // 
         // var shapeOffsetY = 0 * this.boxSize; // for perspective, relative to widthAB
-        var shapeOffsetY = 2 * this.boxSize; // for perspective, relative to widthAB
+        var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
 
         var widthAB = heightAB * 2 / 3;
         var cornerHeightAB = heightAB / 2;
@@ -106,18 +106,18 @@ class BlueprintNew {
                 var P21ur = [P12ur[0], P12ur[1] + (heightAB + cornerHeightAB)];
 
                 // dynamic
-                var P1 = [P1ur[0], P1ur[1] - shapeOffsetY];
-                var P2 = [P2ur[0] + shapeOffsetY / 2, P2ur[1] - shapeOffsetY / 2];
+                var P1 = [P1ur[0], P1ur[1] + shapeOffsetY];
+                var P2 = [P2ur[0] - shapeOffsetY / 2, P2ur[1] + shapeOffsetY / 2];
                 var P3 = [P3ur[0], P3ur[1]];
                 var P4 = [P4ur[0], P4ur[1]];
-                var P5 = [P5ur[0], P5ur[1] - shapeOffsetY];
-                var P6 = [P6ur[0], P6ur[1] - shapeOffsetY];
-                var P7 = [P7ur[0], P7ur[1] - shapeOffsetY];
-                var P8 = [P8ur[0] - shapeOffsetY / 2, P8ur[1] + shapeOffsetY / 2];
+                var P5 = [P5ur[0], P5ur[1] + shapeOffsetY];
+                var P6 = [P6ur[0], P6ur[1] + shapeOffsetY];
+                var P7 = [P7ur[0], P7ur[1] + shapeOffsetY];
+                var P8 = [P8ur[0] + shapeOffsetY / 2, P8ur[1] - shapeOffsetY / 2];
                 var P9 = [P9ur[0], P9ur[1]];
-                // var P10 = [P10ur[0], P10ur[1]];
-                // var P11 = [P11ur[0], P11ur[1]];
-                // var P12 = [P12ur[0], P12ur[1]];
+                var P10 = [P10ur[0], P10ur[1]];
+                var P11 = [P11ur[0], P11ur[1]];
+                var P12 = [P12ur[0], P12ur[1]];
                 var P13 = [P13ur[0], P13ur[1] - shapeOffsetY];
                 var P14 = [P14ur[0] + shapeOffsetY / 2, P14ur[1] - shapeOffsetY / 2];
                 var P15 = [P15ur[0], P15ur[1]];
@@ -128,10 +128,10 @@ class BlueprintNew {
                 var P20 = [P20ur[0] - shapeOffsetY / 2, P20ur[1] + shapeOffsetY / 2];
                 var P21 = [P21ur[0], P21ur[1]];
 
-                var P10 = [P20[0], P20[1] - totalTileHeight]; // dirty hack
-                var P11 = [P17[0] + widthAB * 2, P17[1] - totalTileHeight];  // dirty hack
-                var P12 = [P2[0] + widthAB * 2, P2[1]]  // dirty hack
-                // var P5 = [P7[0] - widthAB * 2, P7[1]]  // dirty hack
+                // var P10 = [P20[0], P20[1] - totalTileHeight]; // dirty hack
+                // var P11 = [P17[0] + widthAB * 2, P17[1] - totalTileHeight];  // dirty hack
+                // var P12 = [P2[0] + widthAB * 2, P2[1]]  // dirty hack
+                // // var P5 = [P7[0] - widthAB * 2, P7[1]]  // dirty hack
 
                 var dataEntry = {
                     A: {
