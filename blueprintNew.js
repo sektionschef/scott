@@ -1,6 +1,8 @@
 class BlueprintNew {
     constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight) {
 
+        this.DEBUGpoints = true;
+
         this.stripeHeight = stripeHeight;
         this.marginRelative = marginRelative;
         this.boxSize = shortSide / resolutionBoxCount;
@@ -13,7 +15,14 @@ class BlueprintNew {
             this.margin = Math.round(this.stripeHeight * this.marginRelative) * this.boxSize;
         }
 
-        // fixed
+        // color
+        var highlight = "#eeeded";
+        var midtonehigh = "#d3d3d3";
+        var midtonelow = "#b3b3b3";
+        var lowlight = "#808080";
+
+
+        // fixed distances
         var marginAX = this.margin + this.boxSize * 4;
         var marginAY = this.margin + this.boxSize * 4;
         var heightAB = 15 * this.boxSize; // 
@@ -49,8 +58,8 @@ class BlueprintNew {
             shapes: [],
         }
 
-        for (var y = 0; y < 2; y++) {
-            for (var x = 0; x < 2; x++) {
+        for (var y = 0; y < 1; y++) {
+            for (var x = 0; x < 1; x++) {
                 // for (var y = 0; y < this.canvasHeight / totalTileHeight; y++) {
                 //     for (var x = 0; x < this.canvasWidth / totalTileWidth; x++) {
 
@@ -93,7 +102,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#d3d3d3",
+                        fillColor: midtonelow,
                         pointList: [
                             P1,
                             P2,
@@ -108,7 +117,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#b8b8b8",
+                        fillColor: midtonehigh,
                         pointList: [
                             P3,
                             P6,
@@ -123,7 +132,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#707070",
+                        fillColor: lowlight,
                         pointList: [
                             P2,
                             P9,
@@ -137,7 +146,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#eeeded",
+                        fillColor: highlight,
                         pointList: [
                             P10,
                             P11,
@@ -151,7 +160,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#b8b8b8",
+                        fillColor: midtonehigh,
                         pointList: [
                             P13,
                             P14,
@@ -166,7 +175,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#d3d3d3",
+                        fillColor: midtonelow,
                         pointList: [
                             P15,
                             P18,
@@ -181,7 +190,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#eeeded",
+                        fillColor: highlight,
                         pointList: [
                             P14,
                             P4,
@@ -195,7 +204,7 @@ class BlueprintNew {
                         order: 1,
                         density: 1,
                         colorAction: "blue",
-                        fillColor: "#707070",
+                        fillColor: lowlight,
                         pointList: [
                             P8,
                             P7,
@@ -230,30 +239,32 @@ class BlueprintNew {
             showDebugPolygon(this.data.shapes[i].H.pointList, this.data.shapes[i].H.fillColor, "none");
         }
 
-        showDebugPoint(P1[0], P1[1], "black", "2", "P1")
-        showDebugPoint(P2[0], P2[1], "black", "2", "P2")
-        showDebugPoint(P3[0], P3[1], "black", "2", "P3")
-        showDebugPoint(P4[0], P4[1], "black", "2", "P4")
-        showDebugPoint(P5[0], P5[1], "black", "2", "P5")
-        showDebugPoint(P6[0], P6[1], "black", "2", "P6")
-        showDebugPoint(P7[0], P7[1], "black", "2", "P7")
-        showDebugPoint(P8[0], P8[1], "black", "2", "P8")
-        showDebugPoint(P9[0], P9[1], "black", "2", "P9")
-        showDebugPoint(P10[0], P10[1], "black", "2", "P10")
-        showDebugPoint(P11[0], P11[1], "black", "2", "P11")
-        showDebugPoint(P12[0], P12[1], "black", "2", "P12")
+        if (this.DEBUGpoints) {
+            showDebugPoint(P1[0], P1[1], "black", "2", "P1")
+            showDebugPoint(P2[0], P2[1], "black", "2", "P2")
+            showDebugPoint(P3[0], P3[1], "black", "2", "P3")
+            showDebugPoint(P4[0], P4[1], "black", "2", "P4")
+            showDebugPoint(P5[0], P5[1], "black", "2", "P5")
+            showDebugPoint(P6[0], P6[1], "black", "2", "P6")
+            showDebugPoint(P7[0], P7[1], "black", "2", "P7")
+            showDebugPoint(P8[0], P8[1], "black", "2", "P8")
+            showDebugPoint(P9[0], P9[1], "black", "2", "P9")
+            showDebugPoint(P10[0], P10[1], "black", "2", "P10")
+            showDebugPoint(P11[0], P11[1], "black", "2", "P11")
+            showDebugPoint(P12[0], P12[1], "black", "2", "P12")
 
-        showDebugPoint(P13[0], P13[1], "black", "2", "P13")
-        showDebugPoint(P14[0], P14[1], "black", "2", "P14")
-        showDebugPoint(P15[0], P15[1], "black", "2", "P15")
-        showDebugPoint(P16[0], P16[1], "black", "2", "P16")
-        showDebugPoint(P17[0], P17[1], "black", "2", "P17")
+            showDebugPoint(P13[0], P13[1], "black", "2", "P13")
+            showDebugPoint(P14[0], P14[1], "black", "2", "P14")
+            showDebugPoint(P15[0], P15[1], "black", "2", "P15")
+            showDebugPoint(P16[0], P16[1], "black", "2", "P16")
+            showDebugPoint(P17[0], P17[1], "black", "2", "P17")
 
-        showDebugPoint(P18[0], P18[1], "black", "2", "P18")
-        showDebugPoint(P19[0], P19[1], "black", "2", "P19")
-        showDebugPoint(P20[0], P20[1], "black", "2", "P20")
+            showDebugPoint(P18[0], P18[1], "black", "2", "P18")
+            showDebugPoint(P19[0], P19[1], "black", "2", "P19")
+            showDebugPoint(P20[0], P20[1], "black", "2", "P20")
 
-        showDebugPoint(P21[0], P21[1], "black", "2", "P21")
+            showDebugPoint(P21[0], P21[1], "black", "2", "P21")
+        }
 
     }
 }
