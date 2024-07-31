@@ -107,13 +107,13 @@ class BlueprintNew {
 
                 // dynamic
                 var P1 = [P1ur[0], P1ur[1] + shapeOffsetY];
-                var P2 = [P2ur[0] - shapeOffsetY / 2, P2ur[1] + shapeOffsetY / 2];
+                var P2 = [P2ur[0] + shapeOffsetY / 2, P2ur[1] - shapeOffsetY / 2];
                 var P3 = [P3ur[0], P3ur[1]];
                 var P4 = [P4ur[0], P4ur[1]];
                 var P5 = [P5ur[0], P5ur[1] + shapeOffsetY];
                 var P6 = [P6ur[0], P6ur[1] + shapeOffsetY];
                 var P7 = [P7ur[0], P7ur[1] + shapeOffsetY];
-                var P8 = [P8ur[0] + shapeOffsetY / 2, P8ur[1] - shapeOffsetY / 2];
+                var P8 = [P8ur[0] + shapeOffsetY / 2, P8ur[1] + shapeOffsetY / 2];
                 var P9 = [P9ur[0], P9ur[1]];
                 var P10 = [P10ur[0], P10ur[1]];
                 var P11 = [P11ur[0], P11ur[1]];
@@ -268,13 +268,13 @@ class BlueprintNew {
         for (var i = 0; i < this.data.shapes.length; i++) {
             // showDebugPolygon(this.data.shapes[i].A.pointList, this.data.shapes[i].A.fillColor, "none", this.data.shapes[i].A.label);
             showDebugPolygon(this.data.shapes[i].A.pointList, this.data.shapes[i].A.fillColor, "none", "none");
-            showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].C.pointList, this.data.shapes[i].C.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].D.pointList, this.data.shapes[i].D.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].G.pointList, this.data.shapes[i].G.fillColor, "none");
             showDebugPolygon(this.data.shapes[i].H.pointList, this.data.shapes[i].H.fillColor, "none");
+            showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none");
         }
 
         if (this.DEBUGpoints) {
@@ -296,6 +296,7 @@ class BlueprintNew {
             showDebugPoint(P15[0], P15[1], "black", "2", "P15")
             showDebugPoint(P16[0], P16[1], "black", "2", "P16")
             showDebugPoint(P17[0], P17[1], "black", "2", "P17")
+
 
             showDebugPoint(P18[0], P18[1], "black", "2", "P18")
             showDebugPoint(P19[0], P19[1], "black", "2", "P19")
