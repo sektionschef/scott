@@ -422,6 +422,15 @@ function getCenter(points) {
     return center
 }
 
+// https://stackoverflow.com/questions/16282330/find-centerpoint-of-polygon-in-javascript
+function getCentroid(arr) {
+    var x = arr.map(xy => xy[0]);
+    var y = arr.map(xy => xy[1]);
+    var cx = (Math.min(...x) + Math.max(...x)) / 2;
+    var cy = (Math.min(...y) + Math.max(...y)) / 2;
+    return [cx, cy];
+}
+
 
 // DEBUG
 function showDebugPoint(x, y, colory, r = "2", label_name = "none") {
@@ -459,10 +468,12 @@ function showDebugPolygon(pointList, color, strokeColor, label_name = "none") {
     shape.setAttributeNS(null, 'fill', color);
     svgNode.appendChild(shape);
 
+    var centroid = getCentroid(pointList);
+
     if (label_name != "none") {
         var label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('x', pointList[0][0]);
-        label.setAttribute('y', pointList[0][0]);
+        label.setAttribute('x', centroid[0]);
+        label.setAttribute('y', centroid[1]);
         label.setAttribute('fill', '#000');
         label.appendChild(document.createTextNode(label_name));
 

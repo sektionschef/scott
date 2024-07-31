@@ -13,9 +13,6 @@ function testBlueprintNew() {
         stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight
     );
 
-    // for (var y = 0; y < canvasHeight / boxSize; y++) {
-    //     for (var x = 0; x < canvasWidth / boxSize; x++) {
-    //         showDebugPoint(x * boxSize, y * boxSize, "pink", r = "1");
-    //     }
-    // }
+    blueprint.debugShowShapes();
+    blueprint.debugShowPoints();
 }
