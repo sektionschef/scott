@@ -26,7 +26,7 @@ class BlueprintNew {
         // fixed distances
         var marginAX = this.margin + this.boxSize * -4;
         var marginAY = this.margin + this.boxSize * -4;
-        var heightAB = 40 * this.boxSize; // used to be 15
+        var heightAB = 20 * this.boxSize; // used to be 15
 
         var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
 
@@ -140,7 +140,7 @@ class BlueprintNew {
                         label: "B",
                         shapeMaxLoop: 1,
                         order: 8,
-                        density: 8,
+                        density: 2,
                         colorAction: "blue",
                         fillColor: midtonehigh,
                         pointList: [
@@ -169,7 +169,7 @@ class BlueprintNew {
                         label: "D",
                         shapeMaxLoop: 1,
                         order: 3,
-                        density: 10,
+                        density: 6,
                         colorAction: "blue",
                         fillColor: highlight,
                         pointList: [
@@ -183,7 +183,7 @@ class BlueprintNew {
                         label: "E",
                         shapeMaxLoop: 1,
                         order: 4,
-                        density: 30,
+                        density: 3,
                         colorAction: "blue",
                         fillColor: midtonehigh,
                         pointList: [
@@ -213,7 +213,7 @@ class BlueprintNew {
                         label: "G",
                         shapeMaxLoop: 1,
                         order: 6,
-                        density: 12,
+                        density: 5,
                         colorAction: "blue",
                         fillColor: highlight,
                         pointList: [
@@ -227,7 +227,7 @@ class BlueprintNew {
                         label: "H",
                         shapeMaxLoop: 1,
                         order: 7,
-                        density: 60,
+                        density: 1,
                         colorAction: "blue",
                         fillColor: lowlight,
                         pointList: [

@@ -112,17 +112,18 @@ class strokeSystem {
             if (path.readyToDraw == true) {
 
                 if (path.boxIndex % path.density == 0) {
-                    // CULPRIT
-                    continue;
-                }
-
-
-                if (this.debugPath) {
-                    path.drawDebugLine(group);
-                    path.drawDebugCenter(group);
+                    if (this.debugPath) {
+                        path.drawDebugLine(group);
+                        path.drawDebugCenter(group);
+                    } else {
+                        path.drawFilledPath(group);
+                    }
                 } else {
-                    path.drawFilledPath(group);
+                    continue;
+
                 }
+
+
 
             }
         }
