@@ -52,6 +52,7 @@ class strokeSystem {
         })
 
         this.paths.push(path);
+        // console.log(this.paths);
     }
 
     run() {
@@ -111,8 +112,10 @@ class strokeSystem {
             if (path.readyToDraw == true) {
 
                 if (path.boxIndex % path.density == 0) {
+                    // CULPRIT
                     continue;
                 }
+
 
                 if (this.debugPath) {
                     path.drawDebugLine(group);

@@ -1,5 +1,5 @@
 // ########################################
-TEST = true;
+TEST = false;
 
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
@@ -64,7 +64,15 @@ if (CANVASFORMATCHOSEN.canvasWidth <= CANVASFORMATCHOSEN.canvasHeight) {
 }
 
 if (TEST == false) {
-  blueprint = new Blueprint(
+  // blueprint = new Blueprint(
+  //   STRIPEHEIGHT,
+  //   MARGINRELATIVE,
+  //   SHORTSIDE,
+  //   RESOLUTIONBOXCOUNT,
+  //   CANVASFORMATCHOSEN.canvasWidth,
+  //   CANVASFORMATCHOSEN.canvasHeight,
+  // );
+  blueprint = new BlueprintNew(
     STRIPEHEIGHT,
     MARGINRELATIVE,
     SHORTSIDE,
@@ -73,10 +81,13 @@ if (TEST == false) {
     CANVASFORMATCHOSEN.canvasHeight,
   );
 
+  // console.log(blueprint);
+
   SHAPES = new Shapes(
     blueprint
   );
 
+  // console.log(SHAPES.loopMaterial);
   STROKESYSTEM = new strokeSystem(SHAPES);
 }
 
@@ -268,8 +279,8 @@ function main() {
   }
 
   if (TEST) {
-    testBlueprintNew();
     // testGrid();
+    // testBlueprintNew();
     // testBlueprint();
     // testShapes();
     // testStrokeSystem();

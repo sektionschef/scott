@@ -18,11 +18,14 @@ class Shapes {
         this.boxSize = blueprint.boxSize;
         this.stripeHeight = blueprint.stripeHeight;
 
-        this.calcCoords();
+        // this.calcCoords();  // for the first blueprint only
+        // this.sortForLoop();
 
-        this.sortForLoop();
-        this.treatIntersections();
-        this.reindex();
+        this.sortForLoopNew();
+
+        // NEEDED FOR THE INITIAL PROTOTYPE - INTERSECTIONS
+        // this.treatIntersections();
+        // this.reindex();
 
         // console.log(this.loopMaterial);
     }
@@ -151,6 +154,31 @@ class Shapes {
         // console.log(this.loopMaterial);
     }
 
+    sortForLoopNew() {
+
+        // reformat for displaying correct hierarchy - order of elements, background to front
+        this.loopMaterial = {};
+
+        // BACKGROUND NOT USED - CAN BE POSITION 0
+
+        // console.log(this.allShapes.shapes);  // nur die flächen innerhalb der loops sortieren
+
+        // for (var shapeLoop of this.allShapes.shapes) {
+        for (var i = 0; i < this.allShapes.shapes.length; i++) {
+            var shapeLoop = this.allShapes.shapes[i]
+            // console.log(shapeLoop);
+            var shapeCountPerLoop = Object.keys(shapeLoop).length;
+
+            for (const [key, value] of Object.entries(shapeLoop)) {
+                // console.log(value['order'])
+                // console.log((value['order'] + i * shapeCountPerLoop));
+                this.loopMaterial[(value['order'] + i * shapeCountPerLoop)] = value
+            }
+        }
+        // console.log(this.loopMaterial)
+    }
+
+
 
     // check for intersections between shapes, merge and remove elements
     treatIntersections() {
@@ -158,7 +186,9 @@ class Shapes {
         var removeCandidates = {};  // store for elements to be deleted
 
         for (const [shapeOrderA, shapeValuesA] of Object.entries(this.loopMaterial)) {
+            // console.log(shapeOrderA)
             for (const [shapeOrderB, shapeValuesB] of Object.entries(this.loopMaterial)) {
+                // console.log(shapeOrderB)
 
                 // same layer, but not identical, not already treated
                 if (shapeOrderA == shapeOrderB || shapeValuesA.side != shapeValuesB.side || shapeOrderA in removeCandidates) {
@@ -167,6 +197,7 @@ class Shapes {
 
                 var mergedPolygon = polygonClipping.union([shapeValuesA.pointList], [shapeValuesB.pointList]);
 
+                // check if merged
                 if (mergedPolygon.length == 1) {
                     // console.log(shapeValuesA.side + shapeValuesB.side);
 
@@ -177,7 +208,7 @@ class Shapes {
                 }
             }
         }
-        // console.log(removeCandidates)
+        console.log(removeCandidates)
         // console.log(this.loopMaterial)
     }
 

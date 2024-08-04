@@ -24,9 +24,9 @@ class BlueprintNew {
         var lowlight = "#808080";
 
         // fixed distances
-        var marginAX = this.margin + this.boxSize * 4;
-        var marginAY = this.margin + this.boxSize * 4;
-        var heightAB = 15 * this.boxSize; // 
+        var marginAX = this.margin + this.boxSize * -4;
+        var marginAY = this.margin + this.boxSize * -4;
+        var heightAB = 40 * this.boxSize; // used to be 15
 
         var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
 
@@ -125,7 +125,7 @@ class BlueprintNew {
                         label: "A",
                         shapeMaxLoop: 1,
                         order: 1,
-                        density: 1,
+                        density: 3,
                         colorAction: "blue",
                         fillColor: midtonelow,
                         pointList: [
@@ -139,8 +139,8 @@ class BlueprintNew {
                     B: {
                         label: "B",
                         shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
+                        order: 8,
+                        density: 8,
                         colorAction: "blue",
                         fillColor: midtonehigh,
                         pointList: [
@@ -154,7 +154,7 @@ class BlueprintNew {
                     C: {
                         label: "C",
                         shapeMaxLoop: 1,
-                        order: 1,
+                        order: 2,
                         density: 1,
                         colorAction: "blue",
                         fillColor: lowlight,
@@ -168,8 +168,8 @@ class BlueprintNew {
                     D: {
                         label: "D",
                         shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
+                        order: 3,
+                        density: 10,
                         colorAction: "blue",
                         fillColor: highlight,
                         pointList: [
@@ -182,8 +182,8 @@ class BlueprintNew {
                     E: {
                         label: "E",
                         shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
+                        order: 4,
+                        density: 30,
                         colorAction: "blue",
                         fillColor: midtonehigh,
                         pointList: [
@@ -197,8 +197,8 @@ class BlueprintNew {
                     F: {
                         label: "F",
                         shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
+                        order: 5,
+                        density: 4,
                         colorAction: "blue",
                         fillColor: midtonelow,
                         pointList: [
@@ -212,8 +212,8 @@ class BlueprintNew {
                     G: {
                         label: "G",
                         shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
+                        order: 6,
+                        density: 12,
                         colorAction: "blue",
                         fillColor: highlight,
                         pointList: [
@@ -226,8 +226,8 @@ class BlueprintNew {
                     H: {
                         label: "H",
                         shapeMaxLoop: 1,
-                        order: 1,
-                        density: 1,
+                        order: 7,
+                        density: 60,
                         colorAction: "blue",
                         fillColor: lowlight,
                         pointList: [
