@@ -127,6 +127,7 @@ class BlueprintNew {
                         order: 1,
                         density: 3,
                         colorAction: "blue",
+                        grid: 2,
                         fillColor: midtonelow,
                         pointList: [
                             this.P1,
@@ -142,6 +143,7 @@ class BlueprintNew {
                         order: 8,
                         density: 2,
                         colorAction: "blue",
+                        grid: 1,
                         fillColor: midtonehigh,
                         pointList: [
                             this.P3,
@@ -157,6 +159,7 @@ class BlueprintNew {
                         order: 2,
                         density: 1,
                         colorAction: "blue",
+                        grid: 1,
                         fillColor: lowlight,
                         pointList: [
                             this.P2,
@@ -171,6 +174,7 @@ class BlueprintNew {
                         order: 3,
                         density: 6,
                         colorAction: "blue",
+                        grid: 1,
                         fillColor: highlight,
                         pointList: [
                             this.P10,
@@ -185,6 +189,7 @@ class BlueprintNew {
                         order: 4,
                         density: 3,
                         colorAction: "blue",
+                        grid: 1,
                         fillColor: midtonehigh,
                         pointList: [
                             this.P13,
@@ -200,6 +205,7 @@ class BlueprintNew {
                         order: 5,
                         density: 4,
                         colorAction: "blue",
+                        grid: 1,
                         fillColor: midtonelow,
                         pointList: [
                             this.P15,
@@ -215,6 +221,7 @@ class BlueprintNew {
                         order: 6,
                         density: 5,
                         colorAction: "blue",
+                        grid: 1,
                         fillColor: highlight,
                         pointList: [
                             this.P14,
@@ -229,6 +236,7 @@ class BlueprintNew {
                         order: 7,
                         density: 1,
                         colorAction: "blue",
+                        grid: 1,
                         fillColor: lowlight,
                         pointList: [
                             this.P8,

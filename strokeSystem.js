@@ -60,6 +60,7 @@ class strokeSystem {
         var loopCount = 0;  // how many loops needed
         var loopCountMax = 10;  // max of loop, to prevent infinite loops
 
+
         // run as long as there is no intersections left
         do {
             this.countRerun = 0;
@@ -67,6 +68,12 @@ class strokeSystem {
             // if full everything is done, if not recycle
             for (const path of this.paths) {
                 for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
+
+                    // skip for wrong GRID - TODO THIS SHOULD BE DONE SOMEWHERE ELSE I THINK
+                    if (this.allShapes.loopMaterial[i].grid == 2) {
+                        continue
+                    }
+
                     path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
                 }
             }
