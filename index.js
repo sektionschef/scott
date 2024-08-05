@@ -72,23 +72,38 @@ if (TEST == false) {
   //   CANVASFORMATCHOSEN.canvasWidth,
   //   CANVASFORMATCHOSEN.canvasHeight,
   // );
-  blueprint = new BlueprintNew(
+  blueprint1 = new BlueprintNew(
     STRIPEHEIGHT,
     MARGINRELATIVE,
     SHORTSIDE,
     RESOLUTIONBOXCOUNT,
     CANVASFORMATCHOSEN.canvasWidth,
     CANVASFORMATCHOSEN.canvasHeight,
+    1
+  );
+  blueprint2 = new BlueprintNew(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+    2
   );
 
   // console.log(blueprint);
 
-  SHAPES = new Shapes(
-    blueprint
+  SHAPES1 = new Shapes(
+    blueprint1
+  );
+
+  SHAPES2 = new Shapes(
+    blueprint2
   );
 
   // console.log(SHAPES.loopMaterial);
-  STROKESYSTEM = new strokeSystem(SHAPES);
+  STROKESYSTEM1 = new strokeSystem(SHAPES1);
+  STROKESYSTEM2 = new strokeSystem(SHAPES2);
 }
 
 // this is how to define parameters
@@ -258,8 +273,30 @@ function main() {
       shortSide: SHORTSIDE,
       landscape: LANDSCAPE,
       group: "groupB",
-      strokeSystem: STROKESYSTEM,
+      strokeSystem: STROKESYSTEM1,
     });
+
+    let gridBeta = new Grid({
+      stepCountRes: 200,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 70,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: -Math.PI / 3,
+      angleRadiansGain: Math.PI / 2,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM2,
+    });
+
 
     // let grid2 = new Grid({
     //   stepCountRes: 200,  // 400

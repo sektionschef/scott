@@ -102,57 +102,57 @@ class Shapes {
         }
     }
 
-    sortForLoop() {
+    // sortForLoop() {
 
-        // reformat for displaying correct hierarchy - order of elements, background to front
-        this.loopMaterial = {
-        };
+    //     // reformat for displaying correct hierarchy - order of elements, background to front
+    //     this.loopMaterial = {
+    //     };
 
-        for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
-            for (const [key, value] of Object.entries(shapeValues)) {
+    //     for (const [shapeId, shapeValues] of Object.entries(this.allShapes)) {
+    //         for (const [key, value] of Object.entries(shapeValues)) {
 
-                // console.log(key)
+    //             // console.log(key)
 
-                if (["background"].includes(key)) {
-                    var newValue = value;
-                    newValue.shapeId = shapeId;
-                    newValue.side = "background";
-                    // this.loopMaterial[key].push(newValue);
-                    this.loopMaterial[value.order] = newValue;
-                }
-                // filter out other keys
-                if (["front"].includes(key)) {
-                    var newValue = value;
-                    newValue.shapeId = shapeId;
-                    newValue.side = "front";
-                    // this.loopMaterial[key].push(newValue);
-                    this.loopMaterial[value.order] = newValue;
-                }
-                if (["down"].includes(key)) {
-                    var newValue = value;
-                    newValue.shapeId = shapeId;
-                    newValue.side = "down";
-                    // this.loopMaterial[key].push(newValue);
-                    this.loopMaterial[value.order] = newValue;
-                }
-                if (["right"].includes(key)) {
-                    var newValue = value;
-                    newValue.shapeId = shapeId;
-                    newValue.side = "right";
-                    // this.loopMaterial[key].push(newValue);
-                    this.loopMaterial[value.order] = newValue;
-                }
-                if (["shadow"].includes(key)) {
-                    var newValue = value;
-                    newValue.shapeId = shapeId;
-                    newValue.side = "shadow";
-                    // this.loopMaterial[key].push(newValue);
-                    this.loopMaterial[value.order] = newValue;
-                }
-            }
-        }
-        // console.log(this.loopMaterial);
-    }
+    //             if (["background"].includes(key)) {
+    //                 var newValue = value;
+    //                 newValue.shapeId = shapeId;
+    //                 newValue.side = "background";
+    //                 // this.loopMaterial[key].push(newValue);
+    //                 this.loopMaterial[value.order] = newValue;
+    //             }
+    //             // filter out other keys
+    //             if (["front"].includes(key)) {
+    //                 var newValue = value;
+    //                 newValue.shapeId = shapeId;
+    //                 newValue.side = "front";
+    //                 // this.loopMaterial[key].push(newValue);
+    //                 this.loopMaterial[value.order] = newValue;
+    //             }
+    //             if (["down"].includes(key)) {
+    //                 var newValue = value;
+    //                 newValue.shapeId = shapeId;
+    //                 newValue.side = "down";
+    //                 // this.loopMaterial[key].push(newValue);
+    //                 this.loopMaterial[value.order] = newValue;
+    //             }
+    //             if (["right"].includes(key)) {
+    //                 var newValue = value;
+    //                 newValue.shapeId = shapeId;
+    //                 newValue.side = "right";
+    //                 // this.loopMaterial[key].push(newValue);
+    //                 this.loopMaterial[value.order] = newValue;
+    //             }
+    //             if (["shadow"].includes(key)) {
+    //                 var newValue = value;
+    //                 newValue.shapeId = shapeId;
+    //                 newValue.side = "shadow";
+    //                 // this.loopMaterial[key].push(newValue);
+    //                 this.loopMaterial[value.order] = newValue;
+    //             }
+    //         }
+    //     }
+    //     // console.log(this.loopMaterial);
+    // }
 
     sortForLoopNew() {
 
@@ -169,10 +169,13 @@ class Shapes {
             // console.log(shapeLoop);
             var shapeCountPerLoop = Object.keys(shapeLoop).length;
 
+            var index = 1;  // starts with 1
             for (const [key, value] of Object.entries(shapeLoop)) {
                 // console.log(value['order'])
                 // console.log((value['order'] + i * shapeCountPerLoop));
-                this.loopMaterial[(value['order'] + i * shapeCountPerLoop)] = value
+                // this.loopMaterial[(value['order'] + i * shapeCountPerLoop)] = value
+                this.loopMaterial[(index + i * shapeCountPerLoop)] = value
+                index += 1;
             }
         }
         // console.log(this.loopMaterial)

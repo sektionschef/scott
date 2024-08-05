@@ -69,11 +69,6 @@ class strokeSystem {
             for (const path of this.paths) {
                 for (var i = this.shapeStartPosition; i <= this.shapeCount; i++) {
 
-                    // skip for wrong GRID - TODO THIS SHOULD BE DONE SOMEWHERE ELSE I THINK
-                    if (this.allShapes.loopMaterial[i].grid == 2) {
-                        continue
-                    }
-
                     path.divideFullVsSplit(i, this.allShapes.loopMaterial[i])
                 }
             }

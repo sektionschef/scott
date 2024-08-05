@@ -1,5 +1,5 @@
 class BlueprintNew {
-    constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight) {
+    constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight, group) {
 
         this.DEBUGpoints = false;
         this.DEBUGshapes = true;
@@ -9,6 +9,7 @@ class BlueprintNew {
         this.boxSize = shortSide / resolutionBoxCount;
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
+        this.group = group;
 
         if (this.marginRelative == 0) {
             this.margin = 0;
@@ -252,6 +253,25 @@ class BlueprintNew {
         }
         // SHOWBACKGROUND
         // showDebugPolygon(this.data.shapeBackground.background.pointList, this.data.shapeBackground.background.fillColor, "none");
+
+
+        // FILTER FOR GROUP - TODO: NEW FUNCTION for this
+        var lowlevel = [];
+        for (var run of this.data.shapes) {
+            var container = {}
+            // console.log(run);
+            for (const [key, value] of Object.entries(run)) {
+                // console.log(key, value);
+                if (value.grid != this.group) {
+                    continue;
+                } else {
+                    container[key] = value
+                }
+            }
+            lowlevel.push(container);
+        }
+        this.data.shapes = lowlevel;
+        // console.log(this.data.shapes);
     }
 
     debugShowShapes() {
