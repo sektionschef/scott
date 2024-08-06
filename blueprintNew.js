@@ -25,9 +25,9 @@ class BlueprintNew {
         var lowlight = "#808080";
 
         // fixed distances
-        var marginAX = this.margin + this.boxSize * -4;
-        var marginAY = this.margin + this.boxSize * -4;
-        var heightAB = 20 * this.boxSize; // used to be 15
+        var marginAX = this.margin + this.boxSize * -2;
+        var marginAY = this.margin + this.boxSize * -2;
+        var heightAB = 15 * this.boxSize; // used to be 15
 
         var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
 
@@ -62,7 +62,7 @@ class BlueprintNew {
         }
 
         for (var y = 0; y < 2; y++) {
-            for (var x = 0; x < 3; x++) {
+            for (var x = 0; x < 8; x++) {
                 // for (var y = 0; y < this.canvasHeight / totalTileHeight; y++) {
                 //     for (var x = 0; x < this.canvasWidth / totalTileWidth; x++) {
 
@@ -128,7 +128,7 @@ class BlueprintNew {
                         order: 1,
                         density: 3,
                         colorAction: "blue",
-                        grid: 2,
+                        grid: 1,
                         fillColor: midtonelow,
                         pointList: [
                             this.P1,
@@ -142,9 +142,9 @@ class BlueprintNew {
                         label: "B",
                         shapeMaxLoop: 1,
                         order: 8,
-                        density: 2,
+                        density: 7,
                         colorAction: "blue",
-                        grid: 1,
+                        grid: 2,
                         fillColor: midtonehigh,
                         pointList: [
                             this.P3,
@@ -160,7 +160,7 @@ class BlueprintNew {
                         order: 2,
                         density: 1,
                         colorAction: "blue",
-                        grid: 1,
+                        grid: 3,
                         fillColor: lowlight,
                         pointList: [
                             this.P2,
@@ -173,9 +173,9 @@ class BlueprintNew {
                         label: "D",
                         shapeMaxLoop: 1,
                         order: 3,
-                        density: 6,
+                        density: 13,
                         colorAction: "blue",
-                        grid: 1,
+                        grid: 4,
                         fillColor: highlight,
                         pointList: [
                             this.P10,
@@ -188,9 +188,9 @@ class BlueprintNew {
                         label: "E",
                         shapeMaxLoop: 1,
                         order: 4,
-                        density: 3,
+                        density: 7,
                         colorAction: "blue",
-                        grid: 1,
+                        grid: 5,
                         fillColor: midtonehigh,
                         pointList: [
                             this.P13,
@@ -204,9 +204,9 @@ class BlueprintNew {
                         label: "F",
                         shapeMaxLoop: 1,
                         order: 5,
-                        density: 4,
+                        density: 3,
                         colorAction: "blue",
-                        grid: 1,
+                        grid: 6,
                         fillColor: midtonelow,
                         pointList: [
                             this.P15,
@@ -220,9 +220,9 @@ class BlueprintNew {
                         label: "G",
                         shapeMaxLoop: 1,
                         order: 6,
-                        density: 5,
+                        density: 13,
                         colorAction: "blue",
-                        grid: 1,
+                        grid: 7,
                         fillColor: highlight,
                         pointList: [
                             this.P14,
@@ -237,7 +237,7 @@ class BlueprintNew {
                         order: 7,
                         density: 1,
                         colorAction: "blue",
-                        grid: 1,
+                        grid: 8,
                         fillColor: lowlight,
                         pointList: [
                             this.P8,

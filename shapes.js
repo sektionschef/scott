@@ -211,7 +211,7 @@ class Shapes {
                 }
             }
         }
-        console.log(removeCandidates)
+        // console.log(removeCandidates)
         // console.log(this.loopMaterial)
     }
 

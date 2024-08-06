@@ -90,20 +90,97 @@ if (TEST == false) {
     CANVASFORMATCHOSEN.canvasHeight,
     2
   );
+  blueprint3 = new BlueprintNew(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+    3
+  );
+  blueprint4 = new BlueprintNew(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+    4
+  );
+  blueprint5 = new BlueprintNew(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+    5
+  );
+  blueprint6 = new BlueprintNew(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+    6
+  );
+  blueprint7 = new BlueprintNew(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+    7
+  );
+  blueprint8 = new BlueprintNew(
+    STRIPEHEIGHT,
+    MARGINRELATIVE,
+    SHORTSIDE,
+    RESOLUTIONBOXCOUNT,
+    CANVASFORMATCHOSEN.canvasWidth,
+    CANVASFORMATCHOSEN.canvasHeight,
+    8
+  );
 
   // console.log(blueprint);
 
   SHAPES1 = new Shapes(
     blueprint1
   );
-
   SHAPES2 = new Shapes(
     blueprint2
+  );
+  SHAPES3 = new Shapes(
+    blueprint3
+  );
+  SHAPES4 = new Shapes(
+    blueprint4
+  );
+  SHAPES5 = new Shapes(
+    blueprint5
+  );
+  SHAPES6 = new Shapes(
+    blueprint6
+  );
+  SHAPES7 = new Shapes(
+    blueprint7
+  );
+  SHAPES8 = new Shapes(
+    blueprint8
   );
 
   // console.log(SHAPES.loopMaterial);
   STROKESYSTEM1 = new strokeSystem(SHAPES1);
   STROKESYSTEM2 = new strokeSystem(SHAPES2);
+  STROKESYSTEM3 = new strokeSystem(SHAPES3);
+  STROKESYSTEM4 = new strokeSystem(SHAPES4);
+  STROKESYSTEM5 = new strokeSystem(SHAPES5);
+  STROKESYSTEM6 = new strokeSystem(SHAPES6);
+  STROKESYSTEM7 = new strokeSystem(SHAPES7);
+  STROKESYSTEM8 = new strokeSystem(SHAPES8);
 }
 
 // this is how to define parameters
@@ -255,8 +332,8 @@ function main() {
     // });
 
     // GRID
-    let grid = new Grid({
-      stepCountRes: 400,  // 400
+    let grid1 = new Grid({
+      stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
       vectorMagnitude: 55,  // 50
       marginRelative: 1,  // 1
@@ -265,8 +342,8 @@ function main() {
       strokeWidth: 1,
       // angleRadiansStart: Math.PI / 2,
       // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 1,
-      angleRadiansGain: Math.PI / 3,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
       // angleRadiansGain: 0,
       shortBoxCount: RESOLUTIONBOXCOUNT,
       longSide: LONGSIDE,
@@ -276,18 +353,18 @@ function main() {
       strokeSystem: STROKESYSTEM1,
     });
 
-    let gridBeta = new Grid({
-      stepCountRes: 200,  // 400
+    let grid2 = new Grid({
+      stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 70,  // 50
+      vectorMagnitude: 55,  // 50
       marginRelative: 1,  // 1
       // strokeColor: "#222222ff",
       strokeColor: "#4e4e4eff",
       strokeWidth: 1,
       // angleRadiansStart: Math.PI / 2,
       // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: -Math.PI / 3,
-      angleRadiansGain: Math.PI / 2,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
       // angleRadiansGain: 0,
       shortBoxCount: RESOLUTIONBOXCOUNT,
       longSide: LONGSIDE,
@@ -295,6 +372,129 @@ function main() {
       landscape: LANDSCAPE,
       group: "groupB",
       strokeSystem: STROKESYSTEM2,
+    });
+    let grid3 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 55,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM3,
+    });
+
+    let grid4 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 55,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM4,
+    });
+    let grid5 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 55,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM5,
+    });
+
+    let grid6 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 55,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM6,
+    });
+    let grid7 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 55,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM7,
+    });
+
+    let grid8 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 55,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: Math.PI / 5,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM8,
     });
 
 
