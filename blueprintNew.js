@@ -27,7 +27,7 @@ class BlueprintNew {
         // fixed distances
         var marginAX = this.margin + this.boxSize * -2;
         var marginAY = this.margin + this.boxSize * -2;
-        var heightAB = 15 * this.boxSize; // used to be 15
+        var heightAB = 20 * this.boxSize; // used to be 15
 
         var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
 
