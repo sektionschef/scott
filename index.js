@@ -1,3 +1,10 @@
+// demonstrate seed reset
+// for (let i = 0; i < 10; i++) {
+//   console.log(i, $fx.rand(), $fx.randminter())
+//   $fx.rand.reset();
+//   $fx.randminter.reset();
+// }
+
 // ########################################
 TEST = false;
 
