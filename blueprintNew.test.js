@@ -6,13 +6,16 @@ function testBlueprintNew() {
     var resolutionBoxCount = 80;
     var canvasWidth = 1600;
     var canvasHeight = 900;
+    var groupLength = 8;
 
     var boxSize = shortSide / resolutionBoxCount;
 
-    var blueprint = new BlueprintNew(
-        stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight
-    );
+    for (var i = 1; i <= groupLength; i++) {
+        var blueprint = new BlueprintNew(
+            stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight, i
+        );
 
-    blueprint.debugShowShapes();
-    blueprint.debugShowPoints();
+        blueprint.debugShowShapes();
+        blueprint.debugShowPoints();
+    }
 }

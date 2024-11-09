@@ -1,6 +1,10 @@
 class BlueprintNew {
     constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight, group) {
 
+        this.size = 13; // 20
+        this.iterationX = 10;
+        this.iterationY = 3;
+
         this.DEBUGpoints = false;
         this.DEBUGshapes = true;
 
@@ -27,7 +31,7 @@ class BlueprintNew {
         // fixed distances
         var marginAX = this.margin + this.boxSize * -2;
         var marginAY = this.margin + this.boxSize * -2;
-        var heightAB = 20 * this.boxSize; // used to be 15
+        var heightAB = this.size * this.boxSize; // used to be 15
 
         var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
 
@@ -61,8 +65,8 @@ class BlueprintNew {
             shapes: [],
         }
 
-        for (var y = 0; y < 2; y++) {
-            for (var x = 0; x < 8; x++) {
+        for (var y = 0; y < this.iterationY; y++) {
+            for (var x = 0; x < this.iterationX; x++) {
                 // for (var y = 0; y < this.canvasHeight / totalTileHeight; y++) {
                 //     for (var x = 0; x < this.canvasWidth / totalTileWidth; x++) {
 
@@ -251,6 +255,7 @@ class BlueprintNew {
                 this.data.shapes.push(dataEntry)
             }
         }
+
         // SHOWBACKGROUND
         // showDebugPolygon(this.data.shapeBackground.background.pointList, this.data.shapeBackground.background.fillColor, "none");
 
@@ -271,32 +276,24 @@ class BlueprintNew {
             lowlevel.push(container);
         }
         this.data.shapes = lowlevel;
-        // console.log(this.data.shapes);
     }
 
     debugShowShapes() {
-        for (var i = 0; i < this.data.shapes.length; i++) {
 
-            // with labels
-            if (false) {
-                showDebugPolygon(this.data.shapes[i].A.pointList, this.data.shapes[i].A.fillColor, "none", this.data.shapes[i].A.label);
-                showDebugPolygon(this.data.shapes[i].C.pointList, this.data.shapes[i].C.fillColor, "none", this.data.shapes[i].C.label);
-                showDebugPolygon(this.data.shapes[i].D.pointList, this.data.shapes[i].D.fillColor, "none", this.data.shapes[i].D.label);
-                showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none", this.data.shapes[i].E.label);
-                showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none", this.data.shapes[i].F.label);
-                showDebugPolygon(this.data.shapes[i].G.pointList, this.data.shapes[i].G.fillColor, "none", this.data.shapes[i].G.label);
-                showDebugPolygon(this.data.shapes[i].H.pointList, this.data.shapes[i].H.fillColor, "none", this.data.shapes[i].H.label);
-                showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none", this.data.shapes[i].B.label);  // ORDER
-                // without labels
-            } else {
-                showDebugPolygon(this.data.shapes[i].A.pointList, this.data.shapes[i].A.fillColor, "none");
-                showDebugPolygon(this.data.shapes[i].C.pointList, this.data.shapes[i].C.fillColor, "none");
-                showDebugPolygon(this.data.shapes[i].D.pointList, this.data.shapes[i].D.fillColor, "none");
-                showDebugPolygon(this.data.shapes[i].E.pointList, this.data.shapes[i].E.fillColor, "none");
-                showDebugPolygon(this.data.shapes[i].F.pointList, this.data.shapes[i].F.fillColor, "none");
-                showDebugPolygon(this.data.shapes[i].G.pointList, this.data.shapes[i].G.fillColor, "none");
-                showDebugPolygon(this.data.shapes[i].H.pointList, this.data.shapes[i].H.fillColor, "none");
-                showDebugPolygon(this.data.shapes[i].B.pointList, this.data.shapes[i].B.fillColor, "none");  // ORDER
+        var showLabels = true;
+        // mind the order
+        var alphabet = ["A", "C", "D", "E", "F", "G", "H", "B"];
+
+        for (var i = 0; i < this.data.shapes.length; i++) {
+            for (var letterI = 0; letterI < alphabet.length; letterI++) {
+                var selectedShape = this.data.shapes[i][alphabet[letterI]];
+                if (selectedShape) {
+                    if (showLabels) {
+                        showDebugPolygon(selectedShape.pointList, selectedShape.fillColor, "none", selectedShape.label);
+                    } else {
+                        showDebugPolygon(selectedShape.pointList, selectedShape.fillColor, "none");
+                    }
+                }
             }
         }
     }

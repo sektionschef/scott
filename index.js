@@ -1,11 +1,3 @@
-// demonstrate seed reset
-// for (let i = 0; i < 10; i++) {
-//   console.log(i, $fx.rand(), $fx.randminter())
-//   $fx.rand.reset();
-//   $fx.randminter.reset();
-// }
-
-// ########################################
 TEST = false;
 
 var BULK = false; // bulk export images - and use direct not lense
@@ -34,7 +26,6 @@ const sp = new URLSearchParams(window.location.search)
 //  console.log(sp);
 
 // console.info(`fxhash: %c${$fx.hash}`, 'font-weight: bold');
-
 
 CANVASFORMATS = {
   "1:1": {
@@ -342,16 +333,12 @@ function main() {
     let grid1 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 55,  // 50
+      vectorMagnitude: 64,  // 50
       marginRelative: 1,  // 1
-      // strokeColor: "#222222ff",
       strokeColor: "#4e4e4eff",
       strokeWidth: 1,
-      // angleRadiansStart: Math.PI / 2,
-      // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 2,
-      angleRadiansGain: Math.PI / 5,
-      // angleRadiansGain: 0,
+      angleRadiansStart: - Math.PI / 4, // 2
+      angleRadiansGain: 0,  // 5, Math.PI / 11
       shortBoxCount: RESOLUTIONBOXCOUNT,
       longSide: LONGSIDE,
       shortSide: SHORTSIDE,
@@ -363,16 +350,15 @@ function main() {
     let grid2 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 55,  // 50
+      vectorMagnitude: 62,  // 50
       marginRelative: 1,  // 1
       // strokeColor: "#222222ff",
       strokeColor: "#4e4e4eff",
       strokeWidth: 1,
-      // angleRadiansStart: Math.PI / 2,
-      // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 2,
-      angleRadiansGain: Math.PI / 5,
+      // angleRadiansStart: Math.PI / 4,
       // angleRadiansGain: 0,
+      angleRadiansStart: Math.PI / 2,
+      angleRadiansGain: -Math.PI / 5,
       shortBoxCount: RESOLUTIONBOXCOUNT,
       longSide: LONGSIDE,
       shortSide: SHORTSIDE,
@@ -383,15 +369,15 @@ function main() {
     let grid3 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 55,  // 50
+      vectorMagnitude: 80,  // 50
       marginRelative: 1,  // 1
       // strokeColor: "#222222ff",
       strokeColor: "#4e4e4eff",
       strokeWidth: 1,
       // angleRadiansStart: Math.PI / 2,
       // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 2,
-      angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: -Math.PI / 5,
+      angleRadiansGain: 0,
       // angleRadiansGain: 0,
       shortBoxCount: RESOLUTIONBOXCOUNT,
       longSide: LONGSIDE,
@@ -400,27 +386,26 @@ function main() {
       group: "groupB",
       strokeSystem: STROKESYSTEM3,
     });
-
-    let grid4 = new Grid({
-      stepCountRes: 800,  // 400
-      stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 55,  // 50
-      marginRelative: 1,  // 1
-      // strokeColor: "#222222ff",
-      strokeColor: "#4e4e4eff",
-      strokeWidth: 1,
-      // angleRadiansStart: Math.PI / 2,
-      // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 2,
-      angleRadiansGain: -Math.PI / 5,
-      // angleRadiansGain: 0,
-      shortBoxCount: RESOLUTIONBOXCOUNT,
-      longSide: LONGSIDE,
-      shortSide: SHORTSIDE,
-      landscape: LANDSCAPE,
-      group: "groupB",
-      strokeSystem: STROKESYSTEM4,
-    });
+    // let grid4 = new Grid({
+    //   stepCountRes: 800,  // 400
+    //   stripeHeight: STRIPEHEIGHT,  // 2
+    //   vectorMagnitude: 55,  // 50
+    //   marginRelative: 1,  // 1
+    //   // strokeColor: "#222222ff",
+    //   strokeColor: "#4e4e4eff",
+    //   strokeWidth: 1,
+    //   // angleRadiansStart: Math.PI / 2,
+    //   // angleRadiansGain: Math.PI / 5,
+    //   angleRadiansStart: Math.PI / 2,
+    //   angleRadiansGain: -Math.PI / 5,
+    //   // angleRadiansGain: 0,
+    //   shortBoxCount: RESOLUTIONBOXCOUNT,
+    //   longSide: LONGSIDE,
+    //   shortSide: SHORTSIDE,
+    //   landscape: LANDSCAPE,
+    //   group: "groupB",
+    //   strokeSystem: STROKESYSTEM4,
+    // });
     let grid5 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
@@ -429,8 +414,6 @@ function main() {
       // strokeColor: "#222222ff",
       strokeColor: "#4e4e4eff",
       strokeWidth: 1,
-      // angleRadiansStart: Math.PI / 2,
-      // angleRadiansGain: Math.PI / 5,
       angleRadiansStart: Math.PI / 2,
       angleRadiansGain: Math.PI / 5,
       // angleRadiansGain: 0,
@@ -445,16 +428,12 @@ function main() {
     let grid6 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 55,  // 50
+      vectorMagnitude: 65,  // 50
       marginRelative: 1,  // 1
-      // strokeColor: "#222222ff",
       strokeColor: "#4e4e4eff",
       strokeWidth: 1,
-      // angleRadiansStart: Math.PI / 2,
-      // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 2,
-      angleRadiansGain: Math.PI / 5,
-      // angleRadiansGain: 0,
+      angleRadiansStart: Math.PI / 4,
+      angleRadiansGain: 0,
       shortBoxCount: RESOLUTIONBOXCOUNT,
       longSide: LONGSIDE,
       shortSide: SHORTSIDE,
@@ -462,39 +441,37 @@ function main() {
       group: "groupB",
       strokeSystem: STROKESYSTEM6,
     });
-    let grid7 = new Grid({
-      stepCountRes: 800,  // 400
-      stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 55,  // 50
-      marginRelative: 1,  // 1
-      // strokeColor: "#222222ff",
-      strokeColor: "#4e4e4eff",
-      strokeWidth: 1,
-      // angleRadiansStart: Math.PI / 2,
-      // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 2,
-      angleRadiansGain: -Math.PI / 5,
-      // angleRadiansGain: 0,
-      shortBoxCount: RESOLUTIONBOXCOUNT,
-      longSide: LONGSIDE,
-      shortSide: SHORTSIDE,
-      landscape: LANDSCAPE,
-      group: "groupB",
-      strokeSystem: STROKESYSTEM7,
-    });
-
+    // let grid7 = new Grid({
+    //   stepCountRes: 800,  // 400
+    //   stripeHeight: STRIPEHEIGHT,  // 2
+    //   vectorMagnitude: 55,  // 50
+    //   marginRelative: 1,  // 1
+    //   // strokeColor: "#222222ff",
+    //   strokeColor: "#4e4e4eff",
+    //   strokeWidth: 1,
+    //   // angleRadiansStart: Math.PI / 2,
+    //   // angleRadiansGain: Math.PI / 5,
+    //   angleRadiansStart: Math.PI / 2,
+    //   angleRadiansGain: -Math.PI / 5,
+    //   shortBoxCount: RESOLUTIONBOXCOUNT,
+    //   longSide: LONGSIDE,
+    //   shortSide: SHORTSIDE,
+    //   landscape: LANDSCAPE,
+    //   group: "groupB",
+    //   strokeSystem: STROKESYSTEM7,
+    // });
     let grid8 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
-      vectorMagnitude: 55,  // 50
+      vectorMagnitude: 65,  // 50
       marginRelative: 1,  // 1
       // strokeColor: "#222222ff",
       strokeColor: "#4e4e4eff",
       strokeWidth: 1,
       // angleRadiansStart: Math.PI / 2,
       // angleRadiansGain: Math.PI / 5,
-      angleRadiansStart: Math.PI / 2,
-      angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 4,
+      angleRadiansGain: 0,
       // angleRadiansGain: 0,
       shortBoxCount: RESOLUTIONBOXCOUNT,
       longSide: LONGSIDE,
@@ -526,7 +503,7 @@ function main() {
 
   if (TEST) {
     // testGrid();
-    // testBlueprintNew();
+    testBlueprintNew();
     // testBlueprint();
     // testShapes();
     // testStrokeSystem();
