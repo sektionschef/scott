@@ -264,6 +264,7 @@ class containedPath {
         new filledPath({
             start: this.start,
             end: this.end,
+            strokeColor: this.strokeColor,
             // strokeWidth: this.strokeWidth,
             group: group,
         })

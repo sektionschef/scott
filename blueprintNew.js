@@ -4,6 +4,7 @@ class BlueprintNew {
         this.size = 13; // 20
         this.iterationX = 10;
         this.iterationY = 3;
+        this.colorAction = "#585858";
 
         this.DEBUGpoints = false;
         this.DEBUGshapes = true;
@@ -131,7 +132,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 1,
                         density: 3,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 1,
                         fillColor: midtonelow,
                         pointList: [
@@ -147,7 +148,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 8,
                         density: 6,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 2,
                         fillColor: midtonehigh,
                         pointList: [
@@ -163,7 +164,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 2,
                         density: 1,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 3,
                         fillColor: lowlight,
                         pointList: [
@@ -178,7 +179,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 3,
                         density: 13,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 4,
                         fillColor: highlight,
                         pointList: [
@@ -193,7 +194,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 4,
                         density: 6,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 5,
                         fillColor: midtonehigh,
                         pointList: [
@@ -209,7 +210,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 5,
                         density: 3,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 6,
                         fillColor: midtonelow,
                         pointList: [
@@ -225,7 +226,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 6,
                         density: 13,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 7,
                         fillColor: highlight,
                         pointList: [
@@ -240,7 +241,7 @@ class BlueprintNew {
                         shapeMaxLoop: 1,
                         order: 7,
                         density: 1,
-                        colorAction: "blue",
+                        colorAction: this.colorAction,
                         grid: 8,
                         fillColor: lowlight,
                         pointList: [
