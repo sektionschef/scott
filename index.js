@@ -143,7 +143,7 @@ if (TEST == false) {
     8
   );
 
-  // console.log(blueprint);
+  // console.log(blueprint1);
 
   SHAPES1 = new Shapes(
     blueprint1
@@ -386,26 +386,26 @@ function main() {
       group: "groupB",
       strokeSystem: STROKESYSTEM3,
     });
-    // let grid4 = new Grid({
-    //   stepCountRes: 800,  // 400
-    //   stripeHeight: STRIPEHEIGHT,  // 2
-    //   vectorMagnitude: 55,  // 50
-    //   marginRelative: 1,  // 1
-    //   // strokeColor: "#222222ff",
-    //   strokeColor: "#4e4e4eff",
-    //   strokeWidth: 1,
-    //   // angleRadiansStart: Math.PI / 2,
-    //   // angleRadiansGain: Math.PI / 5,
-    //   angleRadiansStart: Math.PI / 2,
-    //   angleRadiansGain: -Math.PI / 5,
-    //   // angleRadiansGain: 0,
-    //   shortBoxCount: RESOLUTIONBOXCOUNT,
-    //   longSide: LONGSIDE,
-    //   shortSide: SHORTSIDE,
-    //   landscape: LANDSCAPE,
-    //   group: "groupB",
-    //   strokeSystem: STROKESYSTEM4,
-    // });
+    let grid4 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 175,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: Math.PI / 9,
+      angleRadiansGain: 0,
+      // angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM4,
+    });
     let grid5 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
@@ -441,25 +441,25 @@ function main() {
       group: "groupB",
       strokeSystem: STROKESYSTEM6,
     });
-    // let grid7 = new Grid({
-    //   stepCountRes: 800,  // 400
-    //   stripeHeight: STRIPEHEIGHT,  // 2
-    //   vectorMagnitude: 55,  // 50
-    //   marginRelative: 1,  // 1
-    //   // strokeColor: "#222222ff",
-    //   strokeColor: "#4e4e4eff",
-    //   strokeWidth: 1,
-    //   // angleRadiansStart: Math.PI / 2,
-    //   // angleRadiansGain: Math.PI / 5,
-    //   angleRadiansStart: Math.PI / 2,
-    //   angleRadiansGain: -Math.PI / 5,
-    //   shortBoxCount: RESOLUTIONBOXCOUNT,
-    //   longSide: LONGSIDE,
-    //   shortSide: SHORTSIDE,
-    //   landscape: LANDSCAPE,
-    //   group: "groupB",
-    //   strokeSystem: STROKESYSTEM7,
-    // });
+    let grid7 = new Grid({
+      stepCountRes: 800,  // 400
+      stripeHeight: STRIPEHEIGHT,  // 2
+      vectorMagnitude: 85,  // 50
+      marginRelative: 1,  // 1
+      // strokeColor: "#222222ff",
+      strokeColor: "#4e4e4eff",
+      strokeWidth: 1,
+      // angleRadiansStart: Math.PI / 2,
+      // angleRadiansGain: Math.PI / 5,
+      angleRadiansStart: -Math.PI / 8,
+      angleRadiansGain: 0,
+      shortBoxCount: RESOLUTIONBOXCOUNT,
+      longSide: LONGSIDE,
+      shortSide: SHORTSIDE,
+      landscape: LANDSCAPE,
+      group: "groupB",
+      strokeSystem: STROKESYSTEM7,
+    });
     let grid8 = new Grid({
       stepCountRes: 800,  // 400
       stripeHeight: STRIPEHEIGHT,  // 2
@@ -503,11 +503,10 @@ function main() {
 
   if (TEST) {
     // testGrid();
-    testBlueprintNew();
-    // testBlueprint();
+    // testBlueprintNew();
     // testShapes();
     // testStrokeSystem();
-    // testFilledPath();
+    testFilledPath();
   } else {
 
     showBackground();  // REMOVE FOR DEBUGGING SHAPES

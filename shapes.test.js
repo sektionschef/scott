@@ -6,71 +6,1192 @@
 
 function testShapes() {
 
-    var blueprint = {};
-    blueprint = {
-        boxSize: 11.25,
-        stripeHeight: 4,
-        margin: 45,
-        marginRelative: 1,
-        data: {
-            shapeA: {
-                MainHeightLine: 2,
-                MainWidth: 70,
-                ShadAAY: 20,
-                mainBoxPos: { x: 34, y: 12 },
-                mainWidthCX: 104,
-                mainWidthCY: 19,
-                shadAheight: 3,
-                shadHeightLine: 1,
-                shapeMainHeight: 7,
-                superShadowHeightMax: 15,
-                superShadowShiftX: 25,
-                superShadowShiftY: 1,
-                shadAshift: 3,
-                shadAheight: 3,
-                shadHeightLine: 1,
-                front: {
-                    density: 1,
-                    fillColor: "#e2e2e2",
-                    order: 1,
-                    shapeMaxLoop: 2
-                },
-                down: {
-                    density: 1,
-                    fillColor: "#e2e2e2",
-                    order: 2,
-                    shapeMaxLoop: 2
-                },
-                right: {
-                    density: 1,
-                    fillColor: "#e2e2e2",
-                    order: 3,
-                    shapeMaxLoop: 2
-                },
-                shadow: {
-                    density: 1,
-                    fillColor: "#e2e2e2",
-                    order: 4,
-                    shapeMaxLoop: 2
+    var blueprint = {
+        "size": 13,
+        "iterationX": 10,
+        "iterationY": 3,
+        "colorAction": "#585858",
+        "DEBUGpoints": false,
+        "DEBUGshapes": true,
+        "stripeHeight": 4,
+        "marginRelative": 1,
+        "boxSize": 11.25,
+        "canvasWidth": 1600,
+        "canvasHeight": 900,
+        "group": 1,
+        "margin": 45,
+        "data": {
+            "shapeBackground": {
+                "background": {
+                    "shapeMaxLoop": 1,
+                    "order": 13,
+                    "density": 2,
+                    "fillColor": "#7e7e7eff",
+                    "pointList": [
+                        [
+                            45,
+                            45
+                        ],
+                        [
+                            1555,
+                            45
+                        ],
+                        [
+                            1555,
+                            855
+                        ],
+                        [
+                            45,
+                            855
+                        ]
+                    ]
                 }
             },
-            shapeBackground: {
-                background: {
-                    colorAction: "#2f6e32",
-                    density: 2,
-                    fillColor: "None",
-                    order: 13,
-                    pointList: [
-                        [45, 45],
-                        [1555, 45],
-                        [1555, 855],
-                        [45, 855]
-                    ],
-                    shapeMaxLoop: 1,
+            "tile": {},
+            "shapes": [
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                22.5,
+                                33.75
+                            ],
+                            [
+                                76.875,
+                                -56.25
+                            ],
+                            [
+                                120,
+                                22.5
+                            ],
+                            [
+                                120,
+                                168.75
+                            ],
+                            [
+                                22.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                217.5,
+                                33.75
+                            ],
+                            [
+                                271.875,
+                                -56.25
+                            ],
+                            [
+                                315,
+                                22.5
+                            ],
+                            [
+                                315,
+                                168.75
+                            ],
+                            [
+                                217.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                412.5,
+                                33.75
+                            ],
+                            [
+                                466.875,
+                                -56.25
+                            ],
+                            [
+                                510,
+                                22.5
+                            ],
+                            [
+                                510,
+                                168.75
+                            ],
+                            [
+                                412.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                607.5,
+                                33.75
+                            ],
+                            [
+                                661.875,
+                                -56.25
+                            ],
+                            [
+                                705,
+                                22.5
+                            ],
+                            [
+                                705,
+                                168.75
+                            ],
+                            [
+                                607.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                802.5,
+                                33.75
+                            ],
+                            [
+                                856.875,
+                                -56.25
+                            ],
+                            [
+                                900,
+                                22.5
+                            ],
+                            [
+                                900,
+                                168.75
+                            ],
+                            [
+                                802.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                997.5,
+                                33.75
+                            ],
+                            [
+                                1051.875,
+                                -56.25
+                            ],
+                            [
+                                1095,
+                                22.5
+                            ],
+                            [
+                                1095,
+                                168.75
+                            ],
+                            [
+                                997.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1192.5,
+                                33.75
+                            ],
+                            [
+                                1246.875,
+                                -56.25
+                            ],
+                            [
+                                1290,
+                                22.5
+                            ],
+                            [
+                                1290,
+                                168.75
+                            ],
+                            [
+                                1192.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1387.5,
+                                33.75
+                            ],
+                            [
+                                1441.875,
+                                -56.25
+                            ],
+                            [
+                                1485,
+                                22.5
+                            ],
+                            [
+                                1485,
+                                168.75
+                            ],
+                            [
+                                1387.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1582.5,
+                                33.75
+                            ],
+                            [
+                                1636.875,
+                                -56.25
+                            ],
+                            [
+                                1680,
+                                22.5
+                            ],
+                            [
+                                1680,
+                                168.75
+                            ],
+                            [
+                                1582.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1777.5,
+                                33.75
+                            ],
+                            [
+                                1831.875,
+                                -56.25
+                            ],
+                            [
+                                1875,
+                                22.5
+                            ],
+                            [
+                                1875,
+                                168.75
+                            ],
+                            [
+                                1777.5,
+                                180
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                22.5,
+                                472.5
+                            ],
+                            [
+                                76.875,
+                                382.5
+                            ],
+                            [
+                                120,
+                                461.25
+                            ],
+                            [
+                                120,
+                                607.5
+                            ],
+                            [
+                                22.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                217.5,
+                                472.5
+                            ],
+                            [
+                                271.875,
+                                382.5
+                            ],
+                            [
+                                315,
+                                461.25
+                            ],
+                            [
+                                315,
+                                607.5
+                            ],
+                            [
+                                217.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                412.5,
+                                472.5
+                            ],
+                            [
+                                466.875,
+                                382.5
+                            ],
+                            [
+                                510,
+                                461.25
+                            ],
+                            [
+                                510,
+                                607.5
+                            ],
+                            [
+                                412.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                607.5,
+                                472.5
+                            ],
+                            [
+                                661.875,
+                                382.5
+                            ],
+                            [
+                                705,
+                                461.25
+                            ],
+                            [
+                                705,
+                                607.5
+                            ],
+                            [
+                                607.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                802.5,
+                                472.5
+                            ],
+                            [
+                                856.875,
+                                382.5
+                            ],
+                            [
+                                900,
+                                461.25
+                            ],
+                            [
+                                900,
+                                607.5
+                            ],
+                            [
+                                802.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                997.5,
+                                472.5
+                            ],
+                            [
+                                1051.875,
+                                382.5
+                            ],
+                            [
+                                1095,
+                                461.25
+                            ],
+                            [
+                                1095,
+                                607.5
+                            ],
+                            [
+                                997.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1192.5,
+                                472.5
+                            ],
+                            [
+                                1246.875,
+                                382.5
+                            ],
+                            [
+                                1290,
+                                461.25
+                            ],
+                            [
+                                1290,
+                                607.5
+                            ],
+                            [
+                                1192.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1387.5,
+                                472.5
+                            ],
+                            [
+                                1441.875,
+                                382.5
+                            ],
+                            [
+                                1485,
+                                461.25
+                            ],
+                            [
+                                1485,
+                                607.5
+                            ],
+                            [
+                                1387.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1582.5,
+                                472.5
+                            ],
+                            [
+                                1636.875,
+                                382.5
+                            ],
+                            [
+                                1680,
+                                461.25
+                            ],
+                            [
+                                1680,
+                                607.5
+                            ],
+                            [
+                                1582.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1777.5,
+                                472.5
+                            ],
+                            [
+                                1831.875,
+                                382.5
+                            ],
+                            [
+                                1875,
+                                461.25
+                            ],
+                            [
+                                1875,
+                                607.5
+                            ],
+                            [
+                                1777.5,
+                                618.75
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                22.5,
+                                911.25
+                            ],
+                            [
+                                76.875,
+                                821.25
+                            ],
+                            [
+                                120,
+                                900
+                            ],
+                            [
+                                120,
+                                1046.25
+                            ],
+                            [
+                                22.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                217.5,
+                                911.25
+                            ],
+                            [
+                                271.875,
+                                821.25
+                            ],
+                            [
+                                315,
+                                900
+                            ],
+                            [
+                                315,
+                                1046.25
+                            ],
+                            [
+                                217.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                412.5,
+                                911.25
+                            ],
+                            [
+                                466.875,
+                                821.25
+                            ],
+                            [
+                                510,
+                                900
+                            ],
+                            [
+                                510,
+                                1046.25
+                            ],
+                            [
+                                412.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                607.5,
+                                911.25
+                            ],
+                            [
+                                661.875,
+                                821.25
+                            ],
+                            [
+                                705,
+                                900
+                            ],
+                            [
+                                705,
+                                1046.25
+                            ],
+                            [
+                                607.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                802.5,
+                                911.25
+                            ],
+                            [
+                                856.875,
+                                821.25
+                            ],
+                            [
+                                900,
+                                900
+                            ],
+                            [
+                                900,
+                                1046.25
+                            ],
+                            [
+                                802.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                997.5,
+                                911.25
+                            ],
+                            [
+                                1051.875,
+                                821.25
+                            ],
+                            [
+                                1095,
+                                900
+                            ],
+                            [
+                                1095,
+                                1046.25
+                            ],
+                            [
+                                997.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1192.5,
+                                911.25
+                            ],
+                            [
+                                1246.875,
+                                821.25
+                            ],
+                            [
+                                1290,
+                                900
+                            ],
+                            [
+                                1290,
+                                1046.25
+                            ],
+                            [
+                                1192.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1387.5,
+                                911.25
+                            ],
+                            [
+                                1441.875,
+                                821.25
+                            ],
+                            [
+                                1485,
+                                900
+                            ],
+                            [
+                                1485,
+                                1046.25
+                            ],
+                            [
+                                1387.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1582.5,
+                                911.25
+                            ],
+                            [
+                                1636.875,
+                                821.25
+                            ],
+                            [
+                                1680,
+                                900
+                            ],
+                            [
+                                1680,
+                                1046.25
+                            ],
+                            [
+                                1582.5,
+                                1057.5
+                            ]
+                        ]
+                    }
+                },
+                {
+                    "A": {
+                        "label": "A",
+                        "shapeMaxLoop": 1,
+                        "order": 1,
+                        "density": 3,
+                        "colorAction": "#585858",
+                        "grid": 1,
+                        "fillColor": "#b3b3b3",
+                        "pointList": [
+                            [
+                                1777.5,
+                                911.25
+                            ],
+                            [
+                                1831.875,
+                                821.25
+                            ],
+                            [
+                                1875,
+                                900
+                            ],
+                            [
+                                1875,
+                                1046.25
+                            ],
+                            [
+                                1777.5,
+                                1057.5
+                            ]
+                        ]
+                    }
                 }
-            }
-        }
+            ]
+        },
+        "P1": [
+            1777.5,
+            911.25
+        ],
+        "P2": [
+            1831.875,
+            821.25
+        ],
+        "P3": [
+            1875,
+            900
+        ],
+        "P4": [
+            1875,
+            1046.25
+        ],
+        "P5": [
+            1777.5,
+            1057.5
+        ],
+        "P6": [
+            1972.5,
+            911.25
+        ],
+        "P7": [
+            1972.5,
+            1057.5
+        ],
+        "P8": [
+            1929.375,
+            1125
+        ],
+        "P9": [
+            1875,
+            826.875
+        ],
+        "P10": [
+            1918.125,
+            905.625
+        ],
+        "P11": [
+            1972.5,
+            815.625
+        ],
+        "P12": [
+            2026.875,
+            821.25
+        ],
+        "P13": [
+            1777.5,
+            1108.125
+        ],
+        "P14": [
+            1831.875,
+            1040.625
+        ],
+        "P15": [
+            1875,
+            1119.375
+        ],
+        "P16": [
+            1875,
+            1265.625
+        ],
+        "P17": [
+            1777.5,
+            1254.375
+        ],
+        "P18": [
+            1972.5,
+            1108.125
+        ],
+        "P19": [
+            1972.5,
+            1254.375
+        ],
+        "P20": [
+            1918.125,
+            1344.375
+        ],
+        "P21": [
+            2021.25,
+            1046.25
+        ]
     }
+
+    // var blueprint = {};
+    // blueprint = {
+    //     boxSize: 11.25,
+    //     stripeHeight: 4,
+    //     margin: 45,
+    //     marginRelative: 1,
+    //     data: {
+    //         shapeA: {
+    //             MainHeightLine: 2,
+    //             MainWidth: 70,
+    //             ShadAAY: 20,
+    //             mainBoxPos: { x: 34, y: 12 },
+    //             mainWidthCX: 104,
+    //             mainWidthCY: 19,
+    //             shadAheight: 3,
+    //             shadHeightLine: 1,
+    //             shapeMainHeight: 7,
+    //             superShadowHeightMax: 15,
+    //             superShadowShiftX: 25,
+    //             superShadowShiftY: 1,
+    //             shadAshift: 3,
+    //             shadAheight: 3,
+    //             shadHeightLine: 1,
+    //             front: {
+    //                 density: 1,
+    //                 fillColor: "#e2e2e2",
+    //                 order: 1,
+    //                 shapeMaxLoop: 2
+    //             },
+    //             down: {
+    //                 density: 1,
+    //                 fillColor: "#e2e2e2",
+    //                 order: 2,
+    //                 shapeMaxLoop: 2
+    //             },
+    //             right: {
+    //                 density: 1,
+    //                 fillColor: "#e2e2e2",
+    //                 order: 3,
+    //                 shapeMaxLoop: 2
+    //             },
+    //             shadow: {
+    //                 density: 1,
+    //                 fillColor: "#e2e2e2",
+    //                 order: 4,
+    //                 shapeMaxLoop: 2
+    //             }
+    //         },
+    //         shapeBackground: {
+    //             background: {
+    //                 colorAction: "#2f6e32",
+    //                 density: 2,
+    //                 fillColor: "None",
+    //                 order: 13,
+    //                 pointList: [
+    //                     [45, 45],
+    //                     [1555, 45],
+    //                     [1555, 855],
+    //                     [45, 855]
+    //                 ],
+    //                 shapeMaxLoop: 1,
+    //             }
+    //         }
+    //     }
+    // }
 
     var shapes_ = new Shapes(
         blueprint

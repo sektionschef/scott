@@ -8,7 +8,7 @@ function testBlueprintNew() {
     var canvasHeight = 900;
     var groupLength = 8;
 
-    var boxSize = shortSide / resolutionBoxCount;
+    // var boxSize = shortSide / resolutionBoxCount;
 
     for (var i = 1; i <= groupLength; i++) {
         var blueprint = new BlueprintNew(

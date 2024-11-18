@@ -1,7 +1,7 @@
 class filledPath {
     constructor(data) {
         this.strokeWidth = 1
-        .3; // deprecatd
+        // .3; // deprecatd
         // this.colory = "#3a3a3aff"
         // this.colory = "#333333ff"
         this.colory = data.strokeColor;

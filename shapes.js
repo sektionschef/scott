@@ -14,7 +14,6 @@ class Shapes {
 
 
         this.allShapes = blueprint.data;
-        // console.log(this.allShapes);
         this.boxSize = blueprint.boxSize;
         this.stripeHeight = blueprint.stripeHeight;
 
