@@ -143,42 +143,14 @@ if (TEST == false) {
     8
   );
 
-  // console.log(blueprint1);
-
-  SHAPES1 = new Shapes(
-    blueprint1
-  );
-  SHAPES2 = new Shapes(
-    blueprint2
-  );
-  SHAPES3 = new Shapes(
-    blueprint3
-  );
-  SHAPES4 = new Shapes(
-    blueprint4
-  );
-  SHAPES5 = new Shapes(
-    blueprint5
-  );
-  SHAPES6 = new Shapes(
-    blueprint6
-  );
-  SHAPES7 = new Shapes(
-    blueprint7
-  );
-  SHAPES8 = new Shapes(
-    blueprint8
-  );
-
-  // console.log(SHAPES.loopMaterial);
-  STROKESYSTEM1 = new strokeSystem(SHAPES1);
-  STROKESYSTEM2 = new strokeSystem(SHAPES2);
-  STROKESYSTEM3 = new strokeSystem(SHAPES3);
-  STROKESYSTEM4 = new strokeSystem(SHAPES4);
-  STROKESYSTEM5 = new strokeSystem(SHAPES5);
-  STROKESYSTEM6 = new strokeSystem(SHAPES6);
-  STROKESYSTEM7 = new strokeSystem(SHAPES7);
-  STROKESYSTEM8 = new strokeSystem(SHAPES8);
+  STROKESYSTEM1 = new strokeSystem(blueprint1);
+  STROKESYSTEM2 = new strokeSystem(blueprint2);
+  STROKESYSTEM3 = new strokeSystem(blueprint3);
+  STROKESYSTEM4 = new strokeSystem(blueprint4);
+  STROKESYSTEM5 = new strokeSystem(blueprint5);
+  STROKESYSTEM6 = new strokeSystem(blueprint6);
+  STROKESYSTEM7 = new strokeSystem(blueprint7);
+  STROKESYSTEM8 = new strokeSystem(blueprint8);
 }
 
 // this is how to define parameters
@@ -503,10 +475,9 @@ function main() {
 
   if (TEST) {
     // testGrid();
-    // testBlueprintNew();
-    // testShapes();
+    testBlueprintNew();
     // testStrokeSystem();
-    testFilledPath();
+    // testFilledPath();
   } else {
 
     showBackground();  // REMOVE FOR DEBUGGING SHAPES

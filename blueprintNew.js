@@ -260,8 +260,11 @@ class BlueprintNew {
         // SHOWBACKGROUND
         // showDebugPolygon(this.data.shapeBackground.background.pointList, this.data.shapeBackground.background.fillColor, "none");
 
+        this.filterForGroup();
+        this.sortForLoopNew();
+    }
 
-        // FILTER FOR GROUP - TODO: NEW FUNCTION for this
+    filterForGroup() {
         var lowlevel = [];
         for (var run of this.data.shapes) {
             var container = {}
@@ -279,6 +282,33 @@ class BlueprintNew {
         this.data.shapes = lowlevel;
     }
 
+    sortForLoopNew() {
+
+        // reformat for displaying correct hierarchy - order of elements, background to front
+        this.loopMaterial = {};
+
+        // BACKGROUND NOT USED - CAN BE POSITION 0
+
+        // console.log(this.data.shapes);  // nur die flächen innerhalb der loops sortieren
+
+        // for (var shapeLoop of this.data.shapes) {
+        for (var i = 0; i < this.data.shapes.length; i++) {
+            var shapeLoop = this.data.shapes[i]
+            // console.log(shapeLoop);
+            var shapeCountPerLoop = Object.keys(shapeLoop).length;
+
+            var index = 1;  // starts with 1
+            for (const [key, value] of Object.entries(shapeLoop)) {
+                // console.log(value['order'])
+                // console.log((value['order'] + i * shapeCountPerLoop));
+                // this.loopMaterial[(value['order'] + i * shapeCountPerLoop)] = value
+                this.loopMaterial[(index + i * shapeCountPerLoop)] = value
+                index += 1;
+            }
+        }
+        // console.log(this.loopMaterial)
+    }
+
     debugShowShapes() {
 
         var showLabels = true;
@@ -290,9 +320,10 @@ class BlueprintNew {
                 var selectedShape = this.data.shapes[i][alphabet[letterI]];
                 if (selectedShape) {
                     if (showLabels) {
-                        showDebugPolygon(selectedShape.pointList, selectedShape.fillColor, "none", selectedShape.label);
+                        // showDebugPolygon(selectedShape.pointList, selectedShape.fillColor, "none", selectedShape.label);
+                        showDebugPolygon(selectedShape.pointList, selectedShape.fillColor, "orange", selectedShape.label);
                     } else {
-                        showDebugPolygon(selectedShape.pointList, selectedShape.fillColor, "none");
+                        showDebugPolygon(selectedShape.pointList, selectedShape.fillColor, "orange");
                     }
                 }
             }
@@ -322,4 +353,5 @@ class BlueprintNew {
         showDebugPoint(this.P20[0], this.P20[1], "black", "2", "P20")
         showDebugPoint(this.P21[0], this.P21[1], "black", "2", "P21")
     }
+
 }

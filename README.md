@@ -16,6 +16,12 @@ Aktuell ein Paperfilter für Grundstruktr als Hintergrund. Papierknitter, Grain 
 
 https://www.npmjs.com/package/polygon-clipping - from: https://stackoverflow.com/questions/33502767/merging-intersecting-polygons-to-single-polygon 
 
+### other stuff
+* algorithm of combining https://stackoverflow.com/questions/2667748/how-do-i-combine-complex-polygons 
+* https://stackoverflow.com/questions/66066287/how-to-find-the-intersect-points-in-a-polygon-object 
+
+* center and sort: https://stackoverflow.com/questions/54719326/sorting-points-in-a-clockwise-direction 
+* again: https://stackoverflow.com/questions/45660743/sort-points-in-counter-clockwise-in-javascript 
 
 
 # fx(hash) boilerplate
