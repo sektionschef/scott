@@ -1,4 +1,4 @@
-TEST = false;
+TEST = true;
 
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;
@@ -17,7 +17,6 @@ var WEBSITE = "https://digitalitility.com";
 var YEAR = "2024";
 
 var BACKGROUNDTONE = "#929292";
-
 
 Math.random = $fx.rand;
 noise.seed($fx.rand());
@@ -475,8 +474,8 @@ function main() {
 
   if (TEST) {
     // testGrid();
-    testBlueprintNew();
-    // testStrokeSystem();
+    // testBlueprintNew();
+    testStrokeSystem();
     // testFilledPath();
   } else {
 

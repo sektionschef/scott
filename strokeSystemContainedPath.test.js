@@ -12,7 +12,7 @@ function testStrokeSystem() {
                 ],
                 shapeMaxLoop: 2,
                 order: 4,
-                density: 0,
+                density: 1,
                 colorAction: "#f8688c",
                 fillColor: "#757575",
             }
@@ -78,11 +78,13 @@ function testStrokeSystem() {
         boxIndex: 4,
     });
 
+    // console.log(system.paths);
+
     // make active - SHORTCUT FOR MAKING VISIBLE
-    // system.paths[0].readyToDraw = true;
-    // system.paths[1].readyToDraw = true;  // culprit
-    // system.paths[2].readyToDraw = true;
-    // system.paths[3].readyToDraw = true;
+    system.paths[0].readyToDraw = true;
+    system.paths[1].readyToDraw = true;  // culprit
+    system.paths[2].readyToDraw = true;
+    system.paths[3].readyToDraw = true;
 
     // debug line 
     system.debugPath = true;
