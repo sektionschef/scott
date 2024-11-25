@@ -1,4 +1,4 @@
-function testGrid() {
+function testGrid(data1) {
 
     // test grid for 
     // * marginRelative - already done
@@ -6,7 +6,25 @@ function testGrid() {
     // * stripe height - relative to small size boxcount
     // * resolutionboxcount
 
+    var stripeHeight = 4;
+    var marginRelative = 1;
+    var shortSide = 900;
+    var resolutionBoxCount = 80;
+    var canvasWidth = 1600;
+    var canvasHeight = 900;
+
     // const resolutionBoxCount = 80;
+    blueprint1 = new BlueprintNew(
+        stripeHeight,
+        marginRelative,
+        shortSide,
+        resolutionBoxCount,
+        canvasWidth,
+        canvasHeight,
+        1
+    );
+
+    STROKESYSTEM = new strokeSystem(blueprint1);
 
     // create background
     var group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -24,9 +42,9 @@ function testGrid() {
 
     data1 = {
         stepCountRes: 100,
-        stripeHeight: 4,  // 2- or 4
+        stripeHeight: stripeHeight,
         vectorMagnitude: 55,
-        marginRelative: 0,
+        marginRelative: marginRelative,
         strokeColor: "#222222ff",
         strokeWidth: 1,
         angleRadiansStart: Math.PI / 2,
@@ -41,9 +59,9 @@ function testGrid() {
 
     data2 = {
         stepCountRes: 100,
-        stripeHeight: 4,  // 2- or 4
+        stripeHeight: stripeHeight,
         vectorMagnitude: 55,
-        marginRelative: 1,
+        marginRelative: marginRelative,
         strokeColor: "#222222ff",
         strokeWidth: 1,
         angleRadiansStart: Math.PI / 2,
@@ -58,9 +76,9 @@ function testGrid() {
 
     data3 = {
         stepCountRes: 100,
-        stripeHeight: 4,  // 2- or 4
+        stripeHeight: stripeHeight,
         vectorMagnitude: 55,
-        marginRelative: 2,
+        marginRelative: marginRelative,
         strokeColor: "#222222ff",
         strokeWidth: 1,
         angleRadiansStart: Math.PI / 2,

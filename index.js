@@ -473,9 +473,9 @@ function main() {
   }
 
   if (TEST) {
-    // testGrid();
+    testGrid();
     // testBlueprintNew();
-    testStrokeSystem();
+    // testStrokeSystem();
     // testFilledPath();
   } else {
 
