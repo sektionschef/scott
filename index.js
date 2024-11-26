@@ -473,8 +473,8 @@ function main() {
   }
 
   if (TEST) {
-    testGrid();
-    // testBlueprintNew();
+    // testGrid();
+    testBlueprintNew();
     // testStrokeSystem();
     // testFilledPath();
   } else {
