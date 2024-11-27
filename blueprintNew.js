@@ -1,16 +1,12 @@
+// TODO
+// order params und alphabet for shapes
+// different grids for each shape
+
 class BlueprintNew {
     constructor(stripeHeight, marginRelative, shortSide, resolutionBoxCount, canvasWidth, canvasHeight, group) {
 
         // this.profile = "A";  // bausatzsystem
         this.profile = "B";  // pyramide
-
-        this.size = 13; // 20
-        this.iterationX = 10;
-        this.iterationY = 3;
-        this.colorAction = "#585858";
-
-        this.DEBUGpoints = false;
-        this.DEBUGshapes = true;
 
         this.stripeHeight = stripeHeight;
         this.marginRelative = marginRelative;
@@ -18,6 +14,20 @@ class BlueprintNew {
         this.canvasWidth = canvasWidth;
         this.canvasHeight = canvasHeight;
         this.group = group;
+
+        if (this.profile == "A") {
+            this.iterationX = 10;
+            this.iterationY = 3;
+        } else if (this.profile == "B") {
+            this.iterationX = 8;
+            this.iterationY = 7;
+
+            this.sizePyramid = 13;
+            this.sidePyramid = this.sizePyramid * this.boxSize;
+        }
+
+        this.size = 13; // 20
+        this.colorAction = "#585858";
 
         if (this.marginRelative == 0) {
             this.margin = 0;
@@ -45,9 +55,6 @@ class BlueprintNew {
             var cornerWidthAB = widthAB / 2;
             var totalTileWidth = widthAB * 2;
             var totalTileHeight = (heightAB + cornerHeightAB) * 2;
-        } else if (this.profile == "B") {
-            this.sizePyramid = 8;
-            this.sidePyramid = this.sizePyramid * this.boxSize;
         }
 
         // TODO: MERGE THE PARAMS IN THIS DATA
@@ -284,59 +291,55 @@ class BlueprintNew {
                             density: 3,
                             colorAction: this.colorAction,
                             grid: 1,
-                            fillColor: midtonelow,
+                            fillColor: highlight,
                             pointList: [
                                 this.P1,
                                 this.P2,
                                 this.P5,
                             ]
                         },
-                        // B: {
-                        //     label: "B",
-                        //     shapeMaxLoop: 1,
-                        //     order: 8,
-                        //     density: 6,
-                        //     colorAction: this.colorAction,
-                        //     grid: 2,
-                        //     fillColor: midtonehigh,
-                        //     pointList: [
-                        //         this.P3,
-                        //         this.P6,
-                        //         this.P7,
-                        //         this.P8,
-                        //         this.P4,
-                        //     ]
-                        // },
-                        // C: {
-                        //     label: "C",
-                        //     shapeMaxLoop: 1,
-                        //     order: 2,
-                        //     density: 1,
-                        //     colorAction: this.colorAction,
-                        //     grid: 3,
-                        //     fillColor: lowlight,
-                        //     pointList: [
-                        //         this.P2,
-                        //         this.P9,
-                        //         this.P10,
-                        //         this.P3,
-                        //     ]
-                        // },
-                        // D: {
-                        //     label: "D",
-                        //     shapeMaxLoop: 1,
-                        //     order: 3,
-                        //     density: 13,
-                        //     colorAction: this.colorAction,
-                        //     grid: 4,
-                        //     fillColor: highlight,
-                        //     pointList: [
-                        //         this.P10,
-                        //         this.P11,
-                        //         this.P12,
-                        //         this.P6,
-                        //     ]
-                        // }
+                        B: {
+                            label: "B",
+                            shapeMaxLoop: 1,
+                            order: 8,
+                            density: 6,
+                            colorAction: this.colorAction,
+                            grid: 1,
+                            fillColor: midtonelow,
+                            pointList: [
+                                this.P2,
+                                this.P3,
+                                this.P5,
+                            ]
+                        },
+                        C: {
+                            label: "C",
+                            shapeMaxLoop: 1,
+                            order: 2,
+                            density: 1,
+                            colorAction: this.colorAction,
+                            grid: 1,
+                            fillColor: lowlight,
+                            pointList: [
+                                this.P3,
+                                this.P4,
+                                this.P5,
+                            ]
+                        },
+                        D: {
+                            label: "D",
+                            shapeMaxLoop: 1,
+                            order: 3,
+                            density: 13,
+                            colorAction: this.colorAction,
+                            grid: 1,
+                            fillColor: midtonelow,
+                            pointList: [
+                                this.P4,
+                                this.P1,
+                                this.P5,
+                            ]
+                        }
                     }
                     this.data.shapes.push(dataEntry)
                 }
@@ -401,7 +404,11 @@ class BlueprintNew {
 
         var showLabels = true;
         // mind the order
-        var alphabet = ["A", "C", "D", "E", "F", "G", "H", "B"];
+        if (this.profile == "A") {
+            var alphabet = ["A", "C", "D", "E", "F", "G", "H", "B"];
+        } else if (this.profile == "B") {
+            var alphabet = ["A", "B", "C", "D", "E", "F", "G", "H",];
+        }
 
         for (var i = 0; i < this.data.shapes.length; i++) {
             for (var letterI = 0; letterI < alphabet.length; letterI++) {
@@ -419,6 +426,7 @@ class BlueprintNew {
     }
 
     debugShowPoints() {
+        // console.log(this.data.shapes);
         if (this.profile == "A") {
             showDebugPoint(this.P1[0], this.P1[1], "black", "2", "P1")
             showDebugPoint(this.P2[0], this.P2[1], "black", "2", "P2")
@@ -443,11 +451,28 @@ class BlueprintNew {
             showDebugPoint(this.P21[0], this.P21[1], "black", "2", "P21")
         } else if (this.profile == "B") {
             for (var i = 0; i < this.data.shapes.length; i++) {
-                showDebugPoint(this.P1[0], this.P1[1], "black", "1", "P1")
-                showDebugPoint(this.P2[0], this.P2[1], "black", "1", "P2")
-                showDebugPoint(this.P3[0], this.P3[1], "black", "1", "P3")
-                showDebugPoint(this.P4[0], this.P4[1], "black", "1", "P4")
-                showDebugPoint(this.P5[0], this.P5[1], "black", "1", "P5")
+                // console.log(this.data.shapes[i]);
+
+                // shape A
+                showDebugPoint(this.data.shapes[i]["A"]["pointList"][0][0], this.data.shapes[i]["A"]["pointList"][0][1], "black", "1", "P1");
+                showDebugPoint(this.data.shapes[i]["A"]["pointList"][1][0], this.data.shapes[i]["A"]["pointList"][1][1], "black", "1", "P2");
+                showDebugPoint(this.data.shapes[i]["A"]["pointList"][2][0], this.data.shapes[i]["A"]["pointList"][2][1], "black", "1", "P5");
+
+                // shape B
+                showDebugPoint(this.data.shapes[i]["B"]["pointList"][0][0], this.data.shapes[i]["B"]["pointList"][0][1], "black", "1", "P2");
+                showDebugPoint(this.data.shapes[i]["B"]["pointList"][1][0], this.data.shapes[i]["B"]["pointList"][1][1], "black", "1", "P3");
+                showDebugPoint(this.data.shapes[i]["B"]["pointList"][2][0], this.data.shapes[i]["B"]["pointList"][2][1], "black", "1", "P5");
+
+                // shape B
+                showDebugPoint(this.data.shapes[i]["C"]["pointList"][0][0], this.data.shapes[i]["C"]["pointList"][0][1], "black", "1", "P3");
+                showDebugPoint(this.data.shapes[i]["C"]["pointList"][1][0], this.data.shapes[i]["C"]["pointList"][1][1], "black", "1", "P4");
+                showDebugPoint(this.data.shapes[i]["C"]["pointList"][2][0], this.data.shapes[i]["C"]["pointList"][2][1], "black", "1", "P5");
+
+                // shape B
+                showDebugPoint(this.data.shapes[i]["D"]["pointList"][0][0], this.data.shapes[i]["D"]["pointList"][0][1], "black", "1", "P3");
+                showDebugPoint(this.data.shapes[i]["D"]["pointList"][1][0], this.data.shapes[i]["D"]["pointList"][1][1], "black", "1", "P4");
+                showDebugPoint(this.data.shapes[i]["D"]["pointList"][2][0], this.data.shapes[i]["D"]["pointList"][2][1], "black", "1", "P5");
+
             }
         }
     }

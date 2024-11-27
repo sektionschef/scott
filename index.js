@@ -1,4 +1,4 @@
-TEST = true;
+TEST = false;
 
 var BULK = false; // bulk export images - and use direct not lense
 // let RESOLUTIONBOXCOUNT = 160;

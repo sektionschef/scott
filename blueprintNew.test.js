@@ -6,7 +6,8 @@ function testBlueprintNew() {
     var resolutionBoxCount = 80;
     var canvasWidth = 1600;
     var canvasHeight = 900;
-    var groupLength = 8;
+    // var groupLength = 8;  // for profile A
+    var groupLength = 1;
 
     // var boxSize = shortSide / resolutionBoxCount;
 
@@ -16,6 +17,6 @@ function testBlueprintNew() {
         );
 
         blueprint.debugShowShapes();
-        blueprint.debugShowPoints();
+        // blueprint.debugShowPoints();
     }
 }
