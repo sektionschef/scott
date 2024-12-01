@@ -15,25 +15,7 @@ class BlueprintNew {
         this.canvasHeight = canvasHeight;
         this.group = group;
 
-        if (this.profile == "A") {
-            this.iterationX = 10;
-            this.iterationY = 3;
-        } else if (this.profile == "B") {
-            this.iterationX = 8;
-            this.iterationY = 7;
-
-            this.sizePyramid = 13;
-            this.sidePyramid = this.sizePyramid * this.boxSize;
-        }
-
-        this.size = 13; // 20
         this.colorAction = "#585858";
-
-        if (this.marginRelative == 0) {
-            this.margin = 0;
-        } else {
-            this.margin = Math.round(this.stripeHeight * this.marginRelative) * this.boxSize;
-        }
 
         // PROFILE 
         // color
@@ -42,14 +24,32 @@ class BlueprintNew {
         var midtonelow = "#b3b3b3";
         var lowlight = "#808080";
 
+        if (this.profile == "A") {
+            this.iterationX = 10;
+            this.iterationY = 3;
+            this.size = 13; // 20
+        } else if (this.profile == "B") {
+            this.iterationX = 8;
+            this.iterationY = 7;
+
+            this.sizePyramid = 13;
+            this.sidePyramid = this.sizePyramid * this.boxSize;
+        }
+
+        if (this.marginRelative == 0) {
+            this.margin = 0;
+        } else {
+            this.margin = Math.round(this.stripeHeight * this.marginRelative) * this.boxSize;
+        }
+
         // fixed distances
         var marginAX = this.margin + this.boxSize * -2;
         var marginAY = this.margin + this.boxSize * -2;
-        var heightAB = this.size * this.boxSize; // used to be 15
-
-        var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
 
         if (this.profile == "A") {
+            var heightAB = this.size * this.boxSize; // used to be 15
+
+            var shapeOffsetY = 1 * this.boxSize; // for perspective, relative to widthAB
             var widthAB = heightAB * 2 / 3;
             var cornerHeightAB = heightAB / 2;
             var cornerWidthAB = widthAB / 2;
