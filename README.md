@@ -1,5 +1,65 @@
 # Scott
 
+## generated documentation
+
+### Project purpose
+
+This repository is a browser-based generative SVG artwork for fxhash. The piece builds a geometric tile blueprint, generates many candidate stroke vectors, clips/splits those vectors against polygon faces, and renders the accepted segments as filled, pencil-like marks with paper and grain overlays.
+
+### Runtime pipeline
+
+1. `index.html` loads all scripts in global scope and starts `index.js`.
+2. `index.js` seeds randomness with `$fx.rand()`, sets canvas format and constants, and initializes scene groups/filters.
+3. `blueprintNew.js` creates repeated polygon tile faces (A-H) and returns shape data by group.
+4. `shapes.js` transforms blueprint data into ordered `loopMaterial` used for path containment checks.
+5. `grid.js` creates striped box regions and generates candidate stroke vectors per stripe.
+6. `strokeSystem.js` processes candidate paths and delegates split/full checks to `containedPath.js`.
+7. `containedPath.js` checks point-in-polygon and edge intersections, splitting paths when needed.
+8. `filledPath.js` draws accepted path segments as organic filled Bezier forms.
+9. Filter layers (`paperFilter.js`, `pencilFilter.js`, `noiseDotFilter.js`, `paperLightFilter.js`) add texture and final surface look.
+
+### Visible layer order
+
+When rendering in normal mode (`TEST = false`), the visual stack is:
+
+1. `backgroundRect` with `filterPaper`
+2. `groupB` strokes with `pencilFilter`
+3. `rectDot` overlay from `noiseDotFilter`
+4. `paperLightContainer` overlay from `paperLightFilter`
+
+This order is controlled in `index.js` by `showBackground()`, `showGroupB()`, `new noiseDotFilter()`, and `paperLight.showLayer()`.
+
+### File responsibilities
+
+- `index.js`: composition setup, object wiring, and render orchestration.
+- `blueprintNew.js`: core geometric blueprint and per-face metadata (`density`, `shapeMaxLoop`, `fillColor`).
+- `shapes.js`: flattening/sorting geometry into loop order.
+- `grid.js`: box grid, stripe categorization, and stroke candidate generation.
+- `strokeSystem.js`: iterative path solving and draw dispatch.
+- `containedPath.js`: geometry tests (inside/split/full) and path splitting.
+- `filledPath.js`: stroke appearance profile (`vanilla`/`swingspitz`) and final path drawing.
+- `utilsSVG.js`: vector math, helpers, metadata tags, SVG export.
+- `*.test.js`: manual debug/test routines toggled by `TEST` in `index.js` (not an automated test runner).
+
+### Main tuning controls
+
+- In `index.js`:
+  - `RESOLUTIONBOXCOUNT`: effective scene resolution.
+  - `STRIPEHEIGHT`: stripe band height.
+  - `MARGINRELATIVE`: drawing margin.
+  - Grid config (`stepCountRes`, `vectorMagnitude`, `angleRadiansStart`, `angleRadiansGain`).
+- In `blueprintNew.js`:
+  - Tile proportions (`heightAB`, offsets) and face-level `density`.
+- In `containedPath.js`:
+  - `minimalFactor`, `uncertaintyShift` for clipping behavior.
+- In filter files:
+  - Turbulence frequencies, blend modes, and overlay opacity.
+
+### Export and interaction
+
+- Press `E` to export the current SVG (`saveSvg(...)` in `index.js`).
+- fxhash metadata tags are set via `setTagsHTML(...)`.
+
 ## Filter
 // *result* ist wichtig bei filtern, um auf die einelnen Ebenen referenzieren zu können
 
