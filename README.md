@@ -1,5 +1,49 @@
 # Scott
 
+## todos
+
+* different hatching sttyles
+  * https://i1-e.pinimg.com/1200x/d9/7f/79/d97f7922b641e9fc0ec8a89c46354dda.jpg 
+  * https://i1-e.pinimg.com/736x/0b/70/b4/0b70b4595e5fdd9dd95e4e29e940d5c6.jpg 
+  * result: http://localhost:3301/?debugHatching=1 
+* test with complex cubes
+* check 3d generation
+  * Three.js scene: cube, plane, camera, light, shadows.
+  * Physics: use cannon-es or rapier to drop the cube.
+  * Freeze frame: stop animation when the cube rests.
+  * Extract 2D face coordinates: project cube vertices through the camera.
+  * Create flat image: generate SVG polygons for visible cube faces + projected shadow.
+
+debug hatching styles: http://localhost:3301/?debugHatching=1
+debug strokes: http://localhost:3301/?debugStroke=1 
+debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
+debug stroke: http://localhost:3301/?debugFilledPathParams=1 
+
+
+## shape design insights
+
+Shape: 4 corners (A, B, C, D)
+
+The stroke is not a line — it's a filled polygon with curved edges. In swingspitz profile (currently active):
+
+A — near start, offset slightly inward (−70% of π)
+B — near end, slightly inward from one side
+C — near end, slightly inward from the other side
+D — near start, slightly inward
+So A/D are the "back" of the stroke (start side), B/C are the "tip" (end side). The whole shape is very narrow — distanceWidth = 1 pixel.
+
+Path: A → B → C → D → A (4 cubic Bézier curves)
+Each segment uses two control points (cAB/cBA, cBC/cCB, cCD/cDC, cDA/cAD) to give each edge a slight curve.
+
+Where randomness is injected:
+
+Variable	Where	Effect
+cat = 0.75	jitterPoint(start, cat) and jitterPoint(end, cat)	Wiggles both endpoints ±0.75px
+bogal = gaussianRandAdj(0, 0.03)	cAB, cBA, cCD, cDC control point angles	Slightly bends the long edges of the stroke
+The control points for the tip (cBC/cCB) and back (cDA/cAD) use fixed angle offsets (±4% and ±82% of π), so the pointy tip and blunt tail are deterministic in shape but move with the jittered endpoints.
+
+randomPath() exists but is commented out — it would additionally push all control points outward from the center.
+
 ## generated documentation
 
 ### Project purpose

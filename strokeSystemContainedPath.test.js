@@ -12,7 +12,7 @@ function testStrokeSystem() {
                 ],
                 shapeMaxLoop: 2,
                 order: 4,
-                density: 0,
+                density: 1,
                 colorAction: "#f8688c",
                 fillColor: "#757575",
             }

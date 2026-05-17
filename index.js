@@ -26,6 +26,21 @@ noise.seed($fx.rand());
 const sp = new URLSearchParams(window.location.search)
 //  console.log(sp);
 
+if (sp.get("zoom") === "1") {
+  const link = document.querySelector('link[rel="stylesheet"]');
+  if (link) link.href = "stylesZoomIn.css";
+}
+
+const DEBUG_GRID = sp.get("debugGrid") === "1" || sp.get("debug") === "grid";
+const DEBUG_CUBE = sp.get("debugCube") === "1" || sp.get("debug") === "cube";
+const DEBUG_HATCHING = sp.get("debugHatching") === "1" || sp.get("debug") === "hatching";
+const DEBUG_STROKE = sp.get("debugStroke") === "1" || sp.get("debug") === "stroke";
+const DEBUG_FILLED_PATH = sp.get("debugFilledPath") === "1" || sp.get("debug") === "filledPath";
+const DEBUG_FILLED_PATH_PARAMS = sp.get("debugFilledPathParams") === "1" || sp.get("debug") === "filledPathParams";
+if (DEBUG_GRID || DEBUG_CUBE || DEBUG_HATCHING || DEBUG_STROKE || DEBUG_FILLED_PATH || DEBUG_FILLED_PATH_PARAMS) {
+  TEST = true;
+}
+
 // console.info(`fxhash: %c${$fx.hash}`, 'font-weight: bold');
 
 
@@ -518,7 +533,19 @@ function main() {
   }
 
   if (TEST) {
-    // testGrid();
+    if (DEBUG_CUBE) {
+      testCubeComposition();
+    } else if (DEBUG_GRID) {
+      testGrid();
+    } else if (DEBUG_HATCHING) {
+      testHatchingStyles();
+    } else if (DEBUG_STROKE) {
+      testStrokeSystem();
+    } else if (DEBUG_FILLED_PATH) {
+      testFilledPath();
+    } else if (DEBUG_FILLED_PATH_PARAMS) {
+      testFilledPathParams();
+    }
     // testBlueprintNew();
     // testBlueprint();
     // testShapes();
@@ -748,4 +775,171 @@ function showGroupC() {
   groupC.setAttribute("href", "#groupC");
 
   svgNode.appendChild(groupC);
+}
+
+function testCubeComposition() {
+  const svgNode = document.getElementById("svgNode");
+
+  const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  group.setAttribute("id", "debugCubeGroup");
+  group.setAttribute("fill", "none");
+  svgNode.appendChild(group);
+
+  const width = CANVASFORMATCHOSEN.canvasWidth;
+  const height = CANVASFORMATCHOSEN.canvasHeight;
+  const boxSize = SHORTSIDE / RESOLUTIONBOXCOUNT;
+  const snapToGrid = (value) => Math.round(value / boxSize) * boxSize;
+
+  const center = {
+    x: snapToGrid(width / 2),
+    y: snapToGrid(height / 2 + height * 0.03),
+  };
+  const sideA = Math.max(2 * boxSize, snapToGrid(Math.min(width, height) * 0.28));
+  const offset = {
+    x: snapToGrid(sideA * 0.48),
+    y: snapToGrid(-sideA * 0.34),
+  };
+
+  const aTL = { x: center.x - sideA / 2, y: center.y - sideA / 2 };
+  const aTR = { x: center.x + sideA / 2, y: center.y - sideA / 2 };
+  const aBR = { x: center.x + sideA / 2, y: center.y + sideA / 2 };
+  const aBL = { x: center.x - sideA / 2, y: center.y + sideA / 2 };
+
+  const bTR = vectorAdd(aTR, offset);
+  const bTL = vectorAdd(aTL, offset);
+  const bBR = vectorAdd(aBR, offset);
+
+  const faceA = [aTL, aTR, aBR, aBL];
+  const faceB = [aTR, aBR, bBR, bTR];
+  const faceC = [aTL, aTR, bTR, bTL];
+  const faceAFlat = transformToXYLess(faceA);
+  const faceBFlat = transformToXYLess(faceB);
+  const faceCFlat = transformToXYLess(faceC);
+
+  const fullCanvas = [
+    { x: 0, y: 0 },
+    { x: width, y: 0 },
+    { x: width, y: height },
+    { x: 0, y: height },
+  ];
+
+  drawPolygon(group, fullCanvas, "#efefef", "none", 0, 1);
+
+  // Row rhythm drives positions and length. Region membership only changes direction.
+  const stepX = boxSize;
+  const stepY = boxSize * 2;
+  const angleA = Math.PI / 4;
+  const angleB = -Math.PI / 4;
+  const strokeLengthBoxes = 4;
+  const targetStrokeLength = strokeLengthBoxes * boxSize;
+  const maxAbsSin = Math.max(Math.abs(Math.sin(angleA)), Math.abs(Math.sin(angleB)));
+  const maxLengthNoRowOverlap = (stepY * 1.0) / Math.max(maxAbsSin, 0.0001);
+  const strokeLength = Math.min(targetStrokeLength, maxLengthNoRowOverlap);
+
+  const clipIdB = `debugCubeClipB_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+  const clipIdC = `debugCubeClipC_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+  const maskIdBG = `debugCubeMaskBG_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
+
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+
+  const clipB = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+  clipB.setAttribute("id", clipIdB);
+  const clipBPoly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  clipBPoly.setAttribute("points", faceB.map((p) => `${p.x},${p.y}`).join(" "));
+  clipB.appendChild(clipBPoly);
+  defs.appendChild(clipB);
+
+  const clipC = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
+  clipC.setAttribute("id", clipIdC);
+  const clipCPoly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  clipCPoly.setAttribute("points", faceC.map((p) => `${p.x},${p.y}`).join(" "));
+  clipC.appendChild(clipCPoly);
+  defs.appendChild(clipC);
+
+  const backgroundMask = document.createElementNS("http://www.w3.org/2000/svg", "mask");
+  backgroundMask.setAttribute("id", maskIdBG);
+  backgroundMask.setAttribute("maskUnits", "userSpaceOnUse");
+
+  const maskBase = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  maskBase.setAttribute("x", 0);
+  maskBase.setAttribute("y", 0);
+  maskBase.setAttribute("width", width);
+  maskBase.setAttribute("height", height);
+  maskBase.setAttribute("fill", "white");
+  backgroundMask.appendChild(maskBase);
+
+  const maskFaceA = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  maskFaceA.setAttribute("points", faceA.map((p) => `${p.x},${p.y}`).join(" "));
+  maskFaceA.setAttribute("fill", "black");
+  backgroundMask.appendChild(maskFaceA);
+
+  const maskFaceB = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  maskFaceB.setAttribute("points", faceB.map((p) => `${p.x},${p.y}`).join(" "));
+  maskFaceB.setAttribute("fill", "black");
+  backgroundMask.appendChild(maskFaceB);
+
+  const maskFaceC = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  maskFaceC.setAttribute("points", faceC.map((p) => `${p.x},${p.y}`).join(" "));
+  maskFaceC.setAttribute("fill", "black");
+  backgroundMask.appendChild(maskFaceC);
+
+  defs.appendChild(backgroundMask);
+
+  svgNode.insertBefore(defs, group);
+
+  const backgroundGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  backgroundGroup.setAttribute("mask", `url(#${maskIdBG})`);
+  group.appendChild(backgroundGroup);
+
+  const faceBGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  faceBGroup.setAttribute("clip-path", `url(#${clipIdB})`);
+  group.appendChild(faceBGroup);
+
+  const faceCGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  faceCGroup.setAttribute("clip-path", `url(#${clipIdC})`);
+  group.appendChild(faceCGroup);
+
+  for (var y = stepY / 2; y <= height; y += stepY) {
+    const rowIndex = Math.round((y - stepY / 2) / stepY);
+    const rowAnglePrimary = rowIndex % 2 === 0 ? angleA : angleB;
+    const rowAngleSecondary = rowIndex % 2 === 0 ? angleB : angleA;
+
+    for (var x = stepX / 2; x <= width; x += stepX) {
+      // Draw full hatch fields and let clip-paths enforce exact face boundaries.
+      drawGridStroke(backgroundGroup, x, y, rowAnglePrimary, strokeLength, "#000000", 1, 0.55);
+      drawGridStroke(backgroundGroup, x, y, rowAngleSecondary, strokeLength, "#000000", 1, 0.45);
+      drawGridStroke(faceBGroup, x, y, rowAnglePrimary, strokeLength, "#000000", 1, 1);
+      drawGridStroke(faceCGroup, x, y, rowAngleSecondary, strokeLength, "#000000", 1, 1);
+    }
+  }
+
+}
+
+function drawPolygon(group, points, fill, stroke, strokeWidth, opacity) {
+  const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+  polygon.setAttribute("points", points.map((p) => `${p.x},${p.y}`).join(" "));
+  polygon.setAttribute("fill", fill);
+  polygon.setAttribute("stroke", stroke);
+  polygon.setAttribute("stroke-width", strokeWidth);
+  polygon.setAttribute("opacity", opacity);
+  group.appendChild(polygon);
+}
+
+function drawGridStroke(group, cx, cy, angle, length, stroke, strokeWidth, opacity) {
+  const half = length / 2;
+  const x1 = cx + Math.cos(angle) * half;
+  const y1 = cy + Math.sin(angle) * half;
+  const x2 = cx - Math.cos(angle) * half;
+  const y2 = cy - Math.sin(angle) * half;
+
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("x1", x1);
+  line.setAttribute("y1", y1);
+  line.setAttribute("x2", x2);
+  line.setAttribute("y2", y2);
+  line.setAttribute("stroke", stroke);
+  line.setAttribute("stroke-width", strokeWidth);
+  line.setAttribute("opacity", opacity);
+  line.setAttribute("fill", "none");
+  group.appendChild(line);
 }

@@ -22,9 +22,31 @@ function testGrid() {
     defs.appendChild(group);
 
 
-    data1 = {
-        stepCountRes: 100,
-        stripeHeight: 4,  // 2- or 4
+    // Use a full-canvas debug shape so every generated stroke is visible.
+    const allShapesDebug = {
+        loopMaterial: {
+            1: {
+                pointList: [
+                    [0, 0],
+                    [CANVASFORMATCHOSEN.canvasWidth, 0],
+                    [CANVASFORMATCHOSEN.canvasWidth, CANVASFORMATCHOSEN.canvasHeight],
+                    [0, CANVASFORMATCHOSEN.canvasHeight],
+                ],
+                shapeMaxLoop: 10,
+                order: 1,
+                density: 1,
+                colorAction: "#222222ff",
+                fillColor: "#757575",
+            }
+        }
+    };
+
+    const debugStrokeSystem = new strokeSystem(allShapesDebug);
+    debugStrokeSystem.debugPath = true;
+
+    const data1 = {
+        stepCountRes: 120,
+        stripeHeight: 4,  // smaller rows for direction debugging
         vectorMagnitude: 55,
         marginRelative: 0,
         strokeColor: "#222222ff",
@@ -36,12 +58,12 @@ function testGrid() {
         shortSide: SHORTSIDE,
         landscape: LANDSCAPE,
         group: "debugGridGroup",
-        strokeSystem: STROKESYSTEM,
+        strokeSystem: debugStrokeSystem,
     }
 
-    data2 = {
-        stepCountRes: 100,
-        stripeHeight: 4,  // 2- or 4
+    const data2 = {
+        stepCountRes: 120,
+        stripeHeight: 4,  // smaller rows for direction debugging
         vectorMagnitude: 55,
         marginRelative: 1,
         strokeColor: "#222222ff",
@@ -53,12 +75,12 @@ function testGrid() {
         shortSide: SHORTSIDE,
         landscape: LANDSCAPE,
         group: "debugGridGroup",
-        strokeSystem: STROKESYSTEM,
+        strokeSystem: debugStrokeSystem,
     }
 
-    data3 = {
-        stepCountRes: 100,
-        stripeHeight: 4,  // 2- or 4
+    const data3 = {
+        stepCountRes: 120,
+        stripeHeight: 4,  // smaller rows for direction debugging
         vectorMagnitude: 55,
         marginRelative: 2,
         strokeColor: "#222222ff",
@@ -70,7 +92,7 @@ function testGrid() {
         shortSide: SHORTSIDE,
         landscape: LANDSCAPE,
         group: "debugGridGroup",
-        strokeSystem: STROKESYSTEM,
+        strokeSystem: debugStrokeSystem,
     }
 
     // let grid = new Grid(data1);

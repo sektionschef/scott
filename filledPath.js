@@ -1,18 +1,19 @@
 class filledPath {
     constructor(data) {
-        this.strokeWidth = 1.3; // deprecatd
-        // this.colory = "#3a3a3aff"
+        this.strokeWidth = 1.3; // deprecated
         this.colory = "#333333ff"
-        // this.profile = "vanilla";
         this.profile = "swingspitz";
-        var cat = 0.75;
-        var bogal = gaussianRandAdj(0, 0.03);
 
 
         this.start = data.start;
         this.end = data.end;
         // this.strokeWidth = data.strokeWidth;
         this.group = data.group;
+
+        // controllable shape params (with backwards-compatible defaults)
+        var cat           = data.jitter !== undefined ? data.jitter : 0.75;
+        var bogal         = data.bend   !== undefined ? data.bend   : gaussianRandAdj(0, 0.03);
+        var distanceWidth = data.width  !== undefined ? data.width  : 1;
 
         this.angleRadians = angleBetweenPoints(this.start, this.end);
         this.vectorMagnitude = vectorLength(vectorSub(this.start, this.end));
@@ -28,13 +29,6 @@ class filledPath {
         this.center = getMiddlePpoint(this.start, this.end);
         this.center.id = "center";
         this.center.debugColor = "pink";
-        // this.center.x = this.center.x + gaussianRandAdj(0, cat);
-        // this.center.y = this.center.y + gaussianRandAdj(0, cat);
-
-        // var widthy =
-        // console.log(this.vectorMagnitude * 0.02);
-
-        var distanceWidth = 1;
 
         if (this.profile == "vanilla") {
             this.Atheo = vectorAdd(this.start, vectorFromAngle(this.angleRadians + Math.PI / 2, this.strokeWidth / 2));

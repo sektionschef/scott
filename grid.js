@@ -98,6 +98,7 @@ class Grid {
                     "index": index,
                     "margin": margin,
                     "stripeIndex": this.stripeIndex,
+                    "colStripeIndex": Math.floor(w / this.stripeHeight),
                     "stripeA": false,
                     "stripeB": false,
                     "stripeC": false,
@@ -405,6 +406,8 @@ class Grid {
 
                     for (var v = 1; v <= loopMax; v++) {
 
+                        var vectorMagnitude = this.vectorMagnitude;
+
                         // first loop
                         if (v == 0) {
                             var angleRadiansLooped = angleRadians;
@@ -420,12 +423,21 @@ class Grid {
                             var angleRadiansLooped = angleRadians;
                         }
 
+                        // Debug view: make line candidates longer, but clamp to stripe height so rows do not overlap.
+                        if (this.strokeSystem && this.strokeSystem.debugPath) {
+                            var targetDebugMagnitude = this.vectorMagnitude * 1.8;
+                            var rowHeightPx = this.stripeHeight * this.boxSize;
+                            var yProjection = Math.max(Math.abs(Math.sin(angleRadiansLooped)), 0.0001);
+                            var maxMagnitudeNoOverlap = rowHeightPx * 0.9 / yProjection;
+                            vectorMagnitude = Math.min(targetDebugMagnitude, maxMagnitudeNoOverlap);
+                        }
+
                         this.strokeSystem.add({
                             "center": {
                                 x: positionX,
                                 y: positionMiddleLineY
                             },
-                            vectorMagnitude: this.vectorMagnitude,
+                            vectorMagnitude: vectorMagnitude,
                             angleRadians: angleRadiansLooped, // 0.2,
                             strokeColor: this.strokeColor,
                             strokeWidth: this.strokeWidth,
