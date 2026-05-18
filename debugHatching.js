@@ -45,21 +45,29 @@ function testHatchingStyles() {
     const H = CANVASFORMATCHOSEN.canvasHeight;
     console.log("testHatchingStyles: W=" + W + " H=" + H);
 
+    const columns = 5;
+    const rows = 2;
     const labelHeight = 20;
-    const gap = 10;
-    const marginX = Math.max(30, W * 0.04);
-    const rectW = (W - marginX * 2 - gap * 4) / 5;
-    const rectH = Math.max(120, H - 120 - labelHeight);
-    const rectY = Math.round((H - rectH) / 2 + labelHeight / 2);
+    const gapX = 10;
+    const gapY = 28;
+    const marginX = Math.max(24, W * 0.04);
+    const topPad = 36;
+    const bottomPad = 24;
+
+    const rectW = (W - marginX * 2 - gapX * (columns - 1)) / columns;
+    const rectH = (H - topPad - bottomPad - rows * labelHeight - (rows - 1) * gapY) / rows;
 
     const rects = [];
-    for (let i = 0; i < 5; i++) {
-        rects.push({
-            x: marginX + i * (rectW + gap),
-            y: rectY,
-            width: rectW,
-            height: rectH,
-        });
+    for (let row = 0; row < rows; row++) {
+        const y = topPad + row * (labelHeight + rectH + gapY) + labelHeight;
+        for (let col = 0; col < columns; col++) {
+            rects.push({
+                x: marginX + col * (rectW + gapX),
+                y,
+                width: rectW,
+                height: rectH,
+            });
+        }
     }
 
     const boxSize = SHORTSIDE / RESOLUTIONBOXCOUNT;
@@ -68,7 +76,18 @@ function testHatchingStyles() {
     const color = "#222222";
     const sw = 2;
 
-    const labels = ["Horizontal", "Vertical", "45°", "315°", "Circles"];
+    const labels = [
+        "Horizontal",
+        "Vertical",
+        "45°",
+        "315°",
+        "Circles",
+        "Horizontal + Vertical",
+        "45° + 315°",
+        "Vertical + Horizontal + Circles",
+        "45° + 315° + Circles",
+        "All Five",
+    ];
 
     // wrapper group for everything
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -78,7 +97,7 @@ function testHatchingStyles() {
     // reuse the existing <defs id="defs"> created in main() — avoids multiple-defs quirks
     const defs = document.getElementById('defs');
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < rects.length; i++) {
         const clipPath = document.createElementNS("http://www.w3.org/2000/svg", "clipPath");
         clipPath.setAttribute("id", `debugHatchClip_${i}`);
         const clipRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -99,7 +118,7 @@ function testHatchingStyles() {
     ], "#f0f0f0", "none", 0, 1);
 
     // borders
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < rects.length; i++) {
         _drawHatchBorder(group, rects[i]);
     }
 
@@ -113,6 +132,16 @@ function testHatchingStyles() {
         return hatchGroupId;
     });
 
+    const drawCombo = (groupId, rect, parts) => {
+        for (const part of parts) {
+            if (part === "horizontal") hatchHorizontal(groupId, rect, spacing, strokeLength, color, sw);
+            if (part === "vertical") hatchVertical(groupId, rect, spacing, strokeLength, color, sw);
+            if (part === "45") hatch45(groupId, rect, spacing, strokeLength, color, sw);
+            if (part === "315") hatch315(groupId, rect, spacing, strokeLength, color, sw);
+            if (part === "circles") hatchCircles(groupId, rect, spacing, strokeLength * 0.28, color, sw);
+        }
+    };
+
     console.log("testHatchingStyles: drawing hatching");
     hatchHorizontal(hatchGroupIds[0], rects[0], spacing, strokeLength, color, sw);
     hatchVertical(hatchGroupIds[1], rects[1], spacing, strokeLength, color, sw);
@@ -120,8 +149,14 @@ function testHatchingStyles() {
     hatch315(hatchGroupIds[3], rects[3], spacing, strokeLength, color, sw);
     hatchCircles(hatchGroupIds[4], rects[4], spacing, strokeLength * 0.28, color, sw);
 
+    drawCombo(hatchGroupIds[5], rects[5], ["horizontal", "vertical"]);
+    drawCombo(hatchGroupIds[6], rects[6], ["45", "315"]);
+    drawCombo(hatchGroupIds[7], rects[7], ["vertical", "horizontal", "circles"]);
+    drawCombo(hatchGroupIds[8], rects[8], ["45", "315", "circles"]);
+    drawCombo(hatchGroupIds[9], rects[9], ["horizontal", "vertical", "45", "315", "circles"]);
+
     // labels drawn on top
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < rects.length; i++) {
         _drawHatchLabel(group, rects[i], labels[i]);
     }
     console.log("testHatchingStyles: done");
