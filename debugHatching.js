@@ -169,43 +169,33 @@ function hatch315(groupId, rect, spacing, strokeLength, color, strokeWidth) {
 
 function hatchCircles(groupId, rect, spacing, radius, color, strokeWidth) {
     const boxSize = SHORTSIDE / RESOLUTIONBOXCOUNT;
-    const hatchDensityMultiplier = 4;
-    const hatchDensityScale = Math.sqrt(hatchDensityMultiplier);
+    // Keep circles light and readable in the style panel.
+    const adjustedRadius = Math.max(boxSize * 0.18, radius * 0.35);
 
-    // Adjust spacing and radius for better visualization
-    const adjustedSpacing = spacing * 1.5; // Increase spacing
-    const adjustedRadius = radius * 1.2; // Increase circle size
+    // Tight row spacing removes visible horizontal white bands.
+    const rowStep = Math.max(boxSize * 0.35, adjustedRadius * 1.9);
+    const colStep = Math.max(boxSize * 0.45, adjustedRadius * 2.15);
+    const jitterAmount = adjustedRadius * 0.22;
 
-    const rowStepBoxesBase = Math.max(1, Math.round(adjustedSpacing / boxSize));
-    const colStepBoxesBase = Math.max(1, Math.round((adjustedRadius * 2) / boxSize));
-    const rowStepBoxes = Math.max(1, Math.round(rowStepBoxesBase / hatchDensityScale));
-    const colStepBoxes = Math.max(1, Math.round(colStepBoxesBase / hatchDensityScale));
+    let rowIndex = 0;
+    for (let centerY = rect.y + adjustedRadius; centerY <= rect.y + rect.height - adjustedRadius; centerY += rowStep) {
+        const rowOffset = (rowIndex % 2 === 0) ? 0 : colStep * 0.5;
+        for (let centerX = rect.x + adjustedRadius + rowOffset; centerX <= rect.x + rect.width - adjustedRadius; centerX += colStep) {
+            const jitteredX = Math.min(rect.x + rect.width - adjustedRadius, Math.max(rect.x + adjustedRadius, centerX + getRandomFromInterval(-jitterAmount, jitterAmount)));
+            const jitteredY = Math.min(rect.y + rect.height - adjustedRadius, Math.max(rect.y + adjustedRadius, centerY + getRandomFromInterval(-jitterAmount, jitterAmount)));
 
-    const minRow = Math.floor(rect.y / boxSize) - rowStepBoxes;
-    const maxRow = Math.ceil((rect.y + rect.height) / boxSize) + rowStepBoxes;
-    const minCol = Math.floor(rect.x / boxSize) - colStepBoxes;
-    const maxCol = Math.ceil((rect.x + rect.width) / boxSize) + colStepBoxes;
-
-    for (let row = minRow; row <= maxRow; row += rowStepBoxes) {
-        for (let col = minCol; col <= maxCol; col += colStepBoxes) {
-            const centerX = col * boxSize + boxSize / 2;
-            const centerY = row * boxSize + boxSize / 2;
-
-            if (
-                centerX >= rect.x &&
-                centerX <= rect.x + rect.width &&
-                centerY >= rect.y &&
-                centerY <= rect.y + rect.height
-            ) {
-                new circlePath({
-                    center: { x: centerX, y: centerY },
-                    radius: adjustedRadius,
-                    group: groupId,
-                    color,
-                    width: strokeWidth,
-                });
-            }
+            new circlePath({
+                center: { x: jitteredX, y: jitteredY },
+                radius: adjustedRadius,
+                group: groupId,
+                color,
+                width: 0.15,
+                fill: "none",
+                stroke: color,
+                strokeWidth: 1,
+            });
         }
+        rowIndex += 1;
     }
 }
 

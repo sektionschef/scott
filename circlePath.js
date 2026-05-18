@@ -4,6 +4,9 @@ class circlePath {
         this.radius = data.radius !== undefined ? data.radius : 2;
         this.group = data.group;
         this.colory = data.color !== undefined ? data.color : "#333333ff";
+        this.fill = data.fill !== undefined ? data.fill : this.colory;
+        this.stroke = data.stroke !== undefined ? data.stroke : "none";
+        this.strokeWidth = data.strokeWidth !== undefined ? data.strokeWidth : 0;
 
         // Same parameter model as filledPath/hatches.
         this.jitter = data.jitter !== undefined ? data.jitter : getRandomFromInterval(0.3, 0.7);
@@ -50,9 +53,11 @@ class circlePath {
 
     showCirclePath() {
         const group = document.getElementById(this.group);
-        this.path.setAttributeNS(null, "stroke", "none");
+        if (!group) { return; }
+        this.path.setAttributeNS(null, "stroke", this.stroke);
+        this.path.setAttributeNS(null, "stroke-width", this.strokeWidth);
         this.path.setAttributeNS(null, "opacity", 1);
-        this.path.setAttributeNS(null, "fill", this.colory);
+        this.path.setAttributeNS(null, "fill", this.fill);
         group.appendChild(this.path);
     }
 }
