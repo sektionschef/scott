@@ -18,6 +18,7 @@ debug hatching styles: http://localhost:3301/?debugHatching=1
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
 debug stroke params: http://localhost:3301/?debugFilledPathParams=1 
+debug composition: http://localhost:3301/?debugComposition=1 
 
 
 ## shape design insights
