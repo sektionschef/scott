@@ -11,8 +11,8 @@ class filledPath {
         this.group = data.group;
 
         // controllable shape params (with backwards-compatible defaults)
-        var cat           = data.jitter !== undefined ? data.jitter : 0.75;
-        var bogal         = data.bend   !== undefined ? data.bend   : gaussianRandAdj(0, 0.03);
+        var cat           = data.jitter !== undefined ? data.jitter : getRandomFromInterval(0.3, 0.7);
+        var bogal         = data.bend   !== undefined ? data.bend   : getRandomFromInterval(-0.05, 0.05);
         var distanceWidth = data.width  !== undefined ? data.width  : 1;
 
         this.angleRadians = angleBetweenPoints(this.start, this.end);

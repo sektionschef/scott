@@ -15,9 +15,9 @@
   * Create flat image: generate SVG polygons for visible cube faces + projected shadow.
 
 debug hatching styles: http://localhost:3301/?debugHatching=1
-debug strokes: http://localhost:3301/?debugStroke=1 
+debug strokes boundaries: http://localhost:3301/?debugStroke=1 
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
-debug stroke: http://localhost:3301/?debugFilledPathParams=1 
+debug stroke params: http://localhost:3301/?debugFilledPathParams=1 
 
 
 ## shape design insights

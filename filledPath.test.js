@@ -43,6 +43,12 @@ function testFilledPathParams() {
         { label: "width",  key: "width",  values: [0.3, 0.6, 1, 1.5, 2, 3, 4, 6] },
     ];
 
+    const defaultParams = {
+        jitter: getRandomFromInterval(0.3, 0.7),
+        bend: getRandomFromInterval(-0.05, 0.05),
+        width: 1,
+    };
+
     const _text = (parent, x, y, str, size, color, anchor) => {
         const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
         t.setAttribute("x", x); t.setAttribute("y", y);
@@ -65,7 +71,7 @@ function testFilledPathParams() {
             const val = sweep.values[c];
 
             // neutral baseline + sweep this row's param
-            const params = { jitter: 0.75, bend: 0, width: 1 };
+            const params = { ...defaultParams };
             params[sweep.key] = val;
 
             // draw multiple strokes per cell to show natural variation

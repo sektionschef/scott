@@ -37,7 +37,8 @@ const DEBUG_HATCHING = sp.get("debugHatching") === "1" || sp.get("debug") === "h
 const DEBUG_STROKE = sp.get("debugStroke") === "1" || sp.get("debug") === "stroke";
 const DEBUG_FILLED_PATH = sp.get("debugFilledPath") === "1" || sp.get("debug") === "filledPath";
 const DEBUG_FILLED_PATH_PARAMS = sp.get("debugFilledPathParams") === "1" || sp.get("debug") === "filledPathParams";
-if (DEBUG_GRID || DEBUG_CUBE || DEBUG_HATCHING || DEBUG_STROKE || DEBUG_FILLED_PATH || DEBUG_FILLED_PATH_PARAMS) {
+const DEBUG_SINGLE_CIRCLE = sp.get("debugSingleCircle") === "1";
+if (DEBUG_GRID || DEBUG_CUBE || DEBUG_HATCHING || DEBUG_STROKE || DEBUG_FILLED_PATH || DEBUG_FILLED_PATH_PARAMS || DEBUG_SINGLE_CIRCLE) {
   TEST = true;
 }
 
@@ -539,6 +540,8 @@ function main() {
       testGrid();
     } else if (DEBUG_HATCHING) {
       testHatchingStyles();
+    } else if (DEBUG_SINGLE_CIRCLE) {
+      testSingleCircle();
     } else if (DEBUG_STROKE) {
       testStrokeSystem();
     } else if (DEBUG_FILLED_PATH) {
