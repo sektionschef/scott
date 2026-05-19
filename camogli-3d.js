@@ -11,7 +11,6 @@ const toggleWallsButton = document.getElementById("toggleWallsButton");
 const exportSvgButton = document.getElementById("exportSvgButton");
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x11151b, 6, 18);
 scene.background = new THREE.Color(0x11151b);
 
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 120);
