@@ -15,6 +15,21 @@
   * Create flat image: generate SVG polygons for visible cube faces + projected shadow.
 
 3D preview: http://localhost:3301/camogli-3d.html
+camera position:
+```
+{
+  "camera": {
+    "x": 5.298777684117101,
+    "y": 6.0417509403890035,
+    "z": 2.2597841262231078
+  },
+  "target": {
+    "x": 0,
+    "y": 1.5,
+    "z": 0.19999999999999998
+  }
+}
+```
 
 debug hatching styles: http://localhost:3301/?debugHatching=1
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 

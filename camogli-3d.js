@@ -6,9 +6,11 @@ const container = document.getElementById("app");
 const statusNode = document.getElementById("status");
 const resetButton = document.getElementById("resetButton");
 const focusButton = document.getElementById("focusButton");
+const saveViewButton = document.getElementById("saveViewButton");
+const toggleWallsButton = document.getElementById("toggleWallsButton");
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x11151b, 18, 42);
+scene.fog = new THREE.Fog(0x11151b, 6, 18);
 scene.background = new THREE.Color(0x11151b);
 
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 120);
@@ -30,11 +32,13 @@ controls.maxDistance = 26;
 controls.maxPolarAngle = Math.PI * 0.495;
 controls.update();
 
-const ambient = new THREE.AmbientLight(0xf2efe8, 1.4);
+// Rembrandt: minimal ambient so shadows go deep
+const ambient = new THREE.AmbientLight(0xd8cfc4, 0.28);
 scene.add(ambient);
 
-const keyLight = new THREE.DirectionalLight(0xfff3e0, 2.6);
-keyLight.position.set(-8, 14, 10);
+// Key light: warm, steep (70°), offset 30° to the left — one face blazing
+const keyLight = new THREE.DirectionalLight(0xffe4b5, 4.2);
+keyLight.position.set(-5, 18, 6);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
 keyLight.shadow.camera.left = -16;
@@ -45,12 +49,14 @@ keyLight.shadow.camera.near = 0.5;
 keyLight.shadow.camera.far = 40;
 scene.add(keyLight);
 
-const fillLight = new THREE.DirectionalLight(0x8eb4ff, 0.85);
-fillLight.position.set(10, 8, -8);
+// Fill: very cool, very dim — just enough to reveal shadow-side form
+const fillLight = new THREE.DirectionalLight(0x7090c8, 0.18);
+fillLight.position.set(10, 6, -8);
 scene.add(fillLight);
 
-const rimLight = new THREE.DirectionalLight(0xffcc88, 0.55);
-rimLight.position.set(0, 5, -12);
+// Rim: faint warm edge light from behind to silhouette the tower
+const rimLight = new THREE.DirectionalLight(0xffa040, 0.32);
+rimLight.position.set(2, 4, -14);
 scene.add(rimLight);
 
 const world = new CANNON.World();
@@ -62,22 +68,40 @@ world.defaultContactMaterial.friction = 0.88;
 world.defaultContactMaterial.restitution = 0.01;
 
 const materials = {
-  ground: new THREE.MeshStandardMaterial({ color: 0x2b2f33, roughness: 0.96, metalness: 0.02 }),
-  cube: new THREE.MeshStandardMaterial({ color: 0xd8c8b4, roughness: 0.78, metalness: 0.05 }),
-  cubeDark: new THREE.MeshStandardMaterial({ color: 0x9d8d7a, roughness: 0.86, metalness: 0.02 }),
-  cubeLight: new THREE.MeshStandardMaterial({ color: 0xe8ded2, roughness: 0.72, metalness: 0.06 }),
-  obstacle: new THREE.MeshStandardMaterial({ color: 0x65615d, roughness: 0.98, metalness: 0.01 }),
+  ground: new THREE.MeshStandardMaterial({ color: 0x14181d, roughness: 0.98, metalness: 0.0 }),
+  cube: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.0 }),
+  cubeDark: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.0 }),
+  cubeLight: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.0 }),
+  wall: new THREE.MeshStandardMaterial({ color: 0x65615d, roughness: 0.98, metalness: 0.01 }),
 };
 
 const sceneObjects = [];
 const cubeObjects = [];
+const wallMeshes = [];
+const wallOutlineMeshes = [];
 let animationFrameId = 0;
 let settledSeconds = 0;
 let freezeFrame = false;
 let physicsStartedAt = performance.now();
 let simulationStartedAt = performance.now();
 let freezeTimeoutId = 0;
+const spawnTimeoutIds = [];
+let spawnedCount = 0;
+let spawnComplete = false;
+let wallsDebugVisible = false;
 const CUBE_COUNT = 30;
+const CONTAINER_SIZE = 4.8;
+const WALL_HEIGHT = 11;
+const WALL_THICKNESS = 0.8;
+const SPAWN_INSET = 2.05;
+const SPAWN_BASE_Y = 3.2;
+const SPAWN_Y_STEP = 0.2;
+const DROP_DELAY_MS = 110;
+const VIEW_STORAGE_KEY = "camogli3d.defaultView";
+const FALLBACK_VIEW = {
+  camera: { x: 11, y: 9.5, z: 13 },
+  target: { x: 0, y: 1.5, z: 0.2 },
+};
 
 controls.addEventListener("change", () => {
   renderer.render(scene, camera);
@@ -114,19 +138,91 @@ function makeGround() {
   return { groundBody, groundMesh };
 }
 
+function addStaticBox(size, position, material) {
+  const body = new CANNON.Body({ mass: 0, material: new CANNON.Material("wall") });
+  body.addShape(new CANNON.Box(new CANNON.Vec3(size.x / 2, size.y / 2, size.z / 2)));
+  body.position.set(position.x, position.y, position.z);
+  world.addBody(body);
+
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);
+  mesh.castShadow = false;
+  mesh.receiveShadow = true;
+  mesh.position.copy(body.position);
+  mesh.visible = false;
+  scene.add(mesh);
+  sceneObjects.push({ body, mesh });
+  wallMeshes.push(mesh);
+
+  const edgeGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(size.x, size.y, size.z));
+  const edgeMat = new THREE.LineBasicMaterial({ color: 0xf6d7a3, transparent: true, opacity: 0.65 });
+  const outline = new THREE.LineSegments(edgeGeom, edgeMat);
+  outline.position.copy(body.position);
+  outline.visible = false;
+  scene.add(outline);
+  sceneObjects.push({ body: null, mesh: outline });
+  wallOutlineMeshes.push(outline);
+}
+
+function setWallsVisible(visible) {
+  for (const mesh of wallMeshes) {
+    mesh.visible = visible;
+  }
+}
+
+function setWallDebugVisible(visible) {
+  wallsDebugVisible = visible;
+  setWallsVisible(false);
+  for (const outline of wallOutlineMeshes) {
+    outline.visible = visible;
+  }
+  if (toggleWallsButton) {
+    toggleWallsButton.textContent = visible ? "Hide outlines" : "Show outlines";
+  }
+  renderer.render(scene, camera);
+}
+
+function makeContainerWalls() {
+  const half = CONTAINER_SIZE / 2;
+  const y = WALL_HEIGHT / 2;
+
+  addStaticBox(
+    { x: CONTAINER_SIZE + WALL_THICKNESS * 2, y: WALL_HEIGHT, z: WALL_THICKNESS },
+    { x: 0, y, z: half + WALL_THICKNESS / 2 },
+    materials.wall
+  );
+  addStaticBox(
+    { x: CONTAINER_SIZE + WALL_THICKNESS * 2, y: WALL_HEIGHT, z: WALL_THICKNESS },
+    { x: 0, y, z: -half - WALL_THICKNESS / 2 },
+    materials.wall
+  );
+  addStaticBox(
+    { x: WALL_THICKNESS, y: WALL_HEIGHT, z: CONTAINER_SIZE },
+    { x: half + WALL_THICKNESS / 2, y, z: 0 },
+    materials.wall
+  );
+  addStaticBox(
+    { x: WALL_THICKNESS, y: WALL_HEIGHT, z: CONTAINER_SIZE },
+    { x: -half - WALL_THICKNESS / 2, y, z: 0 },
+    materials.wall
+  );
+}
+
 function makeCube(index) {
   const edge = 0.84 + ((index % 3) * 0.1);
+  const spawnHalf = Math.max(0.34, (CONTAINER_SIZE / 2) - SPAWN_INSET);
+  const ringAngle = index * 2.399963229728653;
+  const ringRadius = ((index % 5) / 4) * spawnHalf;
   const body = new CANNON.Body({ mass: 1.4, material: new CANNON.Material("cube") });
   body.addShape(new CANNON.Box(new CANNON.Vec3(edge / 2, edge / 2, edge / 2)));
   body.position.set(
-    (Math.random() - 0.5) * 4.4,
-    4.8 + index * 0.34,
-    (Math.random() - 0.5) * 3.4
+    Math.cos(ringAngle) * ringRadius,
+    SPAWN_BASE_Y + index * SPAWN_Y_STEP,
+    Math.sin(ringAngle) * ringRadius
   );
   body.quaternion.setFromEuler(
-    Math.random() * Math.PI * 0.2,
+    (Math.random() - 0.5) * Math.PI * 0.05,
     Math.random() * Math.PI * 2,
-    Math.random() * Math.PI * 0.2
+    (Math.random() - 0.5) * Math.PI * 0.05
   );
   body.linearDamping = 0.34;
   body.angularDamping = 0.48;
@@ -152,6 +248,9 @@ function makeCube(index) {
 
 function buildScene() {
   window.clearTimeout(freezeTimeoutId);
+  while (spawnTimeoutIds.length > 0) {
+    window.clearTimeout(spawnTimeoutIds.pop());
+  }
   for (let i = 0; i < sceneObjects.length; i += 1) {
     const object = sceneObjects[i];
     scene.remove(object.mesh);
@@ -164,11 +263,24 @@ function buildScene() {
   }
   sceneObjects.length = 0;
   cubeObjects.length = 0;
+  wallMeshes.length = 0;
+  wallOutlineMeshes.length = 0;
+  spawnedCount = 0;
+  spawnComplete = false;
 
   makeGround();
+  makeContainerWalls();
+  setWallDebugVisible(false);
 
   for (let i = 0; i < CUBE_COUNT; i += 1) {
-    makeCube(i);
+    const timeoutId = window.setTimeout(() => {
+      makeCube(i);
+      spawnedCount += 1;
+      if (spawnedCount >= CUBE_COUNT) {
+        spawnComplete = true;
+      }
+    }, i * DROP_DELAY_MS);
+    spawnTimeoutIds.push(timeoutId);
   }
 
   settledSeconds = 0;
@@ -178,6 +290,7 @@ function buildScene() {
   freezeTimeoutId = window.setTimeout(() => {
     if (!freezeFrame) {
       freezeFrame = true;
+      setWallsVisible(false);
       updateStatus("Frozen frame", "Time limit reached; composition locked.");
       renderer.render(scene, camera);
     }
@@ -198,6 +311,9 @@ function syncBodies() {
 }
 
 function allCubesSleeping() {
+  if (!spawnComplete || cubeObjects.length < CUBE_COUNT) {
+    return false;
+  }
   return cubeObjects.every((object) => {
     const body = object.body;
     const linearSpeed = body.velocity.lengthSquared();
@@ -210,6 +326,53 @@ function allCubesSleeping() {
 function stepPhysics(deltaSeconds) {
   world.step(1 / 60, deltaSeconds, 3);
   syncBodies();
+}
+
+function applyView(view) {
+  camera.position.set(view.camera.x, view.camera.y, view.camera.z);
+  controls.target.set(view.target.x, view.target.y, view.target.z);
+  controls.update();
+}
+
+function getCurrentView() {
+  return {
+    camera: {
+      x: camera.position.x,
+      y: camera.position.y,
+      z: camera.position.z,
+    },
+    target: {
+      x: controls.target.x,
+      y: controls.target.y,
+      z: controls.target.z,
+    },
+  };
+}
+
+function loadDefaultView() {
+  try {
+    const saved = window.localStorage.getItem(VIEW_STORAGE_KEY);
+    if (!saved) {
+      return FALLBACK_VIEW;
+    }
+    const parsed = JSON.parse(saved);
+    if (!parsed?.camera || !parsed?.target) {
+      return FALLBACK_VIEW;
+    }
+    return parsed;
+  } catch (error) {
+    return FALLBACK_VIEW;
+  }
+}
+
+function saveCurrentViewAsDefault() {
+  try {
+    const view = getCurrentView();
+    window.localStorage.setItem(VIEW_STORAGE_KEY, JSON.stringify(view));
+    updateStatus("View saved", "Current camera is now the default.");
+  } catch (error) {
+    updateStatus("Save failed", "Could not persist default view.");
+  }
 }
 
 function animate(now) {
@@ -233,6 +396,7 @@ function animate(now) {
 
   if (settledSeconds > 1.1) {
     freezeFrame = true;
+    setWallDebugVisible(false);
     updateStatus("Frozen frame", "All cubes have settled.");
     renderer.render(scene, camera);
     return;
@@ -241,8 +405,15 @@ function animate(now) {
   const elapsedSeconds = (now - simulationStartedAt) / 1000;
   if (elapsedSeconds > 18) {
     freezeFrame = true;
+    setWallDebugVisible(false);
     updateStatus("Frozen frame", "Time limit reached; composition locked.");
     renderer.render(scene, camera);
+    return;
+  }
+
+  if (!spawnComplete) {
+    updateStatus("Spawning", `${spawnedCount}/${CUBE_COUNT} cubes released.`);
+    animationFrameId = window.requestAnimationFrame(animate);
     return;
   }
 
@@ -255,9 +426,7 @@ function animate(now) {
 }
 
 function focusCamera() {
-  controls.target.set(0, 1.5, 0.2);
-  camera.position.set(11, 9.5, 13);
-  controls.update();
+  applyView(loadDefaultView());
   renderer.render(scene, camera);
 }
 
@@ -274,6 +443,13 @@ window.addEventListener("resize", () => {
 
 resetButton?.addEventListener("click", resetScene);
 focusButton?.addEventListener("click", focusCamera);
+saveViewButton?.addEventListener("click", saveCurrentViewAsDefault);
+toggleWallsButton?.addEventListener("click", () => {
+  setWallDebugVisible(!wallsDebugVisible);
+});
+
+// Expose camera state for debugging/persistence
+window.getCameraState = () => getCurrentView();
 
 buildScene();
 focusCamera();
