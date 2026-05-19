@@ -13,8 +13,9 @@
   * Freeze frame: stop animation when the cube rests.
   * Extract 2D face coordinates: project cube vertices through the camera.
   * Create flat image: generate SVG polygons for visible cube faces + projected shadow.
+ 
 
-3D preview: http://localhost:3301/camogli-3d.html
+3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
 camera position:
 ```
 {
