@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Camogli 3D Preview</title>
-    <style>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Camogli 3D Preview</title>
+        <style>
       :root {
         color-scheme: dark;
         --bg: #0f1216;
@@ -102,19 +102,20 @@
         background: rgba(214, 166, 95, 0.14);
       }
     </style>
-  </head>
-  <body>
-    <div id="app"></div>
-    <div class="hud">
-      <h1>Camogli 3D Preview</h1>
-      <p>Ten cubes fall onto a hard surface with real collisions and shadows. Let the pile settle, then inspect the composition.</p>
-      <p>Use the mouse to orbit, zoom, and pan around the stack.</p>
-      <div class="buttons">
-        <button id="resetButton" type="button">Reset scene</button>
-        <button id="focusButton" type="button">Focus camera</button>
-      </div>
-      <div class="status" id="status">Loading physics...</div>
-    </div>
-    <script type="module" src="./camogli-3d.js"></script>
-  </body>
+    </head>
+    <body>
+        <div id="app"></div>
+        <div class="hud">
+            <h1>Camogli 3D Preview</h1>
+            <p>Ten cubes fall onto a hard surface with real collisions and
+                shadows. Let the pile settle, then inspect the composition.</p>
+            <p>Use the mouse to orbit, zoom, and pan around the stack.</p>
+            <div class="buttons">
+                <button id="resetButton" type="button">Reset scene</button>
+                <button id="focusButton" type="button">Focus camera</button>
+            </div>
+            <div class="status" id="status">Loading physics...</div>
+        </div>
+        <script type="module" src="./camogli-3d.js"></script>
+    </body>
 </html>
