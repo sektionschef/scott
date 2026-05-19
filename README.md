@@ -14,6 +14,8 @@
   * Extract 2D face coordinates: project cube vertices through the camera.
   * Create flat image: generate SVG polygons for visible cube faces + projected shadow.
 
+3D preview: http://localhost:3301/camogli-3d.html
+
 debug hatching styles: http://localhost:3301/?debugHatching=1
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
