@@ -46,6 +46,9 @@ import * as THREE from "./vendor/three/three.module.js";
 import { OrbitControls } from "./vendor/three/examples/jsm/controls/OrbitControls.js";
 import * as CANNON from "./vendor/cannon-es/cannon-es.js";
 
+// Match legacy debug runtime randomness: gaussianRand() uses Math.random internally.
+Math.random = $fx.rand;
+
 const container = document.getElementById("app");
 const statusNode = document.getElementById("status");
 const resetButton = document.getElementById("resetButton");
@@ -633,19 +636,31 @@ function hatchStyleForFace(face, width, height) {
 }
 
 
-function buildHatchStrokeFieldSvg(rect, angle, spacing, strokeLength, stroke, strokeWidth, opacity) {
+function buildHatchStrokeFieldSvg(rect, angle, spacing, strokeLength, stroke, strokeWidth, opacity, shortSide) {
+  // Match debugHatching.js grid distribution: global box grid + density scaling.
+  const resolutionBoxCount = 80;
+  const boxSize = Math.max(0.0001, shortSide / resolutionBoxCount);
+  const hatchDensityMultiplier = 4;
+  const hatchDensityScale = Math.sqrt(hatchDensityMultiplier);
+  const rowStepBoxesBase = Math.max(1, Math.round(spacing / boxSize));
+  const colStepBoxesBase = Math.max(1, Math.round(strokeLength / boxSize));
+  const rowStepBoxes = Math.max(1, Math.round(rowStepBoxesBase / hatchDensityScale));
+  const colStepBoxes = Math.max(1, Math.round(colStepBoxesBase / hatchDensityScale));
+
+  const minRow = Math.floor(rect.y / boxSize) - rowStepBoxes;
+  const maxRow = Math.ceil((rect.y + rect.height) / boxSize) + rowStepBoxes;
+  const minCol = Math.floor(rect.x / boxSize) - colStepBoxes;
+  const maxCol = Math.ceil((rect.x + rect.width) / boxSize) + colStepBoxes;
+
   // Use organic filledPath SVG for each hatch stroke
   const half = strokeLength * 0.5;
   const dx = Math.cos(angle) * half;
   const dy = Math.sin(angle) * half;
-  const rowStart = Math.floor((rect.y - strokeLength) / spacing) * spacing;
-  const rowEnd = rect.y + rect.height + strokeLength;
-  const colStep = Math.max(spacing, strokeLength * 0.88);
-  const colStart = Math.floor((rect.x - strokeLength) / colStep) * colStep;
-  const colEnd = rect.x + rect.width + strokeLength;
   let svg = "";
-  for (let cy = rowStart; cy <= rowEnd; cy += spacing) {
-    for (let cx = colStart; cx <= colEnd; cx += colStep) {
+  for (let row = minRow; row <= maxRow; row += rowStepBoxes) {
+    const cy = (row + 0.5) * boxSize;
+    for (let col = minCol; col <= maxCol; col += colStepBoxes) {
+      const cx = (col + 0.5) * boxSize;
       const start = { x: cx - dx, y: cy - dy };
       const end = { x: cx + dx, y: cy + dy };
       svg += buildFilledPathSvg(start, end, { color: stroke, strokeWidth, fill: stroke, opacity });
@@ -655,47 +670,48 @@ function buildHatchStrokeFieldSvg(rect, angle, spacing, strokeLength, stroke, st
 }
 
 
-function buildHatchCirclesSvg(rect, spacing, radius, stroke, strokeWidth, opacity) {
-  // Add jitter to circle centers for organic look, using $fx.rand()
-  const rowStep = Math.max(radius * 2.35, spacing * 0.82);
-  const colStep = Math.max(radius * 2.6, spacing * 0.95);
-  const rowStart = Math.floor((rect.y - radius * 2) / rowStep) * rowStep;
-  const rowEnd = rect.y + rect.height + radius * 2;
+function buildHatchCirclesSvg(rect, spacing, radius, stroke, strokeWidth, opacity, shortSide) {
+  // Match debugHatching.js hatchCircles distribution and jitter.
+  const resolutionBoxCount = 80;
+  const boxSize = Math.max(0.0001, shortSide / resolutionBoxCount);
+  const adjustedRadius = Math.max(boxSize * 0.18, radius * 0.35);
+  const rowStep = Math.max(boxSize * 0.35, adjustedRadius * 1.9);
+  const colStep = Math.max(boxSize * 0.45, adjustedRadius * 2.15);
+  const jitterAmount = adjustedRadius * 0.22;
+
+  const rowStart = rect.y + adjustedRadius;
+  const rowEnd = rect.y + rect.height - adjustedRadius;
   let svg = "";
   let rowIndex = 0;
-  const jitterMag = Math.max(0.7, Math.min(2.2, radius * 0.7));
-  function randJitter() {
-    return ($fx.rand() - 0.5) * jitterMag;
-  }
   for (let cy = rowStart; cy <= rowEnd; cy += rowStep) {
     const offset = rowIndex % 2 === 0 ? 0 : colStep * 0.5;
-    const colStart = Math.floor((rect.x - radius * 2 - offset) / colStep) * colStep + offset;
-    const colEnd = rect.x + rect.width + radius * 2;
+    const colStart = rect.x + adjustedRadius + offset;
+    const colEnd = rect.x + rect.width - adjustedRadius;
     for (let cx = colStart; cx <= colEnd; cx += colStep) {
-      const jitteredX = cx + randJitter();
-      const jitteredY = cy + randJitter();
-      svg += `<circle cx="${jitteredX.toFixed(2)}" cy="${jitteredY.toFixed(2)}" r="${radius.toFixed(2)}" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" />`;
+      const jitteredX = Math.min(rect.x + rect.width - adjustedRadius, Math.max(rect.x + adjustedRadius, cx + getRandomFromInterval(-jitterAmount, jitterAmount)));
+      const jitteredY = Math.min(rect.y + rect.height - adjustedRadius, Math.max(rect.y + adjustedRadius, cy + getRandomFromInterval(-jitterAmount, jitterAmount)));
+      svg += `<circle cx="${jitteredX.toFixed(2)}" cy="${jitteredY.toFixed(2)}" r="${adjustedRadius.toFixed(2)}" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" />`;
     }
     rowIndex += 1;
   }
   return svg;
 }
 
-function buildHatchLayerSvg(layer, rect, style) {
+function buildHatchLayerSvg(layer, rect, style, shortSide) {
   if (layer === "horizontal") {
-    return buildHatchStrokeFieldSvg(rect, 0, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+    return buildHatchStrokeFieldSvg(rect, 0, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
   }
   if (layer === "vertical") {
-    return buildHatchStrokeFieldSvg(rect, Math.PI / 2, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+    return buildHatchStrokeFieldSvg(rect, Math.PI / 2, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
   }
   if (layer === "45") {
-    return buildHatchStrokeFieldSvg(rect, Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+    return buildHatchStrokeFieldSvg(rect, Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
   }
   if (layer === "315") {
-    return buildHatchStrokeFieldSvg(rect, -Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+    return buildHatchStrokeFieldSvg(rect, -Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
   }
   if (layer === "circles") {
-    return buildHatchCirclesSvg(rect, style.spacing, style.circleRadius, style.stroke, style.strokeWidth, style.strokeOpacity);
+    return buildHatchCirclesSvg(rect, style.spacing, style.circleRadius, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
   }
   return "";
 }
@@ -704,8 +720,9 @@ function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, widt
   const clipId = `faceClip_${faceIndex}_${polygonIndex}`;
   const polygonPoints = pointsToSvgString(polygon);
   const rect = polygonBounds(polygon);
+  const shortSide = Math.min(width, height);
   const style = hatchStyleForFace(face, width, height);
-  const hatchSvg = style.layers.map((layer) => buildHatchLayerSvg(layer, rect, style)).join("\n");
+  const hatchSvg = style.layers.map((layer) => buildHatchLayerSvg(layer, rect, style, shortSide)).join("\n");
 
   return {
     defs: `<clipPath id="${clipId}"><polygon points="${polygonPoints}" /></clipPath>`,
