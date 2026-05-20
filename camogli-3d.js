@@ -1,3 +1,47 @@
+// --- Organic filledPath SVG hatching ---
+
+function buildFilledPathSvg(start, end, options = {}) {
+  // Options: {jitter, bend, width, color, strokeWidth, fill, opacity}
+  // Defaults are chosen to match filledPath.js
+  const jitter = options.jitter !== undefined ? options.jitter : getRandomFromInterval(0.3, 0.7);
+  const bend = options.bend !== undefined ? options.bend : getRandomFromInterval(-0.05, 0.05);
+  const distanceWidth = options.width !== undefined ? options.width : 1.3; // match filledPath.js default
+  const color = options.color || "#333";
+  const fill = options.fill || color;
+  const opacity = options.opacity !== undefined ? options.opacity : 1;
+
+  let s = {...start};
+  let e = {...end};
+  const angleRadians = angleBetweenPoints(s, e);
+  const vectorMagnitude = vectorLength(vectorSub(s, e));
+  s = jitterPoint(s, jitter);
+  e = jitterPoint(e, jitter);
+
+  // Swingspitz profile (dynamic width ribbon)
+  const A = vectorAdd(s, vectorFromAngle(angleRadians - Math.PI * 0.70, distanceWidth));
+  const B = vectorAdd(e, vectorFromAngle(angleRadians + Math.PI * 1.1, distanceWidth));
+  const C = vectorAdd(e, vectorFromAngle(angleRadians - Math.PI * 1.1, distanceWidth));
+  const D = vectorAdd(s, vectorFromAngle(angleRadians + Math.PI * 0.80, distanceWidth));
+
+  const cAB = vectorAdd(A, vectorFromAngle(angleRadians - Math.PI * (bend + gaussianRandAdj(0, 0.00)), vectorMagnitude / 6));
+  const cBA = vectorAdd(B, vectorFromAngle(angleRadians - Math.PI + Math.PI * (bend + gaussianRandAdj(0, 0.00)), vectorMagnitude / 6));
+  const cCD = vectorAdd(C, vectorFromAngle(angleRadians - Math.PI + Math.PI * (bend + gaussianRandAdj(0, 0.0)), vectorMagnitude / 6));
+  const cDC = vectorAdd(D, vectorFromAngle(angleRadians - Math.PI * (bend + gaussianRandAdj(0, 0.0)), vectorMagnitude / 6));
+  const cBC = vectorAdd(B, vectorFromAngle(angleRadians - Math.PI * 0.04, 1));
+  const cCB = vectorAdd(C, vectorFromAngle(angleRadians + Math.PI * 0.04, 1));
+  const cDA = vectorAdd(D, vectorFromAngle(angleRadians - Math.PI * 0.82, 1));
+  const cAD = vectorAdd(A, vectorFromAngle(angleRadians + Math.PI * 0.82, 1));
+
+  // SVG path string for closed ribbon
+  const d = `M${A.x.toFixed(2)} ${A.y.toFixed(2)}
+    C${cAB.x.toFixed(2)} ${cAB.y.toFixed(2)},${cBA.x.toFixed(2)} ${cBA.y.toFixed(2)},${B.x.toFixed(2)} ${B.y.toFixed(2)}
+    C${cBC.x.toFixed(2)} ${cBC.y.toFixed(2)},${cCB.x.toFixed(2)} ${cCB.y.toFixed(2)},${C.x.toFixed(2)} ${C.y.toFixed(2)}
+    C${cCD.x.toFixed(2)} ${cCD.y.toFixed(2)},${cDC.x.toFixed(2)} ${cDC.y.toFixed(2)},${D.x.toFixed(2)} ${D.y.toFixed(2)}
+    C${cDA.x.toFixed(2)} ${cDA.y.toFixed(2)},${cAD.x.toFixed(2)} ${cAD.y.toFixed(2)},${A.x.toFixed(2)} ${A.y.toFixed(2)} Z`;
+
+  return `<path d=\"${d}\" fill=\"${fill}\" stroke=\"none\" opacity=\"${opacity}\" />`;
+}
+import "./fxhash.min.js";
 import * as THREE from "./vendor/three/three.module.js";
 import { OrbitControls } from "./vendor/three/examples/jsm/controls/OrbitControls.js";
 import * as CANNON from "./vendor/cannon-es/cannon-es.js";
@@ -529,6 +573,146 @@ function faceToneFromLight(face) {
   return clamp01(0.3 + face.brightness * 0.68 - face.shadowStrength * 0.1);
 }
 
+function polygonBounds(points) {
+  const xs = points.map((point) => point.x);
+  const ys = points.map((point) => point.y);
+  return {
+    x: Math.min(...xs),
+    y: Math.min(...ys),
+    width: Math.max(...xs) - Math.min(...xs),
+    height: Math.max(...ys) - Math.min(...ys),
+  };
+}
+
+function hatchLayersForFace(face) {
+  const tone = faceToneFromLight(face);
+  const layers = [];
+
+  if (face.faceName === "top") {
+    layers.push("45", "315");
+  } else if (face.faceName === "left" || face.faceName === "right") {
+    layers.push("45", "315", "circles");
+  } else {
+    layers.push("45");
+  }
+
+  if (tone < 0.58 && !layers.includes("315")) {
+    layers.push("315");
+  }
+  if (tone < 0.44 && (face.faceName === "front" || face.faceName === "back")) {
+    layers.push("horizontal");
+  }
+  if (tone < 0.38 && face.faceName === "top") {
+    layers.push("horizontal", "vertical");
+  }
+  if (tone < 0.32 && !layers.includes("circles")) {
+    layers.push("circles");
+  }
+
+  return [...new Set(layers)];
+}
+
+function hatchStyleForFace(face, width, height) {
+  const shortSide = Math.min(width, height);
+  const tone = faceToneFromLight(face);
+  const darkness = 1 - tone;
+  const unit = Math.max(4, shortSide / 170);
+
+  return {
+    tone,
+    background: grayHexFromTone(clamp01(0.68 + tone * 0.24)),
+    stroke: grayHexFromTone(clamp01(0.08 + tone * 0.18)),
+    strokeOpacity: (0.48 + darkness * 0.22).toFixed(3),
+    strokeWidth: (0.9 + darkness * 0.45).toFixed(2),
+    spacing: unit * (2.45 - darkness * 0.7),
+    strokeLength: unit * (4.1 - darkness * 0.35),
+    circleRadius: unit * (0.36 + darkness * 0.05),
+    layers: hatchLayersForFace(face),
+    outline: grayHexFromTone(clamp01(0.12 + tone * 0.12)),
+  };
+}
+
+
+function buildHatchStrokeFieldSvg(rect, angle, spacing, strokeLength, stroke, strokeWidth, opacity) {
+  // Use organic filledPath SVG for each hatch stroke
+  const half = strokeLength * 0.5;
+  const dx = Math.cos(angle) * half;
+  const dy = Math.sin(angle) * half;
+  const rowStart = Math.floor((rect.y - strokeLength) / spacing) * spacing;
+  const rowEnd = rect.y + rect.height + strokeLength;
+  const colStep = Math.max(spacing, strokeLength * 0.88);
+  const colStart = Math.floor((rect.x - strokeLength) / colStep) * colStep;
+  const colEnd = rect.x + rect.width + strokeLength;
+  let svg = "";
+  for (let cy = rowStart; cy <= rowEnd; cy += spacing) {
+    for (let cx = colStart; cx <= colEnd; cx += colStep) {
+      const start = { x: cx - dx, y: cy - dy };
+      const end = { x: cx + dx, y: cy + dy };
+      svg += buildFilledPathSvg(start, end, { color: stroke, strokeWidth, fill: stroke, opacity });
+    }
+  }
+  return svg;
+}
+
+
+function buildHatchCirclesSvg(rect, spacing, radius, stroke, strokeWidth, opacity) {
+  // Add jitter to circle centers for organic look, using $fx.rand()
+  const rowStep = Math.max(radius * 2.35, spacing * 0.82);
+  const colStep = Math.max(radius * 2.6, spacing * 0.95);
+  const rowStart = Math.floor((rect.y - radius * 2) / rowStep) * rowStep;
+  const rowEnd = rect.y + rect.height + radius * 2;
+  let svg = "";
+  let rowIndex = 0;
+  const jitterMag = Math.max(0.7, Math.min(2.2, radius * 0.7));
+  function randJitter() {
+    return ($fx.rand() - 0.5) * jitterMag;
+  }
+  for (let cy = rowStart; cy <= rowEnd; cy += rowStep) {
+    const offset = rowIndex % 2 === 0 ? 0 : colStep * 0.5;
+    const colStart = Math.floor((rect.x - radius * 2 - offset) / colStep) * colStep + offset;
+    const colEnd = rect.x + rect.width + radius * 2;
+    for (let cx = colStart; cx <= colEnd; cx += colStep) {
+      const jitteredX = cx + randJitter();
+      const jitteredY = cy + randJitter();
+      svg += `<circle cx="${jitteredX.toFixed(2)}" cy="${jitteredY.toFixed(2)}" r="${radius.toFixed(2)}" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" />`;
+    }
+    rowIndex += 1;
+  }
+  return svg;
+}
+
+function buildHatchLayerSvg(layer, rect, style) {
+  if (layer === "horizontal") {
+    return buildHatchStrokeFieldSvg(rect, 0, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+  }
+  if (layer === "vertical") {
+    return buildHatchStrokeFieldSvg(rect, Math.PI / 2, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+  }
+  if (layer === "45") {
+    return buildHatchStrokeFieldSvg(rect, Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+  }
+  if (layer === "315") {
+    return buildHatchStrokeFieldSvg(rect, -Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity);
+  }
+  if (layer === "circles") {
+    return buildHatchCirclesSvg(rect, style.spacing, style.circleRadius, style.stroke, style.strokeWidth, style.strokeOpacity);
+  }
+  return "";
+}
+
+function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height) {
+  const clipId = `faceClip_${faceIndex}_${polygonIndex}`;
+  const polygonPoints = pointsToSvgString(polygon);
+  const rect = polygonBounds(polygon);
+  const style = hatchStyleForFace(face, width, height);
+  const hatchSvg = style.layers.map((layer) => buildHatchLayerSvg(layer, rect, style)).join("\n");
+
+  return {
+    defs: `<clipPath id="${clipId}"><polygon points="${polygonPoints}" /></clipPath>`,
+    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}"><polygon points="${polygonPoints}" fill="${style.background}" stroke="none" /><g clip-path="url(#${clipId})">${hatchSvg}</g><polygon points="${polygonPoints}" fill="none" stroke="${style.outline}" stroke-opacity="0.46" stroke-width="0.85" stroke-linejoin="round" /></g>`,
+  };
+}
+
 function quadPoint(worldFace, u, v) {
   const p0 = worldFace[0].clone().lerp(worldFace[1], u);
   const p1 = worldFace[3].clone().lerp(worldFace[2], u);
@@ -963,46 +1147,6 @@ function buildShadowData(width, height) {
   return shadows;
 }
 
-function buildHatchDefs() {
-  return `
-  <defs>
-    <pattern id="hatchBright" patternUnits="userSpaceOnUse" width="12" height="12">
-      <rect width="12" height="12" fill="#f8f8f8" />
-      <path d="M0,12 L12,12" stroke="#9a9a9a" stroke-width="0.6" opacity="0.25" />
-    </pattern>
-    <pattern id="hatchLight" patternUnits="userSpaceOnUse" width="12" height="12">
-      <rect width="12" height="12" fill="#f3f3f3" />
-      <path d="M0,12 L12,0" stroke="#636363" stroke-width="0.75" opacity="0.45" />
-    </pattern>
-    <pattern id="hatchMid" patternUnits="userSpaceOnUse" width="10" height="10">
-      <rect width="10" height="10" fill="#ededed" />
-      <path d="M0,10 L10,0" stroke="#4b4b4b" stroke-width="0.8" opacity="0.6" />
-      <path d="M0,0 L10,10" stroke="#4b4b4b" stroke-width="0.8" opacity="0.4" />
-    </pattern>
-    <pattern id="hatchDark" patternUnits="userSpaceOnUse" width="9" height="9">
-      <rect width="9" height="9" fill="#e6e6e6" />
-      <path d="M0,9 L9,0" stroke="#2f2f2f" stroke-width="0.95" opacity="0.72" />
-      <path d="M0,0 L9,9" stroke="#2f2f2f" stroke-width="0.95" opacity="0.55" />
-      <circle cx="2.3" cy="2.3" r="0.8" fill="#262626" opacity="0.45" />
-      <circle cx="6.8" cy="6.8" r="0.8" fill="#262626" opacity="0.45" />
-    </pattern>
-    <pattern id="hatchDeep" patternUnits="userSpaceOnUse" width="8" height="8">
-      <rect width="8" height="8" fill="#dadada" />
-      <path d="M0,8 L8,0" stroke="#1e1e1e" stroke-width="1" opacity="0.88" />
-      <path d="M0,0 L8,8" stroke="#1e1e1e" stroke-width="1" opacity="0.78" />
-      <path d="M0,4 L8,4" stroke="#1e1e1e" stroke-width="0.65" opacity="0.55" />
-      <path d="M4,0 L4,8" stroke="#1e1e1e" stroke-width="0.65" opacity="0.55" />
-      <circle cx="2" cy="2" r="0.7" fill="#131313" opacity="0.65" />
-      <circle cx="6" cy="6" r="0.7" fill="#131313" opacity="0.65" />
-    </pattern>
-    <pattern id="hatchShadow" patternUnits="userSpaceOnUse" width="7" height="7">
-      <rect width="7" height="7" fill="#080a0d" />
-      <path d="M0,7 L7,0" stroke="#000000" stroke-width="0.8" opacity="0.65" />
-      <path d="M0,0 L7,7" stroke="#000000" stroke-width="0.8" opacity="0.35" />
-    </pattern>
-  </defs>`;
-}
-
 function buildSceneSvgExport() {
   const width = Math.max(640, Math.round(renderer.domElement.clientWidth || window.innerWidth || 1600));
   const height = Math.max(360, Math.round(renderer.domElement.clientHeight || window.innerHeight || 900));
@@ -1012,15 +1156,19 @@ function buildSceneSvgExport() {
   const faces = clipFacesByScreenOcclusion(rawFaces);
   const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
 
+  const hatchedFaces = [];
+  const clipDefs = [];
+  faces.forEach((face, faceIndex) => {
+    (face.clippedScreenPolygons || []).forEach((polygon, polygonIndex) => {
+      const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height);
+      clipDefs.push(hatchedFace.defs);
+      hatchedFaces.push(hatchedFace.content);
+    });
+  });
+
   const shadowPolygons = shadows.flatMap((shadow) => (
     (shadow.clippedScreenPolygons || []).map((polygon) => (
       `<polygon points="${pointsToSvgString(polygon)}" fill="#2a3038" opacity="0.34" stroke="none" data-layer="shadow" data-cube="${shadow.cubeIndex}" />`
-    ))
-  )).join("\n");
-
-  const facePolygons = faces.flatMap((face) => (
-    (face.clippedScreenPolygons || []).map((polygon) => (
-      `<polygon points="${pointsToSvgString(polygon)}" fill="${grayHexFromTone(faceToneFromLight(face))}" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
     ))
   )).join("\n");
 
@@ -1048,9 +1196,10 @@ function buildSceneSvgExport() {
   }));
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+<defs>${clipDefs.join("\n")}</defs>
 <rect x="0" y="0" width="${width}" height="${height}" fill="#1b2129" />
 <g id="dropShadows">${shadowPolygons}</g>
-<g id="cubeFaces">${facePolygons}</g>
+<g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
 <metadata>${metadata}</metadata>
 </svg>`;
@@ -1089,6 +1238,7 @@ function exportSceneToSvg() {
     }
     const { svg, data } = buildSceneSvgExport();
     const timestamp = new Date().toISOString().replaceAll(":", "-");
+    window.lastCamogliSvgMarkup = svg;
     downloadTextAsFile(svg, `camogli-cubes-${timestamp}.svg`, "image/svg+xml;charset=utf-8");
     window.lastCamogliSvgExport = data;
     updateStatus("SVG exported", `${data.faces.length} visible faces and ${data.shadows.length} drop shadows.`);
@@ -1227,3 +1377,95 @@ window.exportCamogliSvg = exportSceneToSvg;
 buildScene();
 focusCamera();
 animationFrameId = window.requestAnimationFrame(animate);
+
+// --- Grayscale SVG Export (legacy style) ---
+function buildGrayscaleSceneSvgExport() {
+  const width = Math.max(640, Math.round(renderer.domElement.clientWidth || window.innerWidth || 1600));
+  const height = Math.max(360, Math.round(renderer.domElement.clientHeight || window.innerHeight || 900));
+  renderer.render(scene, camera);
+  const rawFaces = buildVisibleFaceData(width, height);
+  const rawShadows = buildShadowData(width, height);
+  const faces = clipFacesByScreenOcclusion(rawFaces);
+  const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
+
+  const facePolygons = faces.flatMap((face) => (
+    (face.clippedScreenPolygons || []).map((polygon) => (
+      `<polygon points="${pointsToSvgString(polygon)}" fill="${grayHexFromTone(faceToneFromLight(face))}" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
+    ))
+  )).join("\n");
+
+  const shadowPolygons = shadows.flatMap((shadow) => (
+    (shadow.clippedScreenPolygons || []).map((polygon) => (
+      `<polygon points="${pointsToSvgString(polygon)}" fill="#2a3038" opacity="0.34" stroke="none" data-layer="shadow" data-cube="${shadow.cubeIndex}" />`
+    ))
+  )).join("\n");
+
+  const faceShadowPolygons = faces.flatMap((face) => (
+    clipFaceShadowCells(face)
+      .map((cell) => (
+        `<polygon points="${pointsToSvgString(cell.points)}" fill="#1a1a1a" opacity="${(0.08 + cell.darkness * 0.34).toFixed(3)}" stroke="none" data-layer="faceShadow" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-shadow="${cell.darkness.toFixed(4)}" />`
+      ))
+  )).join("\n");
+
+  const exportFaces = faces.map((face) => ({
+    ...face,
+    shadowCellCount: face.shadowCells ? face.shadowCells.length : 0,
+    shadowCells: undefined,
+  }));
+
+  const metadata = escapeXml(JSON.stringify({
+    camera: getCurrentView(),
+    width,
+    height,
+    rawFaces,
+    rawShadows,
+    faces: exportFaces,
+    shadows,
+  }));
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+<rect x="0" y="0" width="${width}" height="${height}" fill="#1b2129" />
+<g id="dropShadows">${shadowPolygons}</g>
+<g id="cubeFaces">${facePolygons}</g>
+<g id="faceShadows">${faceShadowPolygons}</g>
+<metadata>${metadata}</metadata>
+</svg>`;
+
+  return {
+    svg,
+    data: {
+      camera: getCurrentView(),
+      width,
+      height,
+      rawFaces,
+      rawShadows,
+      faces: exportFaces,
+      shadows,
+    },
+  };
+}
+
+function exportGrayscaleSceneToSvg() {
+  try {
+    if (cubeObjects.length < CUBE_COUNT) {
+      updateStatus("Export blocked", `Wait for full spawn (${cubeObjects.length}/${CUBE_COUNT}).`);
+      return;
+    }
+    const { svg, data } = buildGrayscaleSceneSvgExport();
+    const timestamp = new Date().toISOString().replaceAll(":", "-");
+    downloadTextAsFile(svg, `camogli-cubes-grayscale-${timestamp}.svg`, "image/svg+xml;charset=utf-8");
+    updateStatus("SVG exported", `${data.faces.length} visible faces and ${data.shadows.length} drop shadows.`);
+  } catch (error) {
+    console.error("SVG export failed", error);
+    const detail = error instanceof Error ? error.message : String(error);
+    updateStatus("Export failed", `Could not build SVG from current camera view. ${detail}`);
+  }
+}
+
+// Wire up the new grayscale export button
+window.addEventListener("DOMContentLoaded", () => {
+  const exportGrayscaleSvgButton = document.getElementById("exportGrayscaleSvgButton");
+  if (exportGrayscaleSvgButton) {
+    exportGrayscaleSvgButton.addEventListener("click", exportGrayscaleSceneToSvg);
+  }
+});
