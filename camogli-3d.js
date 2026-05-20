@@ -364,6 +364,45 @@ function pointsToSvgString(points) {
   return points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" ");
 }
 
+function isFiniteScreenPoint(point) {
+  return Number.isFinite(point?.x) && Number.isFinite(point?.y);
+}
+
+function sanitizeScreenPolygon(screenPoints) {
+  if (!Array.isArray(screenPoints)) {
+    return null;
+  }
+
+  const sanitized = [];
+  for (const point of screenPoints) {
+    if (!isFiniteScreenPoint(point)) {
+      continue;
+    }
+
+    const previous = sanitized[sanitized.length - 1];
+    if (previous && Math.abs(previous.x - point.x) < 0.001 && Math.abs(previous.y - point.y) < 0.001) {
+      continue;
+    }
+
+    sanitized.push({ x: point.x, y: point.y });
+  }
+
+  while (sanitized.length >= 2) {
+    const first = sanitized[0];
+    const last = sanitized[sanitized.length - 1];
+    if (Math.abs(first.x - last.x) >= 0.001 || Math.abs(first.y - last.y) >= 0.001) {
+      break;
+    }
+    sanitized.pop();
+  }
+
+  if (sanitized.length < 3 || polygonArea(sanitized) < 0.5) {
+    return null;
+  }
+
+  return sanitized;
+}
+
 function escapeXml(text) {
   return text
     .replaceAll("&", "&amp;")
@@ -583,9 +622,13 @@ function getPolygonClipping() {
 }
 
 function screenPointsToPcPolygon(screenPoints) {
+  const sanitized = sanitizeScreenPolygon(screenPoints);
+  if (!sanitized) {
+    return null;
+  }
   return [
     [
-      screenPoints.map((point) => [point.x, point.y]),
+      sanitized.map((point) => [point.x, point.y]),
     ],
   ];
 }
@@ -618,8 +661,8 @@ function multiPolygonToScreenPolygons(multiPolygon) {
     if (!Array.isArray(outer) || outer.length < 3) {
       continue;
     }
-    const screenPoly = pcRingToScreenPoints(outer);
-    if (polygonArea(screenPoly) < 4) {
+    const screenPoly = sanitizeScreenPolygon(pcRingToScreenPoints(outer));
+    if (!screenPoly || polygonArea(screenPoly) < 4) {
       continue;
     }
     polygons.push(screenPoly);
@@ -628,10 +671,23 @@ function multiPolygonToScreenPolygons(multiPolygon) {
   return polygons;
 }
 
+function safePolygonOp(polygonClipping, operation, ...args) {
+  try {
+    return polygonClipping[operation](...args);
+  } catch {
+    return null;
+  }
+}
+
 function clipFacesByScreenOcclusion(faces) {
   const polygonClipping = getPolygonClipping();
   if (!polygonClipping || faces.length === 0) {
-    return faces.map((face) => ({ ...face, clippedScreenPolygons: [face.screenPoints] }));
+    return faces
+      .map((face) => {
+        const polygon = sanitizeScreenPolygon(face.screenPoints);
+        return polygon ? { ...face, clippedScreenPolygons: [polygon] } : null;
+      })
+      .filter(Boolean);
   }
 
   const nearToFar = faces.slice().sort((a, b) => a.depth - b.depth);
@@ -640,9 +696,20 @@ function clipFacesByScreenOcclusion(faces) {
 
   for (const face of nearToFar) {
     const facePolygon = screenPointsToPcPolygon(face.screenPoints);
+    if (!facePolygon) {
+      continue;
+    }
     let visiblePart = facePolygon;
     if (occlusion) {
-      visiblePart = polygonClipping.difference(facePolygon, occlusion);
+      visiblePart = safePolygonOp(polygonClipping, "difference", facePolygon, occlusion);
+      if (!visiblePart) {
+        clippedFaces.push({
+          ...face,
+          clippedScreenPolygons: [sanitizeScreenPolygon(face.screenPoints)].filter(Boolean),
+        });
+        occlusion = safePolygonOp(polygonClipping, "union", occlusion, facePolygon) || occlusion;
+        continue;
+      }
     }
 
     const clippedScreenPolygons = multiPolygonToScreenPolygons(visiblePart);
@@ -653,7 +720,7 @@ function clipFacesByScreenOcclusion(faces) {
       });
     }
 
-    occlusion = occlusion ? polygonClipping.union(occlusion, facePolygon) : facePolygon;
+    occlusion = occlusion ? (safePolygonOp(polygonClipping, "union", occlusion, facePolygon) || occlusion) : facePolygon;
   }
 
   clippedFaces.sort((a, b) => b.depth - a.depth);
@@ -667,21 +734,32 @@ function clipFacesByScreenOcclusion(faces) {
 function clipShadowsByFaceOcclusion(shadows, clippedFaces) {
   const polygonClipping = getPolygonClipping();
   if (!polygonClipping || shadows.length === 0) {
-    return shadows.map((shadow) => ({ ...shadow, clippedScreenPolygons: [shadow.screenPoints] }));
+    return shadows
+      .map((shadow) => {
+        const polygon = sanitizeScreenPolygon(shadow.screenPoints);
+        return polygon ? { ...shadow, clippedScreenPolygons: [polygon] } : null;
+      })
+      .filter(Boolean);
   }
 
   let faceOcclusion = null;
   for (const face of clippedFaces) {
     for (const polygon of face.clippedScreenPolygons || []) {
       const poly = screenPointsToPcPolygon(polygon);
-      faceOcclusion = faceOcclusion ? polygonClipping.union(faceOcclusion, poly) : poly;
+      if (!poly) {
+        continue;
+      }
+      faceOcclusion = faceOcclusion ? (safePolygonOp(polygonClipping, "union", faceOcclusion, poly) || faceOcclusion) : poly;
     }
   }
 
   const clippedShadows = [];
   for (const shadow of shadows) {
     const shadowPoly = screenPointsToPcPolygon(shadow.screenPoints);
-    const visiblePart = faceOcclusion ? polygonClipping.difference(shadowPoly, faceOcclusion) : shadowPoly;
+    if (!shadowPoly) {
+      continue;
+    }
+    const visiblePart = faceOcclusion ? (safePolygonOp(polygonClipping, "difference", shadowPoly, faceOcclusion) || shadowPoly) : shadowPoly;
     const clippedScreenPolygons = multiPolygonToScreenPolygons(visiblePart);
     if (clippedScreenPolygons.length === 0) {
       continue;
@@ -714,7 +792,10 @@ function clipFaceShadowCells(face) {
   let visibleUnion = null;
   for (const polygon of visiblePolygons) {
     const poly = screenPointsToPcPolygon(polygon);
-    visibleUnion = visibleUnion ? polygonClipping.union(visibleUnion, poly) : poly;
+    if (!poly) {
+      continue;
+    }
+    visibleUnion = visibleUnion ? (safePolygonOp(polygonClipping, "union", visibleUnion, poly) || visibleUnion) : poly;
   }
   if (!visibleUnion) {
     return [];
@@ -723,7 +804,14 @@ function clipFaceShadowCells(face) {
   const clipped = [];
   for (const cell of cells) {
     const cellPoly = screenPointsToPcPolygon(cell.points);
-    const intersection = polygonClipping.intersection(cellPoly, visibleUnion);
+    if (!cellPoly) {
+      continue;
+    }
+    const intersection = safePolygonOp(polygonClipping, "intersection", cellPoly, visibleUnion);
+    if (!intersection) {
+      clipped.push(cell);
+      continue;
+    }
     const polys = multiPolygonToScreenPolygons(intersection);
     for (const polygon of polys) {
       clipped.push({ points: polygon, darkness: cell.darkness });
@@ -795,6 +883,10 @@ function buildVisibleFaceData(width, height) {
       }
 
       const screenPoints = worldFace.map((point) => projectWorldToSvg(point, width, height));
+      const facePolygon = sanitizeScreenPolygon(screenPoints);
+      if (!facePolygon) {
+        continue;
+      }
       const lightVisibilities = {
         key: faceLightVisibility(worldFace, faceCenter, worldNormal, cube.mesh, meshes, keyLight.position),
         fill: faceLightVisibility(worldFace, faceCenter, worldNormal, cube.mesh, meshes, fillLight.position),
@@ -813,7 +905,7 @@ function buildVisibleFaceData(width, height) {
         lightVisibilities,
         shadowCells,
         worldPoints: worldFace.map((point) => ({ x: point.x, y: point.y, z: point.z })),
-        screenPoints: screenPoints.map((point) => ({ x: point.x, y: point.y })),
+        screenPoints: facePolygon,
         depth: faceCenter.distanceToSquared(camera.position),
       });
     }
@@ -854,11 +946,15 @@ function buildShadowData(width, height) {
     const hull = convexHullXZ(groundPoints);
     const worldHull = hull.map((point) => new THREE.Vector3(point.x, SHADOW_PLANE_Y + 0.002, point.z));
     const screenHull = worldHull.map((point) => projectWorldToSvg(point, width, height));
+    const shadowPolygon = sanitizeScreenPolygon(screenHull);
+    if (!shadowPolygon) {
+      continue;
+    }
 
     shadows.push({
       cubeIndex,
       worldPoints: worldHull.map((point) => ({ x: point.x, y: point.y, z: point.z })),
-      screenPoints: screenHull.map((point) => ({ x: point.x, y: point.y })),
+      screenPoints: shadowPolygon,
       depth: cube.mesh.position.distanceToSquared(camera.position),
     });
   }
@@ -997,7 +1093,9 @@ function exportSceneToSvg() {
     window.lastCamogliSvgExport = data;
     updateStatus("SVG exported", `${data.faces.length} visible faces and ${data.shadows.length} drop shadows.`);
   } catch (error) {
-    updateStatus("Export failed", "Could not build SVG from current camera view.");
+    console.error("SVG export failed", error);
+    const detail = error instanceof Error ? error.message : String(error);
+    updateStatus("Export failed", `Could not build SVG from current camera view. ${detail}`);
   }
 }
 
