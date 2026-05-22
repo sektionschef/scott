@@ -34,6 +34,7 @@ camera position:
 ```
 
 debug hatching styles: http://localhost:3301/?debugHatching=1
+debug cube principal/perpendicular axes: http://localhost:3301/?debugCubeAxes=1
 debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
