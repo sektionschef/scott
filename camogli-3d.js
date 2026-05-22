@@ -56,6 +56,9 @@ const focusButton = document.getElementById("focusButton");
 const saveViewButton = document.getElementById("saveViewButton");
 const toggleWallsButton = document.getElementById("toggleWallsButton");
 const exportSvgButton = document.getElementById("exportSvgButton");
+const exportGrayscaleSvgButton = document.getElementById("exportGrayscaleSvgButton");
+const searchParams = new URLSearchParams(window.location.search);
+const DEBUG_SVG_HATCHING_LAB = searchParams.get("debugSvgHatching") === "1" || searchParams.get("debug") === "svgHatching";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x11151b);
@@ -615,28 +618,97 @@ function hatchLayersForFace(face) {
   return [...new Set(layers)];
 }
 
-function hatchStyleForFace(face, width, height) {
-  const shortSide = Math.min(width, height);
-  const tone = faceToneFromLight(face);
-  const darkness = 1 - tone;
-  const unit = Math.max(4, shortSide / 170);
-
+function normalizeHatchStyle(style, fallbackControls) {
   return {
-    tone,
-    background: grayHexFromTone(clamp01(0.68 + tone * 0.24)),
-    stroke: grayHexFromTone(clamp01(0.08 + tone * 0.18)),
-    strokeOpacity: (0.48 + darkness * 0.22).toFixed(3),
-    strokeWidth: (0.9 + darkness * 0.45).toFixed(2),
-    spacing: unit * (2.45 - darkness * 0.7),
-    strokeLength: unit * (4.1 - darkness * 0.35),
-    circleRadius: unit * (0.36 + darkness * 0.05),
-    layers: hatchLayersForFace(face),
-    outline: grayHexFromTone(clamp01(0.12 + tone * 0.12)),
+    ...style,
+    layers: [...(style.layers || [])],
+    params: {
+      strokeWidth: style.params?.strokeWidth ?? fallbackControls.strokeWidth,
+      strokeLengthMul: style.params?.strokeLengthMul ?? fallbackControls.strokeLengthMul,
+      jitter: style.params?.jitter ?? fallbackControls.jitter,
+      bend: style.params?.bend ?? fallbackControls.bend,
+    },
   };
 }
 
+const SVG_EXPORT_HATCH_CONFIG = {
+  controls: {
+    strokeWidth: 1.3,
+    strokeLengthMul: 2.25,
+    jitter: 1.25,
+    bend: 0.07,
+  },
+  styles: [
+    { id: "style01", name: "Bright Sparse 45", brightness: 0.98, layers: ["45"], spacingMul: 1.45, lengthMul: 1, params: { strokeWidth: 0.55, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style02", name: "Bright Cross", brightness: 0.69, layers: ["315"], spacingMul: 1.2, lengthMul: 1, params: { strokeWidth: 0.6, strokeLengthMul: 2.3, jitter: 1.25, bend: 0.07 } },
+    { id: "style03", name: "Light Vertical", brightness: 0.74, layers: ["vertical"], spacingMul: 1.1, lengthMul: 1, params: { strokeWidth: 1.9, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style04", name: "Light Diagonal Dense", brightness: 0.66, layers: ["45", "315"], spacingMul: 0.94, lengthMul: 0.95, params: { strokeWidth: 1.3, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style05", name: "Mid Vertical Cross", brightness: 0.58, layers: ["vertical", "horizontal"], spacingMul: 0.92, lengthMul: 1, params: { strokeWidth: 1.3, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style06", name: "Mid Diagonal + Dots", brightness: 0.5, layers: ["45", "315", "circles"], spacingMul: 0.9, lengthMul: 0.92, params: { strokeWidth: 1.3, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style07", name: "Dark Four-Way", brightness: 0.42, layers: ["45", "315", "horizontal", "vertical"], spacingMul: 0.82, lengthMul: 0.95, params: { strokeWidth: 1.3, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style08", name: "Dark Vertical + Dots", brightness: 0.34, layers: ["vertical", "circles"], spacingMul: 0.8, lengthMul: 0.9, params: { strokeWidth: 1.3, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style09", name: "Deep Diagonal Weave", brightness: 0.26, layers: ["45", "315", "vertical"], spacingMul: 0.74, lengthMul: 0.86, params: { strokeWidth: 1.3, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+    { id: "style10", name: "Deep Heavy", brightness: 0.18, layers: ["45", "315", "horizontal", "vertical", "circles"], spacingMul: 0.7, lengthMul: 0.85, params: { strokeWidth: 1.3, strokeLengthMul: 2.25, jitter: 1.25, bend: 0.07 } },
+  ],
+};
 
-function buildHatchStrokeFieldSvg(rect, angle, spacing, strokeLength, stroke, strokeWidth, opacity, shortSide) {
+function copySvgExportHatchConfig() {
+  const controls = { ...SVG_EXPORT_HATCH_CONFIG.controls };
+  return {
+    controls,
+    styles: SVG_EXPORT_HATCH_CONFIG.styles.map((style) => normalizeHatchStyle(style, controls)),
+  };
+}
+
+function pickClosestPresetByBrightness(targetTone, presets) {
+  if (!Array.isArray(presets) || presets.length === 0) {
+    return null;
+  }
+  let best = presets[0];
+  let bestDelta = Math.abs((best.brightness ?? 0.5) - targetTone);
+  for (let index = 1; index < presets.length; index += 1) {
+    const candidate = presets[index];
+    const delta = Math.abs((candidate.brightness ?? 0.5) - targetTone);
+    if (delta < bestDelta) {
+      best = candidate;
+      bestDelta = delta;
+    }
+  }
+  return best;
+}
+
+function buildStyleFromPreset(preset, shortSide, params) {
+  const resolvedParams = params || preset.params || SVG_EXPORT_HATCH_CONFIG.controls;
+  const tone = clamp01(preset.brightness);
+  const darkness = 1 - tone;
+  const unit = Math.max(4, shortSide / 170);
+  return {
+    tone,
+    background: grayHexFromTone(clamp01(0.93 + tone * 0.03)),
+    stroke: grayHexFromTone(clamp01(0.04 + tone * 0.03)),
+    strokeWidth: resolvedParams.strokeWidth,
+    spacing: unit * (2.45 - darkness * 0.7) * (preset.spacingMul ?? 1),
+    strokeLength: unit * (4.1 - darkness * 0.35) * (preset.lengthMul ?? 1) * (resolvedParams.strokeLengthMul ?? 1),
+    circleRadius: unit * (0.36 + darkness * 0.05),
+    layers: [...new Set(Array.isArray(preset.layers) && preset.layers.length > 0 ? preset.layers : ["45"])],
+    hatchParams: {
+      strokeWidth: resolvedParams.strokeWidth,
+      jitter: resolvedParams.jitter,
+      bend: resolvedParams.bend,
+    },
+  };
+}
+
+function hatchStyleForFace(face, width, height) {
+  const shortSide = Math.min(width, height);
+  const faceTone = faceToneFromLight(face);
+  const config = SVG_EXPORT_HATCH_CONFIG;
+  const preset = pickClosestPresetByBrightness(faceTone, config.styles) || config.styles[0];
+  return buildStyleFromPreset(preset, shortSide, preset.params || config.controls);
+}
+
+
+function buildHatchStrokeFieldSvg(rect, angle, spacing, strokeLength, stroke, strokeWidth, opacity, shortSide, hatchParams) {
   // Match debugHatching.js grid distribution: global box grid + density scaling.
   const resolutionBoxCount = 80;
   const boxSize = Math.max(0.0001, shortSide / resolutionBoxCount);
@@ -663,7 +735,15 @@ function buildHatchStrokeFieldSvg(rect, angle, spacing, strokeLength, stroke, st
       const cx = (col + 0.5) * boxSize;
       const start = { x: cx - dx, y: cy - dy };
       const end = { x: cx + dx, y: cy + dy };
-      svg += buildFilledPathSvg(start, end, { color: stroke, strokeWidth, fill: stroke, opacity });
+      svg += buildFilledPathSvg(start, end, {
+        color: stroke,
+        strokeWidth,
+        fill: stroke,
+        opacity,
+        jitter: hatchParams?.jitter,
+        bend: hatchParams?.bend,
+        width: hatchParams?.strokeWidth,
+      });
     }
   }
   return svg;
@@ -699,16 +779,16 @@ function buildHatchCirclesSvg(rect, spacing, radius, stroke, strokeWidth, opacit
 
 function buildHatchLayerSvg(layer, rect, style, shortSide) {
   if (layer === "horizontal") {
-    return buildHatchStrokeFieldSvg(rect, 0, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
+    return buildHatchStrokeFieldSvg(rect, 0, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide, style.hatchParams);
   }
   if (layer === "vertical") {
-    return buildHatchStrokeFieldSvg(rect, Math.PI / 2, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
+    return buildHatchStrokeFieldSvg(rect, Math.PI / 2, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide, style.hatchParams);
   }
   if (layer === "45") {
-    return buildHatchStrokeFieldSvg(rect, Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
+    return buildHatchStrokeFieldSvg(rect, Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide, style.hatchParams);
   }
   if (layer === "315") {
-    return buildHatchStrokeFieldSvg(rect, -Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
+    return buildHatchStrokeFieldSvg(rect, -Math.PI / 4, style.spacing, style.strokeLength, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide, style.hatchParams);
   }
   if (layer === "circles") {
     return buildHatchCirclesSvg(rect, style.spacing, style.circleRadius, style.stroke, style.strokeWidth, style.strokeOpacity, shortSide);
@@ -726,8 +806,350 @@ function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, widt
 
   return {
     defs: `<clipPath id="${clipId}"><polygon points="${polygonPoints}" /></clipPath>`,
-    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}"><polygon points="${polygonPoints}" fill="${style.background}" stroke="none" /><g clip-path="url(#${clipId})">${hatchSvg}</g><polygon points="${polygonPoints}" fill="none" stroke="${style.outline}" stroke-opacity="0.46" stroke-width="0.85" stroke-linejoin="round" /></g>`,
+    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}"><polygon points="${polygonPoints}" fill="${style.background}" stroke="none" /><g clip-path="url(#${clipId})">${hatchSvg}</g></g>`,
   };
+}
+
+function createSvgHatchLabStyles() {
+  return copySvgExportHatchConfig().styles;
+}
+
+function styleFromPresetForLab(preset, shortSide) {
+  return buildStyleFromPreset(preset, shortSide, preset.params);
+}
+
+function renderSvgHatchingLab(svgNode, styles, controlState) {
+  const width = Math.max(1040, window.innerWidth - 380);
+  const height = Math.max(700, window.innerHeight - 24);
+  const previewStyles = [
+    {
+      id: "blank",
+      name: "Blank",
+      brightness: 1,
+      layers: [],
+      spacingMul: 1,
+      lengthMul: 1,
+      params: { ...controlState },
+      blank: true,
+    },
+    ...styles,
+  ];
+  const cols = 4;
+  const rows = Math.ceil(previewStyles.length / cols);
+  const margin = 22;
+  const gap = 14;
+  const tileWidth = (width - margin * 2 - gap * (cols - 1)) / cols;
+  const tileHeight = (height - margin * 2 - gap * (rows - 1)) / rows;
+  const shortSide = Math.min(width, height);
+
+  const defs = [];
+  const tiles = [];
+
+  previewStyles.forEach((preset, index) => {
+    const col = index % cols;
+    const row = Math.floor(index / cols);
+    const x = margin + col * (tileWidth + gap);
+    const y = margin + row * (tileHeight + gap);
+    const rect = {
+      x,
+      y: y + 22,
+      width: tileWidth,
+      height: tileHeight - 22,
+    };
+    const style = styleFromPresetForLab(preset, shortSide);
+    const clipId = `hatchLabClip_${index}`;
+    defs.push(`<clipPath id="${clipId}"><rect x="${rect.x.toFixed(2)}" y="${rect.y.toFixed(2)}" width="${rect.width.toFixed(2)}" height="${rect.height.toFixed(2)}" /></clipPath>`);
+    const hatchSvg = preset.blank ? "" : style.layers.map((layer) => buildHatchLayerSvg(layer, rect, style, shortSide)).join("\n");
+    const label = preset.blank
+      ? "Blank | b=1.00"
+      : `${preset.name} | b=${preset.brightness.toFixed(2)} | ${style.layers.join("+")}`;
+    tiles.push(`<g data-style="${preset.id}">
+      <text x="${x.toFixed(2)}" y="${(y + 15).toFixed(2)}" fill="#d9d0c2" font-size="11" font-family="ui-monospace, Menlo, monospace">${escapeXml(label)}</text>
+      <rect x="${rect.x.toFixed(2)}" y="${rect.y.toFixed(2)}" width="${rect.width.toFixed(2)}" height="${rect.height.toFixed(2)}" fill="${style.background}" stroke="#2f3a46" stroke-width="0.7" />
+      <g clip-path="url(#${clipId})">${hatchSvg}</g>
+    </g>`);
+  });
+
+  svgNode.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svgNode.setAttribute("width", String(width));
+  svgNode.setAttribute("height", String(height));
+  svgNode.innerHTML = `<defs>${defs.join("\n")}</defs>${tiles.join("\n")}`;
+}
+
+function createLayerToggleCheckbox(layer, selectedLayers) {
+  const wrapper = document.createElement("label");
+  wrapper.style.display = "inline-flex";
+  wrapper.style.alignItems = "center";
+  wrapper.style.gap = "6px";
+  wrapper.style.fontSize = "12px";
+  wrapper.style.color = "#c7cdd8";
+  wrapper.style.margin = "0 8px 8px 0";
+
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.value = layer;
+  input.checked = selectedLayers.includes(layer);
+
+  const text = document.createElement("span");
+  text.textContent = layer;
+  wrapper.appendChild(input);
+  wrapper.appendChild(text);
+  return { wrapper, input };
+}
+
+function initSvgHatchingLab() {
+  const hud = document.querySelector(".hud");
+  if (hud) {
+    hud.style.display = "none";
+  }
+
+  container.innerHTML = "";
+  container.style.position = "fixed";
+  container.style.inset = "0";
+  container.style.display = "grid";
+  container.style.gridTemplateColumns = "minmax(0, 1fr) 340px";
+  container.style.background = "linear-gradient(180deg, #131820 0%, #0d1118 100%)";
+
+  const previewPane = document.createElement("div");
+  previewPane.style.padding = "12px";
+  previewPane.style.overflow = "auto";
+
+  const svgNode = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svgNode.style.display = "block";
+  svgNode.style.width = "100%";
+  svgNode.style.height = "auto";
+  svgNode.style.border = "1px solid rgba(255,255,255,0.14)";
+  svgNode.style.background = "#161d28";
+  svgNode.style.borderRadius = "12px";
+  previewPane.appendChild(svgNode);
+
+  const pane = document.createElement("aside");
+  pane.style.padding = "16px";
+  pane.style.borderLeft = "1px solid rgba(255,255,255,0.14)";
+  pane.style.background = "rgba(9, 13, 20, 0.92)";
+  pane.style.color = "#edf2f7";
+  pane.style.fontFamily = "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif";
+  pane.style.overflow = "auto";
+
+  const title = document.createElement("h2");
+  title.textContent = "SVG Hatching Lab";
+  title.style.margin = "0 0 8px";
+  title.style.fontSize = "16px";
+  title.style.letterSpacing = "0.04em";
+
+  const hint = document.createElement("p");
+  hint.textContent = "Select one of 10 styles, tweak params, and compare all tiles live.";
+  hint.style.margin = "0 0 14px";
+  hint.style.color = "#9aa7b7";
+  hint.style.fontSize = "12px";
+
+  const styles = createSvgHatchLabStyles();
+  const defaultControls = copySvgExportHatchConfig().controls;
+  const controlState = {
+    selected: 0,
+    strokeWidth: defaultControls.strokeWidth,
+    strokeLengthMul: defaultControls.strokeLengthMul,
+    jitter: defaultControls.jitter,
+    bend: defaultControls.bend,
+  };
+
+  const styleSelect = document.createElement("select");
+  styleSelect.style.width = "100%";
+  styleSelect.style.marginBottom = "12px";
+  styleSelect.style.padding = "8px";
+  styleSelect.style.borderRadius = "8px";
+  styleSelect.style.border = "1px solid rgba(255,255,255,0.18)";
+  styleSelect.style.background = "#101724";
+  styleSelect.style.color = "#e5ecf5";
+  styles.forEach((style, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = `${index + 1}. ${style.name}`;
+    styleSelect.appendChild(option);
+  });
+
+  const slidersRoot = document.createElement("div");
+
+  function createSlider(labelText, min, max, step, initial, onInput) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+    const label = document.createElement("label");
+    label.style.display = "flex";
+    label.style.justifyContent = "space-between";
+    label.style.fontSize = "12px";
+    label.style.color = "#d2dbe7";
+    label.textContent = labelText;
+
+    const valueNode = document.createElement("span");
+    valueNode.textContent = String(initial);
+    label.appendChild(valueNode);
+
+    const input = document.createElement("input");
+    input.type = "range";
+    input.min = String(min);
+    input.max = String(max);
+    input.step = String(step);
+    input.value = String(initial);
+    input.style.width = "100%";
+    input.addEventListener("input", () => {
+      const next = Number(input.value);
+      valueNode.textContent = Number.isFinite(next) ? next.toFixed(2) : input.value;
+      onInput(next, styles[controlState.selected]);
+      renderSvgHatchingLab(svgNode, styles, controlState);
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    return { wrap, input, valueNode };
+  }
+
+  const brightnessSlider = createSlider("Brightness", 0.05, 0.98, 0.01, styles[0].brightness, (value, currentStyle) => {
+    if (currentStyle) {
+      currentStyle.brightness = clamp01(value);
+    }
+  });
+  const widthSlider = createSlider("Stroke Width", 0.45, 3.2, 0.05, styles[0].params.strokeWidth, (value, currentStyle) => {
+    if (currentStyle) {
+      currentStyle.params.strokeWidth = value;
+    }
+  });
+  const lengthSlider = createSlider("Stroke Length", 0.45, 2.4, 0.05, styles[0].params.strokeLengthMul, (value, currentStyle) => {
+    if (currentStyle) {
+      currentStyle.params.strokeLengthMul = value;
+    }
+  });
+  const jitterSlider = createSlider("Jitter", 0.0, 2.0, 0.05, styles[0].params.jitter, (value, currentStyle) => {
+    if (currentStyle) {
+      currentStyle.params.jitter = value;
+    }
+  });
+  const bendSlider = createSlider("Bend", -0.2, 0.2, 0.01, styles[0].params.bend, (value, currentStyle) => {
+    if (currentStyle) {
+      currentStyle.params.bend = value;
+    }
+  });
+
+  slidersRoot.appendChild(brightnessSlider.wrap);
+  slidersRoot.appendChild(widthSlider.wrap);
+  slidersRoot.appendChild(lengthSlider.wrap);
+  slidersRoot.appendChild(jitterSlider.wrap);
+  slidersRoot.appendChild(bendSlider.wrap);
+
+  const layerTitle = document.createElement("h3");
+  layerTitle.textContent = "Layers";
+  layerTitle.style.margin = "14px 0 8px";
+  layerTitle.style.fontSize = "13px";
+
+  const layerWrap = document.createElement("div");
+  const layerNames = ["horizontal", "vertical", "45", "315", "circles"];
+  const layerInputs = [];
+
+  function refreshLayerInputs() {
+    layerWrap.innerHTML = "";
+    layerInputs.length = 0;
+    const selectedStyle = styles[controlState.selected];
+    const selectedLayers = selectedStyle.layers;
+    layerNames.forEach((layerName) => {
+      const row = createLayerToggleCheckbox(layerName, selectedLayers);
+      row.input.addEventListener("change", () => {
+        const active = selectedStyle.layers;
+        if (row.input.checked && !active.includes(layerName)) {
+          active.push(layerName);
+        }
+        if (!row.input.checked) {
+          selectedStyle.layers = active.filter((name) => name !== layerName);
+        }
+        if (selectedStyle.layers.length === 0) {
+          selectedStyle.layers = ["45"];
+          refreshLayerInputs();
+        }
+        renderSvgHatchingLab(svgNode, styles, controlState);
+      });
+      layerInputs.push(row.input);
+      layerWrap.appendChild(row.wrapper);
+    });
+  }
+
+  styleSelect.addEventListener("change", () => {
+    controlState.selected = Number(styleSelect.value) || 0;
+    const selected = styles[controlState.selected];
+    brightnessSlider.input.value = String(selected.brightness);
+    brightnessSlider.valueNode.textContent = selected.brightness.toFixed(2);
+    widthSlider.input.value = String(selected.params.strokeWidth);
+    widthSlider.valueNode.textContent = selected.params.strokeWidth.toFixed(2);
+    lengthSlider.input.value = String(selected.params.strokeLengthMul);
+    lengthSlider.valueNode.textContent = selected.params.strokeLengthMul.toFixed(2);
+    jitterSlider.input.value = String(selected.params.jitter);
+    jitterSlider.valueNode.textContent = selected.params.jitter.toFixed(2);
+    bendSlider.input.value = String(selected.params.bend);
+    bendSlider.valueNode.textContent = selected.params.bend.toFixed(2);
+    refreshLayerInputs();
+  });
+
+  const actions = document.createElement("div");
+  actions.style.display = "flex";
+  actions.style.gap = "8px";
+  actions.style.marginTop = "14px";
+
+  const exportConfigButton = document.createElement("button");
+  exportConfigButton.type = "button";
+  exportConfigButton.textContent = "Copy Style JSON";
+  exportConfigButton.style.padding = "8px 10px";
+  exportConfigButton.style.borderRadius = "999px";
+  exportConfigButton.style.border = "1px solid rgba(255,255,255,0.22)";
+  exportConfigButton.style.background = "rgba(214,166,95,0.2)";
+  exportConfigButton.style.color = "#f7ead6";
+  exportConfigButton.addEventListener("click", async () => {
+    const payload = {
+      controls: {
+        strokeWidth: controlState.strokeWidth,
+        strokeLengthMul: controlState.strokeLengthMul,
+        jitter: controlState.jitter,
+        bend: controlState.bend,
+      },
+      styles,
+    };
+    window.lastSvgHatchLabConfig = payload;
+    const serialized = JSON.stringify(payload, null, 2);
+    try {
+      await navigator.clipboard.writeText(serialized);
+      updateStatus("Hatch lab", "Copied style JSON to clipboard.");
+    } catch (_error) {
+      updateStatus("Hatch lab", "Could not access clipboard; config stored in window.lastSvgHatchLabConfig.");
+    }
+  });
+
+  const rerenderButton = document.createElement("button");
+  rerenderButton.type = "button";
+  rerenderButton.textContent = "Re-roll Randomness";
+  rerenderButton.style.padding = "8px 10px";
+  rerenderButton.style.borderRadius = "999px";
+  rerenderButton.style.border = "1px solid rgba(255,255,255,0.22)";
+  rerenderButton.style.background = "rgba(255,255,255,0.08)";
+  rerenderButton.style.color = "#e6eef8";
+  rerenderButton.addEventListener("click", () => {
+    renderSvgHatchingLab(svgNode, styles, controlState);
+  });
+
+  actions.appendChild(exportConfigButton);
+  actions.appendChild(rerenderButton);
+
+  pane.appendChild(title);
+  pane.appendChild(hint);
+  pane.appendChild(styleSelect);
+  pane.appendChild(slidersRoot);
+  pane.appendChild(layerTitle);
+  pane.appendChild(layerWrap);
+  pane.appendChild(actions);
+
+  container.appendChild(previewPane);
+  container.appendChild(pane);
+
+  const rerender = () => renderSvgHatchingLab(svgNode, styles, controlState);
+  refreshLayerInputs();
+  rerender();
+  window.addEventListener("resize", rerender);
+  updateStatus("Hatch lab", "Adjust style controls to tune SVG export hatching.");
 }
 
 function quadPoint(worldFace, u, v) {
@@ -1386,14 +1808,19 @@ toggleWallsButton?.addEventListener("click", () => {
   setWallDebugVisible(!wallsDebugVisible);
 });
 exportSvgButton?.addEventListener("click", exportSceneToSvg);
+exportGrayscaleSvgButton?.addEventListener("click", exportGrayscaleSceneToSvg);
 
 // Expose camera state for debugging/persistence
 window.getCameraState = () => getCurrentView();
 window.exportCamogliSvg = exportSceneToSvg;
 
-buildScene();
-focusCamera();
-animationFrameId = window.requestAnimationFrame(animate);
+if (DEBUG_SVG_HATCHING_LAB) {
+  initSvgHatchingLab();
+} else {
+  buildScene();
+  focusCamera();
+  animationFrameId = window.requestAnimationFrame(animate);
+}
 
 // --- Grayscale SVG Export (legacy style) ---
 function buildGrayscaleSceneSvgExport() {
@@ -1479,10 +1906,4 @@ function exportGrayscaleSceneToSvg() {
   }
 }
 
-// Wire up the new grayscale export button
-window.addEventListener("DOMContentLoaded", () => {
-  const exportGrayscaleSvgButton = document.getElementById("exportGrayscaleSvgButton");
-  if (exportGrayscaleSvgButton) {
-    exportGrayscaleSvgButton.addEventListener("click", exportGrayscaleSceneToSvg);
-  }
-});
+// Grayscale export button is wired with the other controls above.

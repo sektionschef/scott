@@ -17,6 +17,7 @@
 
 3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
 camera position:
+
 ```
 {
   "camera": {
@@ -33,6 +34,7 @@ camera position:
 ```
 
 debug hatching styles: http://localhost:3301/?debugHatching=1
+debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
 debug stroke params: http://localhost:3301/?debugFilledPathParams=1 
