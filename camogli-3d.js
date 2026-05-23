@@ -1348,7 +1348,7 @@ function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, widt
 
   return {
     defs: "",
-    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-hatch-brightness="${style.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}" data-hatch-jitter="${style.hatchParams.jitter.toFixed(3)}" data-hatch-bend="${style.hatchParams.bend.toFixed(3)}" data-hatch-width="${style.hatchParams.strokeWidth.toFixed(3)}" data-hatch-jitter-src="${style.sourceHatchJitter.toFixed(3)}" data-hatch-bend-src="${style.sourceHatchBend.toFixed(3)}" data-hatch-width-src="${style.sourceHatchWidth.toFixed(3)}" data-hatch-mode="${hatchBuild.debug.mode}" data-hatch-segments="${totalSegments}" data-hatch-primary="${totalPrimarySegments}" data-hatch-fallback="${totalFallbackSegments}" data-hatch-circles="${hatchBuild.debug.circleCount}"><polygon points="${polygonPoints}" fill="${style.background}" stroke="none" />${hatchSvg}${debugLabelSvg}</g>`,
+    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-hatch-brightness="${style.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}" data-hatch-jitter="${style.hatchParams.jitter.toFixed(3)}" data-hatch-bend="${style.hatchParams.bend.toFixed(3)}" data-hatch-width="${style.hatchParams.strokeWidth.toFixed(3)}" data-hatch-jitter-src="${style.sourceHatchJitter.toFixed(3)}" data-hatch-bend-src="${style.sourceHatchBend.toFixed(3)}" data-hatch-width-src="${style.sourceHatchWidth.toFixed(3)}" data-hatch-mode="${hatchBuild.debug.mode}" data-hatch-segments="${totalSegments}" data-hatch-primary="${totalPrimarySegments}" data-hatch-fallback="${totalFallbackSegments}" data-hatch-circles="${hatchBuild.debug.circleCount}"><polygon points="${polygonPoints}" fill="none" stroke="none" />${hatchSvg}${debugLabelSvg}</g>`,
     debug: {
       cubeIndex: face.cubeIndex,
       faceName: face.faceName,
@@ -2094,6 +2094,55 @@ function buildShadowData(width, height) {
   return shadows;
 }
 
+const PAPER_BG_PRESET_STORAGE_KEY = "paperBackgroundDebugPreset.v1";
+
+function readPaperBackgroundPresetFromStorage() {
+  try {
+    const raw = window.localStorage.getItem(PAPER_BG_PRESET_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function buildPaperBackgroundForExport(width, height) {
+  const fallback = {
+    defs: "",
+    content: `<rect x="0" y="0" width="${width}" height="${height}" fill="#1b2129" />`,
+  };
+
+  if (typeof window === "undefined" || typeof window.PaperBackgroundTexture !== "function") {
+    return fallback;
+  }
+
+  try {
+    const tempSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const savedPreset = readPaperBackgroundPresetFromStorage() || {};
+
+    const texture = new window.PaperBackgroundTexture(tempSvg, {
+      ...savedPreset,
+      width,
+      height,
+    });
+    texture.render();
+
+    const defsNode = tempSvg.querySelector("defs");
+    const rootGroup = tempSvg.querySelector("#paperTextureRoot");
+    if (!rootGroup) {
+      return fallback;
+    }
+
+    return {
+      defs: defsNode ? defsNode.innerHTML : "",
+      content: rootGroup.outerHTML,
+    };
+  } catch (_error) {
+    return fallback;
+  }
+}
+
 function buildSceneSvgExport() {
   const width = Math.max(640, Math.round(renderer.domElement.clientWidth || window.innerWidth || 1600));
   const height = Math.max(360, Math.round(renderer.domElement.clientHeight || window.innerHeight || 900));
@@ -2180,9 +2229,11 @@ function buildSceneSvgExport() {
     ? `<g id="hatchDebugOverlay"><rect x="10" y="10" width="530" height="68" fill="#ffffff" opacity="0.82" /><text x="18" y="30" fill="#111111" font-size="12" font-family="ui-monospace, Menlo, monospace">hatch debug: faces=${hatchDebugSummary.totalFaces} seg=${hatchDebugSummary.totalSegments} primary=${hatchDebugSummary.totalPrimary} fallback=${hatchDebugSummary.totalFallback} circles=${hatchDebugSummary.totalCircles}</text><text x="18" y="49" fill="#111111" font-size="12" font-family="ui-monospace, Menlo, monospace">no-segment(non-none)=${hatchDebugSummary.facesWithoutSegments}</text><text x="18" y="66" fill="#111111" font-size="11" font-family="ui-monospace, Menlo, monospace">${escapeXml((hatchDebugSummary.examples[0] || "example: none"))}</text></g>`
     : "";
 
+  const paperBackground = buildPaperBackgroundForExport(width, height);
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-<defs>${clipDefs.join("\n")}</defs>
-<rect x="0" y="0" width="${width}" height="${height}" fill="#1b2129" />
+<defs>${paperBackground.defs}\n${clipDefs.join("\n")}</defs>
+${paperBackground.content}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
@@ -2381,7 +2432,7 @@ function buildGrayscaleSceneSvgExport() {
 
   const facePolygons = faces.flatMap((face) => (
     (face.clippedScreenPolygons || []).map((polygon) => (
-      `<polygon points="${pointsToSvgString(polygon)}" fill="${grayHexFromTone(faceToneFromLight(face))}" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
+      `<polygon points="${pointsToSvgString(polygon)}" fill="none" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
     ))
   )).join("\n");
 
@@ -2414,8 +2465,11 @@ function buildGrayscaleSceneSvgExport() {
     shadows,
   }));
 
+  const paperBackground = buildPaperBackgroundForExport(width, height);
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-<rect x="0" y="0" width="${width}" height="${height}" fill="#1b2129" />
+<defs>${paperBackground.defs}</defs>
+${paperBackground.content}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
