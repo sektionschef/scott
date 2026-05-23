@@ -175,6 +175,71 @@ function _axisBuildHatchSegments(points, hatchDir, sweepDir, spacing, edgeInset,
   return segments;
 }
 
+function _axisPointInPolygon(point, polygon) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+    const xi = polygon[i].x;
+    const yi = polygon[i].y;
+    const xj = polygon[j].x;
+    const yj = polygon[j].y;
+    const intersects = ((yi > point.y) !== (yj > point.y))
+      && (point.x < ((xj - xi) * (point.y - yi)) / ((yj - yi) || 1e-8) + xi);
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function _axisPolygonBounds(points) {
+  return {
+    minX: Math.min(...points.map((p) => p.x)),
+    maxX: Math.max(...points.map((p) => p.x)),
+    minY: Math.min(...points.map((p) => p.y)),
+    maxY: Math.max(...points.map((p) => p.y)),
+  };
+}
+
+function _axisHatchCirclesForPolygon(groupId, polygon, brightness, circleParams) {
+  const bounds = _axisPolygonBounds(polygon);
+  const area = _axisPolygonArea(polygon);
+  const base = Math.max(4, Math.sqrt(area) * 0.09);
+  const spacingScale = Math.max(0.2, circleParams.circleSpacing);
+  const radiusScale = Math.max(0.1, circleParams.circleRadius);
+  const adjustedRadius = Math.max(0.5, base * 0.55 * radiusScale);
+  const densityFactor = Math.max(0.6, 1.2 - (brightness - 0.8) * 2.5);
+  const rowStep = Math.max(adjustedRadius * 1.9, base * 1.6 * densityFactor * spacingScale);
+  const colStep = Math.max(adjustedRadius * 2.15, base * 2.0 * densityFactor * spacingScale);
+  const jitterAmount = adjustedRadius * Math.max(0, Math.min(0.9, circleParams.circleJitter));
+
+  let rowIndex = 0;
+  for (let centerY = bounds.minY + adjustedRadius; centerY <= bounds.maxY - adjustedRadius; centerY += rowStep) {
+    const rowOffset = (rowIndex % 2 === 0) ? 0 : colStep * 0.5;
+    for (let centerX = bounds.minX + adjustedRadius + rowOffset; centerX <= bounds.maxX - adjustedRadius; centerX += colStep) {
+      const jitteredX = centerX + getRandomFromInterval(-jitterAmount, jitterAmount);
+      const jitteredY = centerY + getRandomFromInterval(-jitterAmount, jitterAmount);
+      if (!_axisPointInPolygon({ x: jitteredX, y: jitteredY }, polygon)) {
+        continue;
+      }
+
+      const circle = new circlePath({
+        center: { x: jitteredX, y: jitteredY },
+        radius: adjustedRadius,
+        group: groupId,
+        color: "#111111",
+        width: 0.15,
+        fill: "none",
+        stroke: "#111111",
+        strokeWidth: 1,
+      });
+      if (circle?.path) {
+        circle.path.setAttributeNS(null, "pointer-events", "none");
+      }
+    }
+    rowIndex += 1;
+  }
+}
+
 function _axisBuildCubePolygons(width, height, options = {}) {
   const cubeVertices = [
     { x: -0.5, y: -0.5, z: -0.5 },
@@ -296,6 +361,9 @@ function _axisReadParams(search) {
     hatchEdgeInset: null,
     hatchTrimRatio: 0.42,
     hatchMinVisible: 4,
+    circleSpacing: 1.8,
+    circleRadius: 0.5,
+    circleJitter: 0.15,
   };
 
   const parsed = {
@@ -306,6 +374,9 @@ function _axisReadParams(search) {
     hatchEdgeInset: search.get("hatchEdgeInset") === null ? null : Number(search.get("hatchEdgeInset")),
     hatchTrimRatio: Number(search.get("hatchTrimRatio")),
     hatchMinVisible: Number(search.get("hatchMinVisible")),
+    circleSpacing: Number(search.get("circleSpacing")),
+    circleRadius: Number(search.get("circleRadius")),
+    circleJitter: Number(search.get("circleJitter")),
   };
 
   return {
@@ -316,6 +387,9 @@ function _axisReadParams(search) {
     hatchEdgeInset: parsed.hatchEdgeInset !== null && Number.isFinite(parsed.hatchEdgeInset) ? parsed.hatchEdgeInset : fallback.hatchEdgeInset,
     hatchTrimRatio: Number.isFinite(parsed.hatchTrimRatio) ? parsed.hatchTrimRatio : fallback.hatchTrimRatio,
     hatchMinVisible: Number.isFinite(parsed.hatchMinVisible) ? parsed.hatchMinVisible : fallback.hatchMinVisible,
+    circleSpacing: Number.isFinite(parsed.circleSpacing) ? parsed.circleSpacing : fallback.circleSpacing,
+    circleRadius: Number.isFinite(parsed.circleRadius) ? parsed.circleRadius : fallback.circleRadius,
+    circleJitter: Number.isFinite(parsed.circleJitter) ? parsed.circleJitter : fallback.circleJitter,
   };
 }
 
@@ -406,6 +480,7 @@ function _axisApplyStudioFromUrl(search, studioState) {
 
     const byId = new Map(studioState.sides.map((side) => [side.id, side]));
     let legacyGlobalApplied = false;
+    let legacyCircleSpacing = null;
 
     if (Array.isArray(payload.g) && payload.g.length >= 6) {
       studioState.globalParams.hatchWidth = _axisSanitizeParamValue(Number(payload.g[0]), studioState.globalParams.hatchWidth);
@@ -416,6 +491,15 @@ function _axisApplyStudioFromUrl(search, studioState) {
         : _axisSanitizeParamValue(Number(payload.g[3]), studioState.globalParams.hatchEdgeInset);
       studioState.globalParams.hatchTrimRatio = _axisSanitizeParamValue(Number(payload.g[4]), studioState.globalParams.hatchTrimRatio);
       studioState.globalParams.hatchMinVisible = _axisSanitizeParamValue(Number(payload.g[5]), studioState.globalParams.hatchMinVisible);
+      if (payload.g.length >= 9) {
+        const sideCircleFallback = studioState.sides[0]?.params.circleSpacing ?? 1.8;
+        legacyCircleSpacing = _axisSanitizeParamValue(Number(payload.g[6]), sideCircleFallback);
+        studioState.globalParams.circleRadius = _axisSanitizeParamValue(Number(payload.g[7]), studioState.globalParams.circleRadius);
+        studioState.globalParams.circleJitter = _axisSanitizeParamValue(Number(payload.g[8]), studioState.globalParams.circleJitter);
+      } else if (payload.g.length >= 8) {
+        studioState.globalParams.circleRadius = _axisSanitizeParamValue(Number(payload.g[6]), studioState.globalParams.circleRadius);
+        studioState.globalParams.circleJitter = _axisSanitizeParamValue(Number(payload.g[7]), studioState.globalParams.circleJitter);
+      }
     } else if (Array.isArray(payload.g) && payload.g.length >= 5) {
       // Backward compatibility with v2 payload where hatchWidth was side-specific.
       studioState.globalParams.hatchJitter = _axisSanitizeParamValue(Number(payload.g[0]), studioState.globalParams.hatchJitter);
@@ -439,10 +523,16 @@ function _axisApplyStudioFromUrl(search, studioState) {
         continue;
       }
       if (row.p.length >= 2) {
-        // Backward compatibility with payload where p[0] was width.
+        // Backward compatibility with payload where p[0] was width and p[1] was hatchSpacing.
         side.params.hatchSpacing = _axisSanitizeParamValue(Number(row.p[1]), side.params.hatchSpacing);
+        if (row.p.length >= 3) {
+          side.params.circleSpacing = _axisSanitizeParamValue(Number(row.p[2]), side.params.circleSpacing);
+        }
       } else {
         side.params.hatchSpacing = _axisSanitizeParamValue(Number(row.p[0]), side.params.hatchSpacing);
+        side.params.circleSpacing = legacyCircleSpacing !== null
+          ? legacyCircleSpacing
+          : side.params.circleSpacing;
       }
 
       // Backward compatibility with older payloads where every side stored full params.
@@ -488,8 +578,11 @@ function _axisWriteStudioState(studioState) {
     search.set("hatchJitter", studioState.globalParams.hatchJitter.toFixed(2));
     search.set("hatchBend", studioState.globalParams.hatchBend.toFixed(3));
     search.set("hatchSpacing", selected.params.hatchSpacing.toFixed(2));
+    search.set("circleSpacing", selected.params.circleSpacing.toFixed(2));
     search.set("hatchTrimRatio", studioState.globalParams.hatchTrimRatio.toFixed(2));
     search.set("hatchMinVisible", studioState.globalParams.hatchMinVisible.toFixed(2));
+    search.set("circleRadius", studioState.globalParams.circleRadius.toFixed(2));
+    search.set("circleJitter", studioState.globalParams.circleJitter.toFixed(2));
     if (studioState.globalParams.hatchEdgeInset === null) {
       search.delete("hatchEdgeInset");
     } else {
@@ -509,12 +602,15 @@ function _axisWriteStudioState(studioState) {
       studioState.globalParams.hatchEdgeInset === null ? null : Number(studioState.globalParams.hatchEdgeInset.toFixed(2)),
       Number(studioState.globalParams.hatchTrimRatio.toFixed(2)),
       Number(studioState.globalParams.hatchMinVisible.toFixed(2)),
+      Number(studioState.globalParams.circleRadius.toFixed(2)),
+      Number(studioState.globalParams.circleJitter.toFixed(2)),
     ],
     d: studioState.sides.map((side) => ({
       id: side.id,
       mode: side.hatchMode,
       p: [
         Number(side.params.hatchSpacing.toFixed(2)),
+        Number(side.params.circleSpacing.toFixed(2)),
       ],
     })),
   };
@@ -545,13 +641,14 @@ function _axisDefaultSpacingForBrightness(brightness) {
   if (brightness <= 0.6) return 1.2;
   if (brightness <= 0.7) return 1.0;
   if (brightness <= 0.8) return 0.8;
-  if (brightness <= 0.9) return 0.6;
-  return 0.2;
+  if (brightness <= 0.91) return 0.9;
+  return 0.5;
 }
 
 function _axisCloneParams(params) {
   return {
     hatchSpacing: params.hatchSpacing,
+    circleSpacing: params.circleSpacing,
   };
 }
 
@@ -563,6 +660,8 @@ function _axisCloneGlobalParams(params) {
     hatchEdgeInset: params.hatchEdgeInset,
     hatchTrimRatio: params.hatchTrimRatio,
     hatchMinVisible: params.hatchMinVisible,
+    circleRadius: params.circleRadius,
+    circleJitter: params.circleJitter,
   };
 }
 
@@ -718,6 +817,15 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
             hatch.path.setAttributeNS(null, "pointer-events", "none");
           }
         }
+      }
+
+      // Add organic circle texture for the darkest sides.
+      if (side.brightness > 0.8) {
+        _axisHatchCirclesForPolygon(hatchGroupId, side.poly.points, side.brightness, {
+          circleSpacing: side.params.circleSpacing,
+          circleRadius: studioState.globalParams.circleRadius,
+          circleJitter: studioState.globalParams.circleJitter,
+        });
       }
     });
 
@@ -905,6 +1013,7 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
 
   const controls = [
     { key: "hatchSpacing", label: "Spacing", min: 0.2, max: 2.0, step: 0.05 },
+    { key: "circleSpacing", label: "Circle Spacing", min: 0.2, max: 6.0, step: 0.1 },
   ];
 
   for (const control of controls) {
@@ -948,6 +1057,8 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
     { key: "hatchEdgeInset", label: "Edge Inset", min: 0.0, max: 8.0, step: 0.1, nullable: true },
     { key: "hatchTrimRatio", label: "Trim Ratio", min: 0.05, max: 0.7, step: 0.01 },
     { key: "hatchMinVisible", label: "Min Visible", min: 0.0, max: 12.0, step: 0.2 },
+    { key: "circleRadius", label: "Circle Radius", min: 0.1, max: 3.0, step: 0.1 },
+    { key: "circleJitter", label: "Circle Jitter", min: 0.0, max: 0.9, step: 0.02 },
   ];
 
   for (const control of globalControls) {
