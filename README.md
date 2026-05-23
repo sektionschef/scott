@@ -1,5 +1,14 @@
 # Scott
 
+## Paper Texture Debug View
+
+- URL: http://localhost:3301/debugPaperBackground.html
+- Start server: `python3 -m http.server 3301`
+- New files:
+  - `paperBackgroundTexture.js` reusable SVG paper/noise/dirt generator
+  - `debugPaperBackground.html` standalone visual lab with sliders and toggles
+  - `debugPaperBackground.js` UI bindings + render loop + SVG download
+
 ## todos
 
 * different hatching sttyles
@@ -17,7 +26,6 @@
 
 3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
 camera position:
-
 ```
 {
   "camera": {
@@ -42,6 +50,10 @@ debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll do
 debug stroke params: http://localhost:3301/?debugFilledPathParams=1 
 debug composition: http://localhost:3301/?debugComposition=1 
 
+new
+* http://localhost:3301/camogli-3d.html - result
+* http://localhost:3301/camogli-3d.html?debugSvgHatching=1 - studio
+* http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.25&hatchJitter=1.30&hatchBend=-0.020&hatchSpacing=3.00&hatchTrimRatio=0.60&hatchMinVisible=12.00&studio=%257B%2522v%2522%253A2%252C%2522s%2522%253A%2522C3-A%2522%252C%2522dir%2522%253Afalse%252C%2522lbl%2522%253Afalse%252C%2522g%2522%253A%255B1.25%252C1.3%252C-0.02%252C0.5%252C0.6%252C12%252C0.5%252C0.68%255D%252C%2522d%2522%253A%255B%257B%2522id%2522%253A%2522C1-A%2522%252C%2522mode%2522%253A%2522none%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C1-B%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C1-C%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C2-A%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C2-B%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C2-C%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C3-A%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C3-B%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C3-C%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B0.9%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C4-A%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C4-B%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C4-C%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B0.5%252C0.5%255D%257D%255D%257D&seed=251560812&hatchEdgeInset=0.50&circleSpacing=0.50&circleRadius=0.50&circleJitter=0.68 - hatching in detail
 
 ## Hatching Studio
 

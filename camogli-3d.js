@@ -59,6 +59,9 @@ const exportSvgButton = document.getElementById("exportSvgButton");
 const exportGrayscaleSvgButton = document.getElementById("exportGrayscaleSvgButton");
 const searchParams = new URLSearchParams(window.location.search);
 const DEBUG_SVG_HATCHING_LAB = searchParams.get("debugSvgHatching") === "1" || searchParams.get("debug") === "svgHatching";
+const DEBUG_EXPORT_HATCH = searchParams.get("debugExportHatch") === "1" || searchParams.get("debug") === "exportHatch";
+const DEBUG_EXPORT_HATCH_LABELS = searchParams.get("debugExportHatchLabels") === "1" || DEBUG_EXPORT_HATCH;
+const DEBUG_EXPORT_HATCH_VERBOSE = searchParams.get("debugExportHatchVerbose") === "1";
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x11151b);
@@ -590,6 +593,539 @@ function polygonBounds(points) {
   };
 }
 
+function studioDefaultHatchMode(brightness) {
+  if (brightness <= 0.1) return "none";
+  return brightness > 0.5 ? "cross" : "single";
+}
+
+function studioDefaultSpacingForBrightness(brightness) {
+  if (brightness <= 0.1) return 2.0;
+  if (brightness <= 0.2) return 2.0;
+  if (brightness <= 0.3) return 1.8;
+  if (brightness <= 0.4) return 1.6;
+  if (brightness <= 0.5) return 1.4;
+  if (brightness <= 0.6) return 1.2;
+  if (brightness <= 0.7) return 1.0;
+  if (brightness <= 0.8) return 0.8;
+  if (brightness <= 0.91) return 0.9;
+  return 0.5;
+}
+
+function faceStudioBrightness(face) {
+  // Use perceived face tone + cast shadow to avoid under-hatching bright-but-occluded faces.
+  const toneDarkness = 1 - clamp01(faceToneFromLight(face));
+  const shadowBoost = clamp01(face.shadowStrength || 0) * 0.32;
+  return clamp01(toneDarkness + shadowBoost);
+}
+
+const SVG_EXPORT_STUDIO_DEFAULT_GLOBALS = {
+  hatchWidth: 1.0,
+  hatchJitter: 1.5,
+  hatchBend: -0.05,
+  hatchEdgeInset: null,
+  hatchTrimRatio: 0.42,
+  hatchMinVisible: 4,
+  circleRadius: 0.5,
+  circleJitter: 1.0,
+};
+
+const SVG_EXPORT_STUDIO_CASE_GLOBALS = {
+  hatchWidth: 1.0,
+  hatchJitter: 1.5,
+  hatchBend: -0.05,
+  circleRadius: 0.5,
+  circleJitter: 1.0,
+};
+
+function sanitizeStudioParamValue(value, fallback, min = null, max = null) {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  if (min !== null && value < min) {
+    return min;
+  }
+  if (max !== null && value > max) {
+    return max;
+  }
+  return value;
+}
+
+function parseStudioGlobalsFromUrl(search) {
+  const globals = { ...SVG_EXPORT_STUDIO_DEFAULT_GLOBALS };
+
+  const direct = {
+    hatchWidth: Number(search.get("hatchWidth")),
+    hatchJitter: Number(search.get("hatchJitter")),
+    hatchBend: Number(search.get("hatchBend")),
+    hatchTrimRatio: Number(search.get("hatchTrimRatio")),
+    hatchMinVisible: Number(search.get("hatchMinVisible")),
+    circleRadius: Number(search.get("circleRadius")),
+    circleJitter: Number(search.get("circleJitter")),
+    hatchEdgeInset: search.get("hatchEdgeInset") === null ? null : Number(search.get("hatchEdgeInset")),
+  };
+
+  globals.hatchWidth = sanitizeStudioParamValue(direct.hatchWidth, globals.hatchWidth, 0.2, 3);
+  globals.hatchJitter = sanitizeStudioParamValue(direct.hatchJitter, globals.hatchJitter, 0, 2);
+  globals.hatchBend = sanitizeStudioParamValue(direct.hatchBend, globals.hatchBend, -0.4, 0.4);
+  globals.hatchTrimRatio = sanitizeStudioParamValue(direct.hatchTrimRatio, globals.hatchTrimRatio, 0, 0.9);
+  globals.hatchMinVisible = sanitizeStudioParamValue(direct.hatchMinVisible, globals.hatchMinVisible, 0, 50);
+  globals.circleRadius = sanitizeStudioParamValue(direct.circleRadius, globals.circleRadius, 0.1, 3);
+  globals.circleJitter = sanitizeStudioParamValue(direct.circleJitter, globals.circleJitter, 0, 1);
+  globals.hatchEdgeInset = direct.hatchEdgeInset === null
+    ? globals.hatchEdgeInset
+    : sanitizeStudioParamValue(direct.hatchEdgeInset, globals.hatchEdgeInset ?? 2, 0, 50);
+
+  const studioPayload = search.get("studio");
+  if (studioPayload) {
+    try {
+      const normalized = studioPayload.replaceAll("-", "+").replaceAll("_", "/");
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+      const decoded = atob(padded);
+      const payload = JSON.parse(decoded);
+      const version = Number(payload?.v);
+      const group = Array.isArray(payload?.g) ? payload.g : null;
+
+      if (group && version >= 4) {
+        globals.hatchWidth = sanitizeStudioParamValue(Number(group[0]), globals.hatchWidth, 0.2, 3);
+        globals.hatchJitter = sanitizeStudioParamValue(Number(group[1]), globals.hatchJitter, 0, 2);
+        globals.hatchBend = sanitizeStudioParamValue(Number(group[2]), globals.hatchBend, -0.4, 0.4);
+        globals.hatchEdgeInset = group[3] === null
+          ? null
+          : sanitizeStudioParamValue(Number(group[3]), globals.hatchEdgeInset ?? 2, 0, 50);
+        globals.hatchTrimRatio = sanitizeStudioParamValue(Number(group[4]), globals.hatchTrimRatio, 0, 0.9);
+        globals.hatchMinVisible = sanitizeStudioParamValue(Number(group[5]), globals.hatchMinVisible, 0, 50);
+        globals.circleRadius = sanitizeStudioParamValue(Number(group[7]), globals.circleRadius, 0.1, 3);
+        globals.circleJitter = sanitizeStudioParamValue(Number(group[8]), globals.circleJitter, 0, 1);
+      } else if (group && version === 3) {
+        globals.hatchWidth = sanitizeStudioParamValue(Number(group[0]), globals.hatchWidth, 0.2, 3);
+        globals.hatchJitter = sanitizeStudioParamValue(Number(group[1]), globals.hatchJitter, 0, 2);
+        globals.hatchBend = sanitizeStudioParamValue(Number(group[2]), globals.hatchBend, -0.4, 0.4);
+        globals.hatchEdgeInset = group[3] === null
+          ? null
+          : sanitizeStudioParamValue(Number(group[3]), globals.hatchEdgeInset ?? 2, 0, 50);
+        globals.hatchTrimRatio = sanitizeStudioParamValue(Number(group[4]), globals.hatchTrimRatio, 0, 0.9);
+        globals.hatchMinVisible = sanitizeStudioParamValue(Number(group[5]), globals.hatchMinVisible, 0, 50);
+        globals.circleRadius = sanitizeStudioParamValue(Number(group[6]), globals.circleRadius, 0.1, 3);
+        globals.circleJitter = sanitizeStudioParamValue(Number(group[7]), globals.circleJitter, 0, 1);
+      } else if (group && version === 2) {
+        globals.hatchJitter = sanitizeStudioParamValue(Number(group[0]), globals.hatchJitter, 0, 2);
+        globals.hatchBend = sanitizeStudioParamValue(Number(group[1]), globals.hatchBend, -0.4, 0.4);
+        globals.hatchEdgeInset = group[2] === null
+          ? null
+          : sanitizeStudioParamValue(Number(group[2]), globals.hatchEdgeInset ?? 2, 0, 50);
+        globals.hatchTrimRatio = sanitizeStudioParamValue(Number(group[3]), globals.hatchTrimRatio, 0, 0.9);
+        globals.hatchMinVisible = sanitizeStudioParamValue(Number(group[4]), globals.hatchMinVisible, 0, 50);
+        globals.circleRadius = sanitizeStudioParamValue(Number(group[6]), globals.circleRadius, 0.1, 3);
+        globals.circleJitter = sanitizeStudioParamValue(Number(group[7]), globals.circleJitter, 0, 1);
+      }
+    } catch (error) {
+      // Ignore malformed studio payload and keep current globals.
+    }
+  }
+
+  return globals;
+}
+
+const SVG_EXPORT_STUDIO_GLOBALS = {
+  ...parseStudioGlobalsFromUrl(searchParams),
+  ...SVG_EXPORT_STUDIO_CASE_GLOBALS,
+};
+
+function hatchPolygonCentroid(points) {
+  let x = 0;
+  let y = 0;
+  for (const point of points) {
+    x += point.x;
+    y += point.y;
+  }
+  return { x: x / points.length, y: y / points.length };
+}
+
+function hatchPolygonArea(points) {
+  let area = 0;
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index];
+    const b = points[(index + 1) % points.length];
+    area += a.x * b.y - b.x * a.y;
+  }
+  return Math.abs(area) * 0.5;
+}
+
+function hatchPrincipalDirections(points) {
+  const center = hatchPolygonCentroid(points);
+  let sxx = 0;
+  let syy = 0;
+  let sxy = 0;
+  for (const point of points) {
+    const dx = point.x - center.x;
+    const dy = point.y - center.y;
+    sxx += dx * dx;
+    syy += dy * dy;
+    sxy += dx * dy;
+  }
+  const angle = 0.5 * Math.atan2(2 * sxy, sxx - syy);
+  return {
+    principal: { x: Math.cos(angle), y: Math.sin(angle) },
+    perpendicular: { x: -Math.sin(angle), y: Math.cos(angle) },
+  };
+}
+
+function hatchDot(a, b) {
+  return a.x * b.x + a.y * b.y;
+}
+
+function hatchSub(a, b) {
+  return { x: a.x - b.x, y: a.y - b.y };
+}
+
+function hatchAdd(a, b) {
+  return { x: a.x + b.x, y: a.y + b.y };
+}
+
+function hatchScale(a, factor) {
+  return { x: a.x * factor, y: a.y * factor };
+}
+
+function hatchLength(a) {
+  return Math.sqrt(a.x * a.x + a.y * a.y);
+}
+
+function hatchNormalize(a) {
+  const len = Math.max(1e-8, hatchLength(a));
+  return { x: a.x / len, y: a.y / len };
+}
+
+function hatchUniquePoints(points, tolerance) {
+  const unique = [];
+  for (const point of points) {
+    const exists = unique.some((candidate) => Math.abs(candidate.x - point.x) < tolerance && Math.abs(candidate.y - point.y) < tolerance);
+    if (!exists) {
+      unique.push(point);
+    }
+  }
+  return unique;
+}
+
+function hatchIntersectSweepLineWithPolygon(points, sweepDir, lineOffset, hatchDir) {
+  const intersections = [];
+  for (let index = 0; index < points.length; index += 1) {
+    const a = points[index];
+    const b = points[(index + 1) % points.length];
+    const edge = hatchSub(b, a);
+    const denom = hatchDot(edge, sweepDir);
+    if (Math.abs(denom) < 1e-8) {
+      continue;
+    }
+    const t = (lineOffset - hatchDot(a, sweepDir)) / denom;
+    if (t < -1e-6 || t > 1 + 1e-6) {
+      continue;
+    }
+    intersections.push({
+      x: a.x + edge.x * t,
+      y: a.y + edge.y * t,
+    });
+  }
+
+  const unique = hatchUniquePoints(intersections, 0.6);
+  if (unique.length < 2) {
+    return null;
+  }
+
+  unique.sort((p, q) => hatchDot(p, hatchDir) - hatchDot(q, hatchDir));
+  return { start: unique[0], end: unique[unique.length - 1] };
+}
+
+function buildPolygonHatchSegments(points, hatchDir, sweepDir, spacing, edgeInset, trimRatio, minVisibleLength) {
+  const minOffset = Math.min(...points.map((point) => hatchDot(point, sweepDir)));
+  const maxOffset = Math.max(...points.map((point) => hatchDot(point, sweepDir)));
+  const segments = [];
+
+  for (let offset = minOffset; offset <= maxOffset; offset += spacing) {
+    const segment = hatchIntersectSweepLineWithPolygon(points, sweepDir, offset, hatchDir);
+    if (!segment) {
+      continue;
+    }
+    const direction = hatchNormalize(hatchSub(segment.end, segment.start));
+    const segmentLength = hatchLength(hatchSub(segment.end, segment.start));
+    const trim = Math.min(edgeInset, Math.max(0, segmentLength * trimRatio));
+    if (segmentLength <= trim * 2 + minVisibleLength) {
+      continue;
+    }
+    segments.push({
+      start: hatchAdd(segment.start, hatchScale(direction, trim)),
+      end: hatchAdd(segment.end, hatchScale(direction, -trim)),
+    });
+  }
+
+  if (segments.length === 0) {
+    const centerOffset = hatchDot(hatchPolygonCentroid(points), sweepDir);
+    const centerSegment = hatchIntersectSweepLineWithPolygon(points, sweepDir, centerOffset, hatchDir);
+    if (centerSegment) {
+      const direction = hatchNormalize(hatchSub(centerSegment.end, centerSegment.start));
+      const segmentLength = hatchLength(hatchSub(centerSegment.end, centerSegment.start));
+      const trim = Math.min(edgeInset, Math.max(0, segmentLength * Math.max(0.12, trimRatio - 0.06)));
+      if (segmentLength > trim * 2 + Math.max(1, minVisibleLength * 0.5)) {
+        segments.push({
+          start: hatchAdd(centerSegment.start, hatchScale(direction, trim)),
+          end: hatchAdd(centerSegment.end, hatchScale(direction, -trim)),
+        });
+      }
+    }
+  }
+
+  return segments;
+}
+
+function hatchPointInPolygon(point, polygon) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i, i += 1) {
+    const xi = polygon[i].x;
+    const yi = polygon[i].y;
+    const xj = polygon[j].x;
+    const yj = polygon[j].y;
+    const intersects = ((yi > point.y) !== (yj > point.y))
+      && (point.x < ((xj - xi) * (point.y - yi)) / ((yj - yi) || 1e-8) + xi);
+    if (intersects) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function hatchPolygonBounds(points) {
+  return {
+    minX: Math.min(...points.map((p) => p.x)),
+    maxX: Math.max(...points.map((p) => p.x)),
+    minY: Math.min(...points.map((p) => p.y)),
+    maxY: Math.max(...points.map((p) => p.y)),
+  };
+}
+
+function buildStudioFaceHatchStyle(face, polygon, globals = null) {
+  const g = globals ?? SVG_EXPORT_STUDIO_GLOBALS;
+  const brightness = faceStudioBrightness(face);
+  const tone = faceToneFromLight(face);
+  const bounds = hatchPolygonBounds(polygon);
+  const shortSide = Math.max(1, Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY));
+  const area = hatchPolygonArea(polygon);
+  const spacingFactor = 1.35 - brightness * 0.95;
+  const sideSpacing = Math.max(0.2, Math.min(2.0, studioDefaultSpacingForBrightness(brightness)));
+  const minSpacing = Math.max(0.9, Math.min(4, shortSide * 0.22));
+  const spacing = Math.max(minSpacing, Math.sqrt(area) * 0.1 * sideSpacing * spacingFactor);
+  const baseEdgeInset = g.hatchEdgeInset !== null
+    ? Math.max(0, g.hatchEdgeInset)
+    : Math.max(2.0, g.hatchWidth * 1.3 + g.hatchJitter * 0.9);
+  const edgeInset = Math.min(baseEdgeInset, Math.max(0.45, shortSide * 0.16));
+  const adaptiveTrimRatio = Math.min(
+    g.hatchTrimRatio,
+    shortSide < 20 ? 0.22 : 0.32,
+  );
+  const adaptiveMinVisible = Math.min(
+    g.hatchMinVisible,
+    Math.max(0.6, shortSide * 0.18),
+  );
+  const hatchMode = studioDefaultHatchMode(brightness);
+  const circleSpacing = studioDefaultSpacingForBrightness(brightness);
+  const directions = hatchPrincipalDirections(polygon);
+  const sourceHatchWidth = g.hatchWidth;
+  const sourceHatchJitter = g.hatchJitter;
+  const sourceHatchBend = g.hatchBend;
+  const effectiveHatchWidth = Math.max(0.8, sourceHatchWidth);
+  const effectiveHatchJitter = Math.max(0.25, sourceHatchJitter);
+  const effectiveHatchBend = Math.abs(sourceHatchBend) < 0.01
+    ? (sourceHatchBend < 0 ? -0.03 : 0.03)
+    : sourceHatchBend;
+  const layers = [];
+  if (hatchMode !== "none") layers.push("single");
+  if (hatchMode === "cross") layers.push("cross");
+  if (brightness > 0.8) layers.push("circles");
+
+  return {
+    tone,
+    brightness,
+    background: grayHexFromTone(clamp01(0.93 + tone * 0.03)),
+    stroke: grayHexFromTone(clamp01(0.04 + tone * 0.03)),
+    strokeOpacity: 1,
+    strokeWidth: effectiveHatchWidth,
+    sourceHatchWidth,
+    sourceHatchJitter,
+    sourceHatchBend,
+    hatchMode,
+    spacing,
+    edgeInset,
+    circleSpacing,
+    circleRadius: g.circleRadius,
+    circleJitter: g.circleJitter,
+    layers,
+    hatchParams: {
+      strokeWidth: effectiveHatchWidth,
+      jitter: effectiveHatchJitter,
+      bend: effectiveHatchBend,
+      trimRatio: adaptiveTrimRatio,
+      minVisible: adaptiveMinVisible,
+    },
+    directions,
+  };
+}
+
+function buildStudioPolygonHatchStrokeSvg(polygon, style, hatchDir, sweepDir, spacingScale = 1) {
+  const spacing = style.spacing * spacingScale;
+  const segments = buildPolygonHatchSegments(
+    polygon,
+    hatchDir,
+    sweepDir,
+    spacing,
+    style.edgeInset,
+    style.hatchParams.trimRatio,
+    style.hatchParams.minVisible,
+  );
+  let fallbackStrokeCount = 0;
+
+  let svg = segments.map((segment) => (
+    buildFilledPathSvg(segment.start, segment.end, {
+      color: style.stroke,
+      fill: style.stroke,
+      opacity: style.strokeOpacity,
+      jitter: style.hatchParams.jitter,
+      bend: style.hatchParams.bend,
+      width: style.hatchParams.strokeWidth,
+    })
+  )).join("\n");
+
+  // Fallback for heavily clipped or tiny polygons where sweep intersections can underflow.
+  if (segments.length < 2) {
+    const bounds = hatchPolygonBounds(polygon);
+    const area = hatchPolygonArea(polygon);
+    const shortSide = Math.max(1, Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY));
+    const step = Math.max(0.8, Math.min(spacing, shortSide * 0.22));
+    const strokeLength = Math.max(step * 1.5, Math.min(shortSide * 0.9, Math.sqrt(area) * 0.55));
+    const half = strokeLength * 0.5;
+    const centerJitter = step * 0.28 * Math.max(0, Math.min(1.5, style.hatchParams.jitter));
+    let extra = "";
+
+    for (let y = bounds.minY + step * 0.5; y <= bounds.maxY - step * 0.5; y += step) {
+      for (let x = bounds.minX + step * 0.5; x <= bounds.maxX - step * 0.5; x += step) {
+        const cx = x + getRandomFromInterval(-centerJitter, centerJitter);
+        const cy = y + getRandomFromInterval(-centerJitter, centerJitter);
+        if (!hatchPointInPolygon({ x: cx, y: cy }, polygon)) {
+          continue;
+        }
+        const start = { x: cx - hatchDir.x * half, y: cy - hatchDir.y * half };
+        const end = { x: cx + hatchDir.x * half, y: cy + hatchDir.y * half };
+        extra += buildFilledPathSvg(start, end, {
+          color: style.stroke,
+          fill: style.stroke,
+          opacity: style.strokeOpacity,
+          jitter: style.hatchParams.jitter,
+          bend: style.hatchParams.bend,
+          width: style.hatchParams.strokeWidth,
+        });
+        fallbackStrokeCount += 1;
+      }
+    }
+
+    if (extra) {
+      svg = `${svg}\n${extra}`;
+    }
+  }
+
+  return {
+    svg,
+    primarySegmentCount: segments.length,
+    fallbackStrokeCount,
+  };
+}
+
+function buildStudioPolygonCircleSvg(polygon, style) {
+  const bounds = hatchPolygonBounds(polygon);
+  const area = hatchPolygonArea(polygon);
+  const base = Math.max(4, Math.sqrt(area) * 0.09);
+  const spacingScale = Math.max(0.2, style.circleSpacing);
+  const radiusScale = Math.max(0.1, style.circleRadius);
+  const adjustedRadius = Math.max(0.5, base * 0.55 * radiusScale);
+  const densityFactor = Math.max(0.6, 1.2 - (style.brightness - 0.8) * 2.5);
+  const rowStep = Math.max(adjustedRadius * 1.9, base * 1.6 * densityFactor * spacingScale);
+  const colStep = Math.max(adjustedRadius * 2.15, base * 2.0 * densityFactor * spacingScale);
+  const jitterAmount = adjustedRadius * Math.max(0, Math.min(0.9, style.circleJitter));
+
+  let rowIndex = 0;
+  let svg = "";
+  let circleCount = 0;
+  for (let centerY = bounds.minY + adjustedRadius; centerY <= bounds.maxY - adjustedRadius; centerY += rowStep) {
+    const rowOffset = (rowIndex % 2 === 0) ? 0 : colStep * 0.5;
+    for (let centerX = bounds.minX + adjustedRadius + rowOffset; centerX <= bounds.maxX - adjustedRadius; centerX += colStep) {
+      const jitteredX = centerX + getRandomFromInterval(-jitterAmount, jitterAmount);
+      const jitteredY = centerY + getRandomFromInterval(-jitterAmount, jitterAmount);
+      if (!hatchPointInPolygon({ x: jitteredX, y: jitteredY }, polygon)) {
+        continue;
+      }
+      svg += `<circle cx="${jitteredX.toFixed(2)}" cy="${jitteredY.toFixed(2)}" r="${adjustedRadius.toFixed(2)}" fill="none" stroke="${style.stroke}" stroke-width="1" stroke-opacity="${style.strokeOpacity}" />`;
+      circleCount += 1;
+    }
+    rowIndex += 1;
+  }
+
+  return {
+    svg,
+    circleCount,
+  };
+}
+
+function buildStudioHatchSvgForFacePolygon(face, polygon, style) {
+  if (style.hatchMode === "none" && style.brightness <= 0.8) {
+    return {
+      svg: "",
+      debug: {
+        mode: style.hatchMode,
+        singleSegments: 0,
+        crossSegments: 0,
+        singleFallback: 0,
+        crossFallback: 0,
+        circleCount: 0,
+      },
+    };
+  }
+
+  const pieces = [];
+  const sweepDir = hatchNormalize(style.directions.principal);
+  const hatchDir = hatchNormalize(style.directions.perpendicular);
+  let singleSegments = 0;
+  let crossSegments = 0;
+  let singleFallback = 0;
+  let crossFallback = 0;
+  let circleCount = 0;
+
+  if (style.hatchMode !== "none") {
+    const single = buildStudioPolygonHatchStrokeSvg(polygon, style, hatchDir, sweepDir);
+    pieces.push(single.svg);
+    singleSegments = single.primarySegmentCount;
+    singleFallback = single.fallbackStrokeCount;
+  }
+  if (style.hatchMode === "cross") {
+    const cross = buildStudioPolygonHatchStrokeSvg(polygon, style, sweepDir, hatchDir, 1.03);
+    pieces.push(cross.svg);
+    crossSegments = cross.primarySegmentCount;
+    crossFallback = cross.fallbackStrokeCount;
+  }
+  if (style.brightness > 0.8) {
+    const circles = buildStudioPolygonCircleSvg(polygon, style);
+    pieces.push(circles.svg);
+    circleCount = circles.circleCount;
+  }
+
+  return {
+    svg: pieces.join("\n"),
+    debug: {
+      mode: style.hatchMode,
+      singleSegments,
+      crossSegments,
+      singleFallback,
+      crossFallback,
+      circleCount,
+    },
+  };
+}
+
 function hatchLayersForFace(face) {
   const tone = faceToneFromLight(face);
   const layers = [];
@@ -797,104 +1333,114 @@ function buildHatchLayerSvg(layer, rect, style, shortSide) {
 }
 
 function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height) {
-  const clipId = `faceClip_${faceIndex}_${polygonIndex}`;
   const polygonPoints = pointsToSvgString(polygon);
-  const rect = polygonBounds(polygon);
-  const shortSide = Math.min(width, height);
-  const style = hatchStyleForFace(face, width, height);
-  const hatchSvg = style.layers.map((layer) => buildHatchLayerSvg(layer, rect, style, shortSide)).join("\n");
+  const style = buildStudioFaceHatchStyle(face, polygon);
+  const hatchBuild = buildStudioHatchSvgForFacePolygon(face, polygon, style);
+  const hatchSvg = hatchBuild.svg;
+  const totalPrimarySegments = hatchBuild.debug.singleSegments + hatchBuild.debug.crossSegments;
+  const totalFallbackSegments = hatchBuild.debug.singleFallback + hatchBuild.debug.crossFallback;
+  const totalSegments = totalPrimarySegments + totalFallbackSegments;
+  const polygonCenter = hatchPolygonCentroid(polygon);
+  const debugLabel = `${face.cubeIndex}:${face.faceName} m=${hatchBuild.debug.mode} seg=${totalSegments} p=${totalPrimarySegments} fb=${totalFallbackSegments} c=${hatchBuild.debug.circleCount} hb=${style.brightness.toFixed(2)} raw=${face.brightness.toFixed(2)} sh=${face.shadowStrength.toFixed(2)}`;
+  const debugLabelSvg = DEBUG_EXPORT_HATCH_LABELS
+    ? `<text x="${polygonCenter.x.toFixed(2)}" y="${polygonCenter.y.toFixed(2)}" fill="#bb1f1f" font-size="9" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" dominant-baseline="middle" data-layer="hatchDebugLabel">${escapeXml(debugLabel)}</text>`
+    : "";
 
   return {
-    defs: `<clipPath id="${clipId}"><polygon points="${polygonPoints}" /></clipPath>`,
-    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}"><polygon points="${polygonPoints}" fill="${style.background}" stroke="none" /><g clip-path="url(#${clipId})">${hatchSvg}</g></g>`,
+    defs: "",
+    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-hatch-brightness="${style.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}" data-hatch-jitter="${style.hatchParams.jitter.toFixed(3)}" data-hatch-bend="${style.hatchParams.bend.toFixed(3)}" data-hatch-width="${style.hatchParams.strokeWidth.toFixed(3)}" data-hatch-jitter-src="${style.sourceHatchJitter.toFixed(3)}" data-hatch-bend-src="${style.sourceHatchBend.toFixed(3)}" data-hatch-width-src="${style.sourceHatchWidth.toFixed(3)}" data-hatch-mode="${hatchBuild.debug.mode}" data-hatch-segments="${totalSegments}" data-hatch-primary="${totalPrimarySegments}" data-hatch-fallback="${totalFallbackSegments}" data-hatch-circles="${hatchBuild.debug.circleCount}"><polygon points="${polygonPoints}" fill="${style.background}" stroke="none" />${hatchSvg}${debugLabelSvg}</g>`,
+    debug: {
+      cubeIndex: face.cubeIndex,
+      faceName: face.faceName,
+      brightness: face.brightness,
+      hatchBrightness: style.brightness,
+      shadowStrength: face.shadowStrength,
+      hatchMode: hatchBuild.debug.mode,
+      hatchSegments: totalSegments,
+      hatchPrimary: totalPrimarySegments,
+      hatchFallback: totalFallbackSegments,
+      hatchCircles: hatchBuild.debug.circleCount,
+      polygonArea: hatchPolygonArea(polygon),
+      polygonIndex,
+      faceIndex,
+    },
   };
 }
 
-function createSvgHatchLabStyles() {
-  return copySvgExportHatchConfig().styles;
-}
+function parseFacesFromExportedSvg(svgText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(svgText, "image/svg+xml");
+  const svgEl = doc.querySelector("svg");
+  if (!svgEl) return null;
 
-function styleFromPresetForLab(preset, shortSide) {
-  return buildStyleFromPreset(preset, shortSide, preset.params);
-}
+  const viewBox = svgEl.getAttribute("viewBox") || "";
+  const width = Number(svgEl.getAttribute("width") || 800);
+  const height = Number(svgEl.getAttribute("height") || 600);
 
-function renderSvgHatchingLab(svgNode, styles, controlState) {
-  const width = Math.max(1040, window.innerWidth - 380);
-  const height = Math.max(700, window.innerHeight - 24);
-  const previewStyles = [
-    {
-      id: "blank",
-      name: "Blank",
-      brightness: 1,
-      layers: [],
-      spacingMul: 1,
-      lengthMul: 1,
-      params: { ...controlState },
-      blank: true,
-    },
-    ...styles,
-  ];
-  const cols = 4;
-  const rows = Math.ceil(previewStyles.length / cols);
-  const margin = 22;
-  const gap = 14;
-  const tileWidth = (width - margin * 2 - gap * (cols - 1)) / cols;
-  const tileHeight = (height - margin * 2 - gap * (rows - 1)) / rows;
-  const shortSide = Math.min(width, height);
+  // Background fill rect
+  const bgRect = doc.querySelector("svg > rect");
+  const bgFill = bgRect ? (bgRect.getAttribute("fill") || "#1b2129") : "#1b2129";
 
-  const defs = [];
-  const tiles = [];
-
-  previewStyles.forEach((preset, index) => {
-    const col = index % cols;
-    const row = Math.floor(index / cols);
-    const x = margin + col * (tileWidth + gap);
-    const y = margin + row * (tileHeight + gap);
-    const rect = {
-      x,
-      y: y + 22,
-      width: tileWidth,
-      height: tileHeight - 22,
-    };
-    const style = styleFromPresetForLab(preset, shortSide);
-    const clipId = `hatchLabClip_${index}`;
-    defs.push(`<clipPath id="${clipId}"><rect x="${rect.x.toFixed(2)}" y="${rect.y.toFixed(2)}" width="${rect.width.toFixed(2)}" height="${rect.height.toFixed(2)}" /></clipPath>`);
-    const hatchSvg = preset.blank ? "" : style.layers.map((layer) => buildHatchLayerSvg(layer, rect, style, shortSide)).join("\n");
-    const label = preset.blank
-      ? "Blank | b=1.00"
-      : `${preset.name} | b=${preset.brightness.toFixed(2)} | ${style.layers.join("+")}`;
-    tiles.push(`<g data-style="${preset.id}">
-      <text x="${x.toFixed(2)}" y="${(y + 15).toFixed(2)}" fill="#d9d0c2" font-size="11" font-family="ui-monospace, Menlo, monospace">${escapeXml(label)}</text>
-      <rect x="${rect.x.toFixed(2)}" y="${rect.y.toFixed(2)}" width="${rect.width.toFixed(2)}" height="${rect.height.toFixed(2)}" fill="${style.background}" stroke="#2f3a46" stroke-width="0.7" />
-      <g clip-path="url(#${clipId})">${hatchSvg}</g>
-    </g>`);
+  // Drop shadows
+  const shadowPolygons = [];
+  doc.querySelectorAll('[data-layer="shadow"]').forEach((el) => {
+    const pts = (el.getAttribute("points") || "").trim().split(/\s+/).flatMap((p) => {
+      const [x, y] = p.split(",").map(Number);
+      return Number.isFinite(x) && Number.isFinite(y) ? [{ x, y }] : [];
+    });
+    if (pts.length >= 3) {
+      shadowPolygons.push({
+        points: pts,
+        fill: el.getAttribute("fill") || "#2a3038",
+        opacity: el.getAttribute("opacity") || "0.34",
+      });
+    }
   });
 
-  svgNode.setAttribute("viewBox", `0 0 ${width} ${height}`);
-  svgNode.setAttribute("width", String(width));
-  svgNode.setAttribute("height", String(height));
-  svgNode.innerHTML = `<defs>${defs.join("\n")}</defs>${tiles.join("\n")}`;
+  // Face groups
+  const faces = [];
+  doc.querySelectorAll('[data-layer="face"]').forEach((el) => {
+    const polygonEl = el.querySelector("polygon");
+    if (!polygonEl) return;
+    const polygon = (polygonEl.getAttribute("points") || "").trim().split(/\s+/).flatMap((p) => {
+      const [x, y] = p.split(",").map(Number);
+      return Number.isFinite(x) && Number.isFinite(y) ? [{ x, y }] : [];
+    });
+    if (polygon.length < 3) return;
+    faces.push({
+      brightness: Number(el.getAttribute("data-brightness") || 0),
+      shadowStrength: Number(el.getAttribute("data-shadow") || 0),
+      cubeIndex: el.getAttribute("data-cube") || "?",
+      faceName: el.getAttribute("data-face") || "face",
+      background: polygonEl.getAttribute("fill") || "#eee",
+      polygon,
+    });
+  });
+
+  return { faces, shadowPolygons, bgFill, width, height, viewBox };
 }
 
-function createLayerToggleCheckbox(layer, selectedLayers) {
-  const wrapper = document.createElement("label");
-  wrapper.style.display = "inline-flex";
-  wrapper.style.alignItems = "center";
-  wrapper.style.gap = "6px";
-  wrapper.style.fontSize = "12px";
-  wrapper.style.color = "#c7cdd8";
-  wrapper.style.margin = "0 8px 8px 0";
+function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals) {
+  const { faces, shadowPolygons, bgFill, width, height, viewBox } = parsedScene;
+  svgNode.setAttribute("viewBox", viewBox || `0 0 ${width} ${height}`);
+  svgNode.setAttribute("width", String(width));
+  svgNode.setAttribute("height", String(height));
 
-  const input = document.createElement("input");
-  input.type = "checkbox";
-  input.value = layer;
-  input.checked = selectedLayers.includes(layer);
+  let html = `<rect x="0" y="0" width="${width}" height="${height}" fill="${bgFill}" />`;
 
-  const text = document.createElement("span");
-  text.textContent = layer;
-  wrapper.appendChild(input);
-  wrapper.appendChild(text);
-  return { wrapper, input };
+  for (const shadow of shadowPolygons) {
+    const pts = shadow.points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+    html += `<polygon points="${pts}" fill="${shadow.fill}" opacity="${shadow.opacity}" stroke="none" />`;
+  }
+
+  for (const face of faces) {
+    const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals);
+    const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
+    const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+    html += `<g><polygon points="${pts}" fill="${style.background}" stroke="none" />${hatchSvg}</g>`;
+  }
+
+  svgNode.innerHTML = html;
 }
 
 function initSvgHatchingLab() {
@@ -938,218 +1484,180 @@ function initSvgHatchingLab() {
   title.style.letterSpacing = "0.04em";
 
   const hint = document.createElement("p");
-  hint.textContent = "Select one of 10 styles, tweak params, and compare all tiles live.";
+  hint.textContent = "Load an exported 3D SVG, tune hatching globals live, then copy URL params.";
   hint.style.margin = "0 0 14px";
   hint.style.color = "#9aa7b7";
   hint.style.fontSize = "12px";
 
-  const styles = createSvgHatchLabStyles();
-  const defaultControls = copySvgExportHatchConfig().controls;
-  const controlState = {
-    selected: 0,
-    strokeWidth: defaultControls.strokeWidth,
-    strokeLengthMul: defaultControls.strokeLengthMul,
-    jitter: defaultControls.jitter,
-    bend: defaultControls.bend,
-  };
+  // 3D Scene controls
+  const labGlobals = { ...SVG_EXPORT_STUDIO_GLOBALS };
+  let labParsedScene = null;
+  const sceneSection = document.createElement("div");
 
-  const styleSelect = document.createElement("select");
-  styleSelect.style.width = "100%";
-  styleSelect.style.marginBottom = "12px";
-  styleSelect.style.padding = "8px";
-  styleSelect.style.borderRadius = "8px";
-  styleSelect.style.border = "1px solid rgba(255,255,255,0.18)";
-  styleSelect.style.background = "#101724";
-  styleSelect.style.color = "#e5ecf5";
-  styles.forEach((style, index) => {
-    const option = document.createElement("option");
-    option.value = String(index);
-    option.textContent = `${index + 1}. ${style.name}`;
-    styleSelect.appendChild(option);
-  });
+  const fileLabel = document.createElement("label");
+  fileLabel.textContent = "Load exported 3D SVG";
+  fileLabel.style.cssText = "display:block;font-size:12px;color:#9aa7b7;margin-bottom:6px;";
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = ".svg,image/svg+xml";
+  fileInput.style.cssText = "width:100%;margin-bottom:14px;color:#d8e4f0;font-size:11px;";
 
-  const slidersRoot = document.createElement("div");
+  const sceneSlidersRoot = document.createElement("div");
 
-  function createSlider(labelText, min, max, step, initial, onInput) {
+  function createSceneSlider(labelText, key, min, max, step) {
+    const initial = labGlobals[key] ?? min;
     const wrap = document.createElement("div");
     wrap.style.marginBottom = "10px";
-    const label = document.createElement("label");
-    label.style.display = "flex";
-    label.style.justifyContent = "space-between";
-    label.style.fontSize = "12px";
-    label.style.color = "#d2dbe7";
-    label.textContent = labelText;
-
-    const valueNode = document.createElement("span");
-    valueNode.textContent = String(initial);
-    label.appendChild(valueNode);
-
-    const input = document.createElement("input");
-    input.type = "range";
-    input.min = String(min);
-    input.max = String(max);
-    input.step = String(step);
-    input.value = String(initial);
-    input.style.width = "100%";
-    input.addEventListener("input", () => {
-      const next = Number(input.value);
-      valueNode.textContent = Number.isFinite(next) ? next.toFixed(2) : input.value;
-      onInput(next, styles[controlState.selected]);
-      renderSvgHatchingLab(svgNode, styles, controlState);
+    const lbl = document.createElement("label");
+    lbl.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;";
+    lbl.textContent = labelText;
+    const valSpan = document.createElement("span");
+    valSpan.textContent = Number(initial).toFixed(2);
+    lbl.appendChild(valSpan);
+    const inp = document.createElement("input");
+    inp.type = "range";
+    inp.min = String(min);
+    inp.max = String(max);
+    inp.step = String(step);
+    inp.value = String(initial);
+    inp.style.width = "100%";
+    inp.addEventListener("input", () => {
+      const v = Number(inp.value);
+      labGlobals[key] = v;
+      valSpan.textContent = v.toFixed(2);
+      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
     });
-
-    wrap.appendChild(label);
-    wrap.appendChild(input);
-    return { wrap, input, valueNode };
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    return wrap;
   }
 
-  const brightnessSlider = createSlider("Brightness", 0.05, 0.98, 0.01, styles[0].brightness, (value, currentStyle) => {
-    if (currentStyle) {
-      currentStyle.brightness = clamp01(value);
+  // Edge inset: special — null (auto) or a number
+  const edgeInsetRow = document.createElement("div");
+  edgeInsetRow.style.marginBottom = "10px";
+  const edgeInsetLbl = document.createElement("label");
+  edgeInsetLbl.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  edgeInsetLbl.textContent = "Edge Inset";
+  const edgeInsetValSpan = document.createElement("span");
+  edgeInsetValSpan.style.cssText = "font-size:11px;color:#9aa7b7;cursor:pointer;text-decoration:underline dotted;";
+  edgeInsetValSpan.title = "Click to toggle auto / manual";
+  edgeInsetValSpan.textContent = labGlobals.hatchEdgeInset === null ? "auto" : String(Number(labGlobals.hatchEdgeInset).toFixed(1));
+  edgeInsetLbl.appendChild(edgeInsetValSpan);
+  const edgeInsetSlider = document.createElement("input");
+  edgeInsetSlider.type = "range";
+  edgeInsetSlider.min = "0";
+  edgeInsetSlider.max = "20";
+  edgeInsetSlider.step = "0.5";
+  edgeInsetSlider.value = String(labGlobals.hatchEdgeInset ?? 3);
+  edgeInsetSlider.style.width = "100%";
+  edgeInsetSlider.disabled = labGlobals.hatchEdgeInset === null;
+  edgeInsetValSpan.addEventListener("click", () => {
+    if (labGlobals.hatchEdgeInset === null) {
+      labGlobals.hatchEdgeInset = Number(edgeInsetSlider.value);
+      edgeInsetSlider.disabled = false;
+      edgeInsetValSpan.textContent = labGlobals.hatchEdgeInset.toFixed(1);
+    } else {
+      labGlobals.hatchEdgeInset = null;
+      edgeInsetSlider.disabled = true;
+      edgeInsetValSpan.textContent = "auto";
     }
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
   });
-  const widthSlider = createSlider("Stroke Width", 0.45, 3.2, 0.05, styles[0].params.strokeWidth, (value, currentStyle) => {
-    if (currentStyle) {
-      currentStyle.params.strokeWidth = value;
-    }
+  edgeInsetSlider.addEventListener("input", () => {
+    const v = Number(edgeInsetSlider.value);
+    labGlobals.hatchEdgeInset = v;
+    edgeInsetValSpan.textContent = v.toFixed(1);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
   });
-  const lengthSlider = createSlider("Stroke Length", 0.45, 2.4, 0.05, styles[0].params.strokeLengthMul, (value, currentStyle) => {
-    if (currentStyle) {
-      currentStyle.params.strokeLengthMul = value;
-    }
-  });
-  const jitterSlider = createSlider("Jitter", 0.0, 2.0, 0.05, styles[0].params.jitter, (value, currentStyle) => {
-    if (currentStyle) {
-      currentStyle.params.jitter = value;
-    }
-  });
-  const bendSlider = createSlider("Bend", -0.2, 0.2, 0.01, styles[0].params.bend, (value, currentStyle) => {
-    if (currentStyle) {
-      currentStyle.params.bend = value;
-    }
-  });
+  edgeInsetRow.appendChild(edgeInsetLbl);
+  edgeInsetRow.appendChild(edgeInsetSlider);
 
-  slidersRoot.appendChild(brightnessSlider.wrap);
-  slidersRoot.appendChild(widthSlider.wrap);
-  slidersRoot.appendChild(lengthSlider.wrap);
-  slidersRoot.appendChild(jitterSlider.wrap);
-  slidersRoot.appendChild(bendSlider.wrap);
+  sceneSlidersRoot.appendChild(createSceneSlider("Hatch Width",    "hatchWidth",    0.2,  3,    0.05));
+  sceneSlidersRoot.appendChild(createSceneSlider("Hatch Jitter",   "hatchJitter",   0,    2,    0.05));
+  sceneSlidersRoot.appendChild(createSceneSlider("Hatch Bend",     "hatchBend",    -0.4,  0.4,  0.01));
+  sceneSlidersRoot.appendChild(createSceneSlider("Trim Ratio",     "hatchTrimRatio",0,    0.9,  0.01));
+  sceneSlidersRoot.appendChild(createSceneSlider("Min Visible",    "hatchMinVisible",0,   20,   0.5));
+  sceneSlidersRoot.appendChild(createSceneSlider("Circle Radius",  "circleRadius",  0.1,  3,    0.05));
+  sceneSlidersRoot.appendChild(createSceneSlider("Circle Jitter",  "circleJitter",  0,    1,    0.05));
+  sceneSlidersRoot.appendChild(edgeInsetRow);
 
-  const layerTitle = document.createElement("h3");
-  layerTitle.textContent = "Layers";
-  layerTitle.style.margin = "14px 0 8px";
-  layerTitle.style.fontSize = "13px";
+  const sceneActions = document.createElement("div");
+  sceneActions.style.cssText = "display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;";
 
-  const layerWrap = document.createElement("div");
-  const layerNames = ["horizontal", "vertical", "45", "315", "circles"];
-  const layerInputs = [];
-
-  function refreshLayerInputs() {
-    layerWrap.innerHTML = "";
-    layerInputs.length = 0;
-    const selectedStyle = styles[controlState.selected];
-    const selectedLayers = selectedStyle.layers;
-    layerNames.forEach((layerName) => {
-      const row = createLayerToggleCheckbox(layerName, selectedLayers);
-      row.input.addEventListener("change", () => {
-        const active = selectedStyle.layers;
-        if (row.input.checked && !active.includes(layerName)) {
-          active.push(layerName);
-        }
-        if (!row.input.checked) {
-          selectedStyle.layers = active.filter((name) => name !== layerName);
-        }
-        if (selectedStyle.layers.length === 0) {
-          selectedStyle.layers = ["45"];
-          refreshLayerInputs();
-        }
-        renderSvgHatchingLab(svgNode, styles, controlState);
-      });
-      layerInputs.push(row.input);
-      layerWrap.appendChild(row.wrapper);
-    });
-  }
-
-  styleSelect.addEventListener("change", () => {
-    controlState.selected = Number(styleSelect.value) || 0;
-    const selected = styles[controlState.selected];
-    brightnessSlider.input.value = String(selected.brightness);
-    brightnessSlider.valueNode.textContent = selected.brightness.toFixed(2);
-    widthSlider.input.value = String(selected.params.strokeWidth);
-    widthSlider.valueNode.textContent = selected.params.strokeWidth.toFixed(2);
-    lengthSlider.input.value = String(selected.params.strokeLengthMul);
-    lengthSlider.valueNode.textContent = selected.params.strokeLengthMul.toFixed(2);
-    jitterSlider.input.value = String(selected.params.jitter);
-    jitterSlider.valueNode.textContent = selected.params.jitter.toFixed(2);
-    bendSlider.input.value = String(selected.params.bend);
-    bendSlider.valueNode.textContent = selected.params.bend.toFixed(2);
-    refreshLayerInputs();
+  const rerollSceneBtn = document.createElement("button");
+  rerollSceneBtn.type = "button";
+  rerollSceneBtn.textContent = "Re-roll Randomness";
+  rerollSceneBtn.style.cssText = "padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#e6eef8;font-size:12px;cursor:pointer;";
+  rerollSceneBtn.addEventListener("click", () => {
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
   });
 
-  const actions = document.createElement("div");
-  actions.style.display = "flex";
-  actions.style.gap = "8px";
-  actions.style.marginTop = "14px";
-
-  const exportConfigButton = document.createElement("button");
-  exportConfigButton.type = "button";
-  exportConfigButton.textContent = "Copy Style JSON";
-  exportConfigButton.style.padding = "8px 10px";
-  exportConfigButton.style.borderRadius = "999px";
-  exportConfigButton.style.border = "1px solid rgba(255,255,255,0.22)";
-  exportConfigButton.style.background = "rgba(214,166,95,0.2)";
-  exportConfigButton.style.color = "#f7ead6";
-  exportConfigButton.addEventListener("click", async () => {
-    const payload = {
-      controls: {
-        strokeWidth: controlState.strokeWidth,
-        strokeLengthMul: controlState.strokeLengthMul,
-        jitter: controlState.jitter,
-        bend: controlState.bend,
-      },
-      styles,
-    };
-    window.lastSvgHatchLabConfig = payload;
-    const serialized = JSON.stringify(payload, null, 2);
+  const copyParamsBtn = document.createElement("button");
+  copyParamsBtn.type = "button";
+  copyParamsBtn.textContent = "Copy URL Params";
+  copyParamsBtn.style.cssText = "padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(214,166,95,0.2);color:#f7ead6;font-size:12px;cursor:pointer;";
+  copyParamsBtn.addEventListener("click", async () => {
+    const gv = labGlobals;
+    const parts = [
+      `hatchWidth=${gv.hatchWidth.toFixed(2)}`,
+      `hatchJitter=${gv.hatchJitter.toFixed(2)}`,
+      `hatchBend=${gv.hatchBend.toFixed(2)}`,
+      `hatchTrimRatio=${gv.hatchTrimRatio.toFixed(2)}`,
+      `hatchMinVisible=${gv.hatchMinVisible.toFixed(1)}`,
+      `circleRadius=${gv.circleRadius.toFixed(2)}`,
+      `circleJitter=${gv.circleJitter.toFixed(2)}`,
+    ];
+    if (gv.hatchEdgeInset !== null) parts.push(`hatchEdgeInset=${gv.hatchEdgeInset.toFixed(1)}`);
+    const paramStr = "?" + parts.join("&");
+    window.lastLabGlobals = { ...gv };
     try {
-      await navigator.clipboard.writeText(serialized);
-      updateStatus("Hatch lab", "Copied style JSON to clipboard.");
-    } catch (_error) {
-      updateStatus("Hatch lab", "Could not access clipboard; config stored in window.lastSvgHatchLabConfig.");
+      await navigator.clipboard.writeText(paramStr);
+      updateStatus("Hatch lab", `Copied: ${paramStr}`);
+    } catch (_e) {
+      updateStatus("Hatch lab", `Params stored in window.lastLabGlobals — clipboard blocked.`);
     }
   });
 
-  const rerenderButton = document.createElement("button");
-  rerenderButton.type = "button";
-  rerenderButton.textContent = "Re-roll Randomness";
-  rerenderButton.style.padding = "8px 10px";
-  rerenderButton.style.borderRadius = "999px";
-  rerenderButton.style.border = "1px solid rgba(255,255,255,0.22)";
-  rerenderButton.style.background = "rgba(255,255,255,0.08)";
-  rerenderButton.style.color = "#e6eef8";
-  rerenderButton.addEventListener("click", () => {
-    renderSvgHatchingLab(svgNode, styles, controlState);
+  sceneActions.appendChild(rerollSceneBtn);
+  sceneActions.appendChild(copyParamsBtn);
+
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result;
+      if (typeof text !== "string") return;
+      labParsedScene = parseFacesFromExportedSvg(text);
+      if (!labParsedScene || labParsedScene.faces.length === 0) {
+        updateStatus("Hatch lab", "No face data found — ensure the SVG was exported from the 3D view.");
+        return;
+      }
+      updateStatus("Hatch lab", `Loaded ${labParsedScene.faces.length} faces. Adjust sliders to tune, then Copy URL Params.`);
+      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
+    };
+    reader.readAsText(file);
   });
 
-  actions.appendChild(exportConfigButton);
-  actions.appendChild(rerenderButton);
+  sceneSection.appendChild(fileLabel);
+  sceneSection.appendChild(fileInput);
+  sceneSection.appendChild(sceneSlidersRoot);
+  sceneSection.appendChild(sceneActions);
 
   pane.appendChild(title);
   pane.appendChild(hint);
-  pane.appendChild(styleSelect);
-  pane.appendChild(slidersRoot);
-  pane.appendChild(layerTitle);
-  pane.appendChild(layerWrap);
-  pane.appendChild(actions);
+  pane.appendChild(sceneSection);
 
   container.appendChild(previewPane);
   container.appendChild(pane);
 
-  const rerender = () => renderSvgHatchingLab(svgNode, styles, controlState);
-  refreshLayerInputs();
-  rerender();
+  const rerender = () => {
+    if (labParsedScene) {
+      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
+    }
+  };
   window.addEventListener("resize", rerender);
-  updateStatus("Hatch lab", "Adjust style controls to tune SVG export hatching.");
+  updateStatus("Hatch lab", "Load an exported 3D SVG to tune export defaults.");
 }
 
 function quadPoint(worldFace, u, v) {
@@ -1597,12 +2105,39 @@ function buildSceneSvgExport() {
 
   const hatchedFaces = [];
   const clipDefs = [];
+  const hatchDebugFaces = [];
   faces.forEach((face, faceIndex) => {
     (face.clippedScreenPolygons || []).forEach((polygon, polygonIndex) => {
       const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height);
       clipDefs.push(hatchedFace.defs);
       hatchedFaces.push(hatchedFace.content);
+      if (hatchedFace.debug) {
+        hatchDebugFaces.push(hatchedFace.debug);
+      }
     });
+  });
+
+  const hatchDebugSummary = hatchDebugFaces.reduce((acc, item) => {
+    acc.totalFaces += 1;
+    acc.totalSegments += item.hatchSegments;
+    acc.totalPrimary += item.hatchPrimary;
+    acc.totalFallback += item.hatchFallback;
+    acc.totalCircles += item.hatchCircles;
+    if (item.hatchSegments <= 0 && item.hatchMode !== "none") {
+      acc.facesWithoutSegments += 1;
+      if (acc.examples.length < 12) {
+        acc.examples.push(`${item.cubeIndex}:${item.faceName} p${item.polygonIndex} hb=${item.hatchBrightness.toFixed(2)} raw=${item.brightness.toFixed(2)} sh=${item.shadowStrength.toFixed(2)} m=${item.hatchMode}`);
+      }
+    }
+    return acc;
+  }, {
+    totalFaces: 0,
+    totalSegments: 0,
+    totalPrimary: 0,
+    totalFallback: 0,
+    totalCircles: 0,
+    facesWithoutSegments: 0,
+    examples: [],
   });
 
   const shadowPolygons = shadows.flatMap((shadow) => (
@@ -1628,11 +2163,22 @@ function buildSceneSvgExport() {
     camera: getCurrentView(),
     width,
     height,
+    hatchDebugFlags: {
+      debugExportHatch: DEBUG_EXPORT_HATCH,
+      debugExportHatchLabels: DEBUG_EXPORT_HATCH_LABELS,
+      debugExportHatchVerbose: DEBUG_EXPORT_HATCH_VERBOSE,
+    },
+    hatchDebugSummary,
+    hatchDebugFaces: DEBUG_EXPORT_HATCH_VERBOSE ? hatchDebugFaces : undefined,
     rawFaces,
     rawShadows,
     faces: exportFaces,
     shadows,
   }));
+
+  const hatchDebugOverlay = DEBUG_EXPORT_HATCH
+    ? `<g id="hatchDebugOverlay"><rect x="10" y="10" width="530" height="68" fill="#ffffff" opacity="0.82" /><text x="18" y="30" fill="#111111" font-size="12" font-family="ui-monospace, Menlo, monospace">hatch debug: faces=${hatchDebugSummary.totalFaces} seg=${hatchDebugSummary.totalSegments} primary=${hatchDebugSummary.totalPrimary} fallback=${hatchDebugSummary.totalFallback} circles=${hatchDebugSummary.totalCircles}</text><text x="18" y="49" fill="#111111" font-size="12" font-family="ui-monospace, Menlo, monospace">no-segment(non-none)=${hatchDebugSummary.facesWithoutSegments}</text><text x="18" y="66" fill="#111111" font-size="11" font-family="ui-monospace, Menlo, monospace">${escapeXml((hatchDebugSummary.examples[0] || "example: none"))}</text></g>`
+    : "";
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
 <defs>${clipDefs.join("\n")}</defs>
@@ -1640,6 +2186,7 @@ function buildSceneSvgExport() {
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+${hatchDebugOverlay}
 <metadata>${metadata}</metadata>
 </svg>`;
 

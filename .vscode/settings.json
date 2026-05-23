@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd '/home/stefan/Dropbox/♥ Coding/scott' && node --check paperBackgroundTexture\\.js && node --check debugPaperBackground\\.js$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
