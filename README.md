@@ -35,6 +35,7 @@ camera position:
 
 debug hatching styles: http://localhost:3301/?debugHatching=1
 debug cube principal/perpendicular axes: http://localhost:3301/?debugCubeAxes=1
+debug indivdual hatching: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.8&hatchBend=0.04&hatchSpacing=0.4 
 debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
@@ -42,7 +43,73 @@ debug stroke params: http://localhost:3301/?debugFilledPathParams=1
 debug composition: http://localhost:3301/?debugComposition=1 
 
 
-## shape design insights
+## Hatching Studio
+
+Purpose: tune hatching behavior on a simplified cube projection before using similar logic in export.
+
+### URLs
+
+- Base screen: http://localhost:3301/?debugCubeAxes=1
+- Tuned example: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.8&hatchBend=0.04&hatchSpacing=0.4
+- Less end washout example: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.45&hatchBend=0.03&hatchSpacing=0.4&hatchEdgeInset=1.2&hatchTrimRatio=0.22&hatchMinVisible=2
+
+### Logic Summary
+
+1. Build 3 cubes side-by-side in flat SVG, viewed in 3/4 from above.
+2. Keep the 3 visible faces per cube as polygons (9 sides total).
+3. For each polygon:
+  - Compute principal axis from point covariance.
+  - Compute perpendicular direction to that principal axis.
+  - Draw direction helpers only when "Debug direction" is enabled.
+  - Principal axis is green and perpendicular direction arrow is red.
+4. Create hatch candidates by sweeping parallel lines through the polygon and intersecting with polygon edges.
+5. Convert each valid segment into a real filledPath stroke (`filledPath.js`) with bend/width/jitter.
+6. No clip mask is used for hatch containment. Strokes are drawn from geometrically clipped segment endpoints.
+7. Labels (`C?-? b=?`) are placed outside each face in gray for readability.
+
+### Side Brightness Strategy
+
+- Brightness scale is inverted from earlier experiments:
+  - `0.0` = bright
+  - `1.0` = dark
+- Default hatch recipe:
+  - `brightness <= 0.5` -> single hatching
+  - `brightness > 0.5` -> cross hatching
+- Faces use `fill="none"`; perceived brightness is achieved by hatch strategy plus spacing density.
+
+### Seed + Continuity
+
+- The studio now uses a fixed numeric seed for deterministic geometry and stroke randomness.
+- Clicking sides or changing slider values keeps the same visual family for that seed.
+- Use "Apply Seed" to jump to a specific seed.
+- Use "New Seed" (or "New Seed + Re-roll") to intentionally generate a new arrangement.
+- Seed and studio state are encoded in the URL and restored on reload.
+
+### Debug Direction Toggle
+
+- "Debug direction" is OFF by default.
+- When enabled, each side shows:
+  - principal axis (green)
+  - perpendicular direction arrow (red)
+
+### Parameters (query string)
+
+- `hatchWidth`: filledPath stroke width.
+- `hatchJitter`: endpoint jitter before curve construction.
+- `hatchBend`: long-edge bend factor in swingspitz profile.
+- `hatchSpacing`: global spacing multiplier for hatch sweep distance.
+- `hatchEdgeInset`: absolute trim from polygon boundaries.
+- `hatchTrimRatio`: relative trim ratio per segment length.
+- `hatchMinVisible`: minimum visible segment length threshold after trim.
+
+### Tuning Notes
+
+- If ends look washed out: lower `hatchJitter`, `hatchTrimRatio`, and `hatchEdgeInset`.
+- If too many short strokes disappear: lower `hatchMinVisible`.
+- If the face looks too dark/light: adjust `hatchSpacing`.
+
+
+## Hatch Studio
 
 Shape: 4 corners (A, B, C, D)
 
