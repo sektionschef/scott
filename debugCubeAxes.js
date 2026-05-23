@@ -289,7 +289,7 @@ function _axisDrawPrincipalLine(group, origin, direction, length, color) {
 
 function _axisReadParams(search) {
   const fallback = {
-    hatchWidth: 1.3,
+    hatchWidth: 1.0,
     hatchJitter: 0.7,
     hatchBend: 0.0,
     hatchSpacing: 1,
@@ -405,6 +405,28 @@ function _axisApplyStudioFromUrl(search, studioState) {
     }
 
     const byId = new Map(studioState.sides.map((side) => [side.id, side]));
+    let legacyGlobalApplied = false;
+
+    if (Array.isArray(payload.g) && payload.g.length >= 6) {
+      studioState.globalParams.hatchWidth = _axisSanitizeParamValue(Number(payload.g[0]), studioState.globalParams.hatchWidth);
+      studioState.globalParams.hatchJitter = _axisSanitizeParamValue(Number(payload.g[1]), studioState.globalParams.hatchJitter);
+      studioState.globalParams.hatchBend = _axisSanitizeParamValue(Number(payload.g[2]), studioState.globalParams.hatchBend);
+      studioState.globalParams.hatchEdgeInset = payload.g[3] === null
+        ? null
+        : _axisSanitizeParamValue(Number(payload.g[3]), studioState.globalParams.hatchEdgeInset);
+      studioState.globalParams.hatchTrimRatio = _axisSanitizeParamValue(Number(payload.g[4]), studioState.globalParams.hatchTrimRatio);
+      studioState.globalParams.hatchMinVisible = _axisSanitizeParamValue(Number(payload.g[5]), studioState.globalParams.hatchMinVisible);
+    } else if (Array.isArray(payload.g) && payload.g.length >= 5) {
+      // Backward compatibility with v2 payload where hatchWidth was side-specific.
+      studioState.globalParams.hatchJitter = _axisSanitizeParamValue(Number(payload.g[0]), studioState.globalParams.hatchJitter);
+      studioState.globalParams.hatchBend = _axisSanitizeParamValue(Number(payload.g[1]), studioState.globalParams.hatchBend);
+      studioState.globalParams.hatchEdgeInset = payload.g[2] === null
+        ? null
+        : _axisSanitizeParamValue(Number(payload.g[2]), studioState.globalParams.hatchEdgeInset);
+      studioState.globalParams.hatchTrimRatio = _axisSanitizeParamValue(Number(payload.g[3]), studioState.globalParams.hatchTrimRatio);
+      studioState.globalParams.hatchMinVisible = _axisSanitizeParamValue(Number(payload.g[4]), studioState.globalParams.hatchMinVisible);
+    }
+
     for (const row of payload.d) {
       const side = byId.get(row.id);
       if (!side) {
@@ -413,16 +435,27 @@ function _axisApplyStudioFromUrl(search, studioState) {
       if (row.mode === "none" || row.mode === "single" || row.mode === "cross") {
         side.hatchMode = row.mode;
       }
-      if (!Array.isArray(row.p) || row.p.length < 7) {
+      if (!Array.isArray(row.p) || row.p.length < 1) {
         continue;
       }
-      side.params.hatchWidth = _axisSanitizeParamValue(Number(row.p[0]), side.params.hatchWidth);
-      side.params.hatchJitter = _axisSanitizeParamValue(Number(row.p[1]), side.params.hatchJitter);
-      side.params.hatchBend = _axisSanitizeParamValue(Number(row.p[2]), side.params.hatchBend);
-      side.params.hatchSpacing = _axisSanitizeParamValue(Number(row.p[3]), side.params.hatchSpacing);
-      side.params.hatchEdgeInset = row.p[4] === null ? null : _axisSanitizeParamValue(Number(row.p[4]), side.params.hatchEdgeInset);
-      side.params.hatchTrimRatio = _axisSanitizeParamValue(Number(row.p[5]), side.params.hatchTrimRatio);
-      side.params.hatchMinVisible = _axisSanitizeParamValue(Number(row.p[6]), side.params.hatchMinVisible);
+      if (row.p.length >= 2) {
+        // Backward compatibility with payload where p[0] was width.
+        side.params.hatchSpacing = _axisSanitizeParamValue(Number(row.p[1]), side.params.hatchSpacing);
+      } else {
+        side.params.hatchSpacing = _axisSanitizeParamValue(Number(row.p[0]), side.params.hatchSpacing);
+      }
+
+      // Backward compatibility with older payloads where every side stored full params.
+      if (!legacyGlobalApplied && row.p.length >= 7) {
+        studioState.globalParams.hatchJitter = _axisSanitizeParamValue(Number(row.p[1]), studioState.globalParams.hatchJitter);
+        studioState.globalParams.hatchBend = _axisSanitizeParamValue(Number(row.p[2]), studioState.globalParams.hatchBend);
+        studioState.globalParams.hatchEdgeInset = row.p[4] === null
+          ? null
+          : _axisSanitizeParamValue(Number(row.p[4]), studioState.globalParams.hatchEdgeInset);
+        studioState.globalParams.hatchTrimRatio = _axisSanitizeParamValue(Number(row.p[5]), studioState.globalParams.hatchTrimRatio);
+        studioState.globalParams.hatchMinVisible = _axisSanitizeParamValue(Number(row.p[6]), studioState.globalParams.hatchMinVisible);
+        legacyGlobalApplied = true;
+      }
     }
 
     if (typeof payload.s === "string" && byId.has(payload.s)) {
@@ -430,6 +463,9 @@ function _axisApplyStudioFromUrl(search, studioState) {
     }
     if (typeof payload.dir === "boolean") {
       studioState.showDebugDirection = payload.dir;
+    }
+    if (typeof payload.lbl === "boolean") {
+      studioState.showSideLabels = payload.lbl;
     }
   } catch (_error) {
     // ignore malformed studio param
@@ -440,37 +476,45 @@ function _axisWriteStudioState(studioState) {
   const search = new URLSearchParams(window.location.search);
   search.set("debugCubeAxes", "1");
   search.set("seed", String(studioState.seed >>> 0));
+  if (studioState.showSideLabels) {
+    search.set("sideLabels", "1");
+  } else {
+    search.delete("sideLabels");
+  }
 
   const selected = studioState.sides.find((side) => side.id === studioState.selectedSideId) || studioState.sides[0];
   if (selected) {
-    search.set("hatchWidth", selected.params.hatchWidth.toFixed(2));
-    search.set("hatchJitter", selected.params.hatchJitter.toFixed(2));
-    search.set("hatchBend", selected.params.hatchBend.toFixed(3));
+    search.set("hatchWidth", studioState.globalParams.hatchWidth.toFixed(2));
+    search.set("hatchJitter", studioState.globalParams.hatchJitter.toFixed(2));
+    search.set("hatchBend", studioState.globalParams.hatchBend.toFixed(3));
     search.set("hatchSpacing", selected.params.hatchSpacing.toFixed(2));
-    search.set("hatchTrimRatio", selected.params.hatchTrimRatio.toFixed(2));
-    search.set("hatchMinVisible", selected.params.hatchMinVisible.toFixed(2));
-    if (selected.params.hatchEdgeInset === null) {
+    search.set("hatchTrimRatio", studioState.globalParams.hatchTrimRatio.toFixed(2));
+    search.set("hatchMinVisible", studioState.globalParams.hatchMinVisible.toFixed(2));
+    if (studioState.globalParams.hatchEdgeInset === null) {
       search.delete("hatchEdgeInset");
     } else {
-      search.set("hatchEdgeInset", selected.params.hatchEdgeInset.toFixed(2));
+      search.set("hatchEdgeInset", studioState.globalParams.hatchEdgeInset.toFixed(2));
     }
   }
 
   const payload = {
-    v: 1,
+    v: 2,
     s: studioState.selectedSideId,
     dir: !!studioState.showDebugDirection,
+    lbl: !!studioState.showSideLabels,
+    g: [
+      Number(studioState.globalParams.hatchWidth.toFixed(2)),
+      Number(studioState.globalParams.hatchJitter.toFixed(2)),
+      Number(studioState.globalParams.hatchBend.toFixed(3)),
+      studioState.globalParams.hatchEdgeInset === null ? null : Number(studioState.globalParams.hatchEdgeInset.toFixed(2)),
+      Number(studioState.globalParams.hatchTrimRatio.toFixed(2)),
+      Number(studioState.globalParams.hatchMinVisible.toFixed(2)),
+    ],
     d: studioState.sides.map((side) => ({
       id: side.id,
       mode: side.hatchMode,
       p: [
-        Number(side.params.hatchWidth.toFixed(2)),
-        Number(side.params.hatchJitter.toFixed(2)),
-        Number(side.params.hatchBend.toFixed(3)),
         Number(side.params.hatchSpacing.toFixed(2)),
-        side.params.hatchEdgeInset === null ? null : Number(side.params.hatchEdgeInset.toFixed(2)),
-        Number(side.params.hatchTrimRatio.toFixed(2)),
-        Number(side.params.hatchMinVisible.toFixed(2)),
       ],
     })),
   };
@@ -487,15 +531,35 @@ function _axisRemoveExistingRender() {
 }
 
 function _axisDefaultHatchMode(brightness) {
+  if (brightness <= 0.1) return "none";
   return brightness > 0.5 ? "cross" : "single";
+}
+
+function _axisDefaultSpacingForBrightness(brightness) {
+  // brightness bins: 0.00-0.10 none; 0.11-0.20 => 2.0 ... 0.91-1.00 => 0.2
+  if (brightness <= 0.1) return 2.0;
+  if (brightness <= 0.2) return 2.0;
+  if (brightness <= 0.3) return 1.8;
+  if (brightness <= 0.4) return 1.6;
+  if (brightness <= 0.5) return 1.4;
+  if (brightness <= 0.6) return 1.2;
+  if (brightness <= 0.7) return 1.0;
+  if (brightness <= 0.8) return 0.8;
+  if (brightness <= 0.9) return 0.6;
+  return 0.2;
 }
 
 function _axisCloneParams(params) {
   return {
+    hatchSpacing: params.hatchSpacing,
+  };
+}
+
+function _axisCloneGlobalParams(params) {
+  return {
     hatchWidth: params.hatchWidth,
     hatchJitter: params.hatchJitter,
     hatchBend: params.hatchBend,
-    hatchSpacing: params.hatchSpacing,
     hatchEdgeInset: params.hatchEdgeInset,
     hatchTrimRatio: params.hatchTrimRatio,
     hatchMinVisible: params.hatchMinVisible,
@@ -504,25 +568,31 @@ function _axisCloneParams(params) {
 
 function _axisBuildStudioSides(width, height, baseParams) {
   const brightnessGroups = [
-    [0.0, 0.1, 0.2],
-    [0.3, 0.4, 0.5],
-    [0.6, 0.7, 0.8],
+    [0.05, 0.15, 0.25],
+    [0.35, 0.45, 0.55],
+    [0.65, 0.75, 0.85],
+    [0.95, 1.0, 1.0],
   ];
   const yaw = getRandomFromInterval(0.62, 0.92);
   const pitch = getRandomFromInterval(-0.86, -0.58);
   const roll = getRandomFromInterval(-0.08, 0.08);
-  const scale = Math.min(width, height) * 0.16;
-  const centers = [width * 0.2, width * 0.5, width * 0.8];
+  const scale = Math.min(width, height) * 0.15;
+  const centers = [
+    { x: width * 0.30, y: height * 0.36 },
+    { x: width * 0.70, y: height * 0.36 },
+    { x: width * 0.30, y: height * 0.74 },
+    { x: width * 0.70, y: height * 0.74 },
+  ];
 
   const sides = [];
-  for (let cubeIndex = 0; cubeIndex < 3; cubeIndex += 1) {
+  for (let cubeIndex = 0; cubeIndex < brightnessGroups.length; cubeIndex += 1) {
     const polygons = _axisBuildCubePolygons(width, height, {
       yaw,
       pitch,
       roll,
       scale,
-      cx: centers[cubeIndex],
-      cy: height * 0.58,
+      cx: centers[cubeIndex].x,
+      cy: centers[cubeIndex].y,
     });
     for (let sideIndex = 0; sideIndex < polygons.length; sideIndex += 1) {
       const brightness = brightnessGroups[cubeIndex][sideIndex];
@@ -534,7 +604,10 @@ function _axisBuildStudioSides(width, height, baseParams) {
         brightness,
         hatchMode: _axisDefaultHatchMode(brightness),
         poly: polygons[sideIndex],
-        params: _axisCloneParams(baseParams),
+        params: {
+          ..._axisCloneParams(baseParams),
+          hatchSpacing: _axisDefaultSpacingForBrightness(brightness),
+        },
       });
     }
   }
@@ -547,10 +620,23 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
   const debugGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
   debugGroup.setAttribute("id", "debugCubeAxesGroup");
   svgNode.appendChild(debugGroup);
-  const canvasCenter = {
-    x: CANVASFORMATCHOSEN.canvasWidth * 0.5,
-    y: CANVASFORMATCHOSEN.canvasHeight * 0.5,
-  };
+
+  const cubeCenterAcc = new Map();
+  for (const side of studioState.sides) {
+    const center = _axisPolygonCentroid(side.poly.points);
+    const acc = cubeCenterAcc.get(side.cubeIndex) || { x: 0, y: 0, count: 0 };
+    acc.x += center.x;
+    acc.y += center.y;
+    acc.count += 1;
+    cubeCenterAcc.set(side.cubeIndex, acc);
+  }
+  const cubeCenters = new Map();
+  for (const [cubeIndex, acc] of cubeCenterAcc.entries()) {
+    cubeCenters.set(cubeIndex, {
+      x: acc.x / Math.max(1, acc.count),
+      y: acc.y / Math.max(1, acc.count),
+    });
+  }
 
   for (let sideIndex = 0; sideIndex < studioState.sides.length; sideIndex += 1) {
     const side = studioState.sides[sideIndex];
@@ -574,23 +660,32 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
     const sweepDir = _axisNormalize(axis.principal);
     const hatchDir = _axisNormalize(axis.perpendicular);
     const spacingFactor = 1.35 - side.brightness * 0.95;
-    const spacing = Math.max(4, Math.sqrt(area) * 0.1 * side.params.hatchSpacing * spacingFactor);
-    const edgeInset = side.params.hatchEdgeInset !== null
-      ? Math.max(0, side.params.hatchEdgeInset)
-      : Math.max(2.0, side.params.hatchWidth * 1.3 + side.params.hatchJitter * 0.9);
+    const sideSpacing = Math.max(0.2, Math.min(2.0, side.params.hatchSpacing));
+    const spacing = Math.max(4, Math.sqrt(area) * 0.1 * sideSpacing * spacingFactor);
+    const edgeInset = studioState.globalParams.hatchEdgeInset !== null
+      ? Math.max(0, studioState.globalParams.hatchEdgeInset)
+      : Math.max(2.0, studioState.globalParams.hatchWidth * 1.3 + studioState.globalParams.hatchJitter * 0.9);
 
     const sideSeed = _axisHashSeed(`${studioState.seed}|${side.id}|${side.hatchMode}`);
     _axisWithSeededRandom(sideSeed, () => {
       if (side.hatchMode !== "none") {
-        const hatchSegments = _axisBuildHatchSegments(side.poly.points, hatchDir, sweepDir, spacing, edgeInset, side.params.hatchTrimRatio, side.params.hatchMinVisible);
+        const hatchSegments = _axisBuildHatchSegments(
+          side.poly.points,
+          hatchDir,
+          sweepDir,
+          spacing,
+          edgeInset,
+          studioState.globalParams.hatchTrimRatio,
+          studioState.globalParams.hatchMinVisible,
+        );
         for (const segment of hatchSegments) {
           const hatch = new filledPath({
             start: { x: segment.start.x, y: segment.start.y },
             end: { x: segment.end.x, y: segment.end.y },
             group: hatchGroupId,
-            width: side.params.hatchWidth,
-            jitter: side.params.hatchJitter,
-            bend: side.params.hatchBend,
+            width: studioState.globalParams.hatchWidth,
+            jitter: studioState.globalParams.hatchJitter,
+            bend: studioState.globalParams.hatchBend,
           });
           if (hatch?.path) {
             hatch.path.setAttributeNS(null, "fill", "#111111");
@@ -600,15 +695,23 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
       }
 
       if (side.hatchMode === "cross") {
-        const crossSegments = _axisBuildHatchSegments(side.poly.points, sweepDir, hatchDir, spacing * 1.03, edgeInset, side.params.hatchTrimRatio, side.params.hatchMinVisible);
+        const crossSegments = _axisBuildHatchSegments(
+          side.poly.points,
+          sweepDir,
+          hatchDir,
+          spacing * 1.03,
+          edgeInset,
+          studioState.globalParams.hatchTrimRatio,
+          studioState.globalParams.hatchMinVisible,
+        );
         for (const segment of crossSegments) {
           const hatch = new filledPath({
             start: { x: segment.start.x, y: segment.start.y },
             end: { x: segment.end.x, y: segment.end.y },
             group: hatchGroupId,
-            width: side.params.hatchWidth,
-            jitter: side.params.hatchJitter,
-            bend: side.params.hatchBend,
+            width: studioState.globalParams.hatchWidth,
+            jitter: studioState.globalParams.hatchJitter,
+            bend: studioState.globalParams.hatchBend,
           });
           if (hatch?.path) {
             hatch.path.setAttributeNS(null, "fill", "#111111");
@@ -623,25 +726,19 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
       _axisDrawArrow(debugGroup, axis.center, axis.perpendicular, arrowLength, "#d61f1f");
     }
 
-    const outwardRaw = _axisSub(axis.center, canvasCenter);
-    const outwardLen = _axisLength(outwardRaw);
-    const outward = outwardLen < 1e-6 ? { x: 0, y: -1 } : _axisNormalize(outwardRaw);
-    const furthestEdgeProjection = Math.max(...side.poly.points.map((point) => _axisDot(_axisSub(point, axis.center), outward)));
-    const labelRadius = Math.max(arrowLength * 0.9 + 24, furthestEdgeProjection + 28);
-    const labelPos = {
-      x: axis.center.x + outward.x * labelRadius,
-      y: axis.center.y + outward.y * labelRadius,
-    };
-
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", labelPos.x.toFixed(2));
-    label.setAttribute("y", labelPos.y.toFixed(2));
-    label.setAttribute("fill", "#777777");
-    label.setAttribute("font-size", "11");
-    label.setAttribute("font-family", "ui-monospace, Menlo, monospace");
-    label.setAttribute("pointer-events", "none");
-    label.textContent = `${side.id} b=${side.brightness.toFixed(2)}`;
-    debugGroup.appendChild(label);
+    if (studioState.showSideLabels) {
+      const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      label.setAttribute("x", axis.center.x.toFixed(2));
+      label.setAttribute("y", axis.center.y.toFixed(2));
+      label.setAttribute("fill", "#777777");
+      label.setAttribute("font-size", "11");
+      label.setAttribute("font-family", "ui-monospace, Menlo, monospace");
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("dominant-baseline", "middle");
+      label.setAttribute("pointer-events", "none");
+      label.textContent = `${side.id} b=${side.brightness.toFixed(2)}`;
+      debugGroup.appendChild(label);
+    }
 
     const hitArea = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
     hitArea.setAttribute("points", side.poly.points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" "));
@@ -684,7 +781,7 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
 
   const selected = studioState.sides.find((side) => side.id === studioState.selectedSideId) || studioState.sides[0];
   const sideInfo = document.createElement("div");
-  sideInfo.textContent = `Selected: ${selected.id} | brightness ${selected.brightness.toFixed(2)} (0=bright, 1=dark)`;
+  sideInfo.textContent = `Selected: ${selected.id} | brightness ${selected.brightness.toFixed(2)} | cross if > 0.50`;
   sideInfo.style.fontSize = "12px";
   sideInfo.style.marginBottom = "10px";
   panel.appendChild(sideInfo);
@@ -709,6 +806,28 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
   debugDirectionWrap.appendChild(debugDirectionToggle);
   debugDirectionWrap.appendChild(debugDirectionText);
   panel.appendChild(debugDirectionWrap);
+
+  const sideLabelsWrap = document.createElement("label");
+  sideLabelsWrap.style.display = "inline-flex";
+  sideLabelsWrap.style.alignItems = "center";
+  sideLabelsWrap.style.gap = "6px";
+  sideLabelsWrap.style.marginBottom = "10px";
+  sideLabelsWrap.style.marginLeft = "10px";
+  sideLabelsWrap.style.fontSize = "12px";
+
+  const sideLabelsToggle = document.createElement("input");
+  sideLabelsToggle.type = "checkbox";
+  sideLabelsToggle.checked = !!studioState.showSideLabels;
+  sideLabelsToggle.addEventListener("change", () => {
+    studioState.showSideLabels = sideLabelsToggle.checked;
+    onRender();
+  });
+
+  const sideLabelsText = document.createElement("span");
+  sideLabelsText.textContent = "Side labels";
+  sideLabelsWrap.appendChild(sideLabelsToggle);
+  sideLabelsWrap.appendChild(sideLabelsText);
+  panel.appendChild(sideLabelsWrap);
 
   const seedWrap = document.createElement("div");
   seedWrap.style.marginBottom = "10px";
@@ -785,13 +904,7 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
   panel.appendChild(modeWrap);
 
   const controls = [
-    { key: "hatchWidth", label: "Width", min: 0.2, max: 3.5, step: 0.05 },
-    { key: "hatchJitter", label: "Jitter", min: 0.0, max: 2.0, step: 0.05 },
-    { key: "hatchBend", label: "Bend", min: -0.2, max: 0.2, step: 0.01 },
-    { key: "hatchSpacing", label: "Spacing", min: 0.2, max: 2.2, step: 0.05 },
-    { key: "hatchEdgeInset", label: "Edge Inset", min: 0.0, max: 8.0, step: 0.1, nullable: true },
-    { key: "hatchTrimRatio", label: "Trim Ratio", min: 0.05, max: 0.7, step: 0.01 },
-    { key: "hatchMinVisible", label: "Min Visible", min: 0.0, max: 12.0, step: 0.2 },
+    { key: "hatchSpacing", label: "Spacing", min: 0.2, max: 2.0, step: 0.05 },
   ];
 
   for (const control of controls) {
@@ -799,13 +912,13 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
     wrap.style.marginBottom = "10px";
 
     const label = document.createElement("label");
-    label.textContent = control.label;
+    label.textContent = `${control.label} (side)`;
     label.style.display = "flex";
     label.style.justifyContent = "space-between";
     label.style.fontSize = "12px";
 
     const valueNode = document.createElement("span");
-    const currentValue = selected.params[control.key] === null ? "auto" : Number(selected.params[control.key]).toFixed(2);
+    const currentValue = Number(selected.params[control.key]).toFixed(2);
     valueNode.textContent = currentValue;
     label.appendChild(valueNode);
 
@@ -814,12 +927,55 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
     slider.min = String(control.min);
     slider.max = String(control.max);
     slider.step = String(control.step);
-    slider.value = String(selected.params[control.key] === null ? Math.max(control.min, 2.2) : selected.params[control.key]);
+    slider.value = String(selected.params[control.key]);
     slider.style.width = "100%";
 
     slider.addEventListener("input", () => {
       selected.params[control.key] = Number(slider.value);
       valueNode.textContent = Number(selected.params[control.key]).toFixed(2);
+      onRender();
+    });
+
+    wrap.appendChild(label);
+    wrap.appendChild(slider);
+    panel.appendChild(wrap);
+  }
+
+  const globalControls = [
+    { key: "hatchWidth", label: "Width", min: 0.2, max: 3.5, step: 0.05 },
+    { key: "hatchJitter", label: "Jitter", min: 0.0, max: 2.0, step: 0.05 },
+    { key: "hatchBend", label: "Bend", min: -0.2, max: 0.2, step: 0.01 },
+    { key: "hatchEdgeInset", label: "Edge Inset", min: 0.0, max: 8.0, step: 0.1, nullable: true },
+    { key: "hatchTrimRatio", label: "Trim Ratio", min: 0.05, max: 0.7, step: 0.01 },
+    { key: "hatchMinVisible", label: "Min Visible", min: 0.0, max: 12.0, step: 0.2 },
+  ];
+
+  for (const control of globalControls) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+
+    const label = document.createElement("label");
+    label.textContent = `${control.label} (global)`;
+    label.style.display = "flex";
+    label.style.justifyContent = "space-between";
+    label.style.fontSize = "12px";
+
+    const valueNode = document.createElement("span");
+    const currentValue = studioState.globalParams[control.key] === null ? "auto" : Number(studioState.globalParams[control.key]).toFixed(2);
+    valueNode.textContent = currentValue;
+    label.appendChild(valueNode);
+
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = String(control.min);
+    slider.max = String(control.max);
+    slider.step = String(control.step);
+    slider.value = String(studioState.globalParams[control.key] === null ? Math.max(control.min, 2.2) : studioState.globalParams[control.key]);
+    slider.style.width = "100%";
+
+    slider.addEventListener("input", () => {
+      studioState.globalParams[control.key] = Number(slider.value);
+      valueNode.textContent = Number(studioState.globalParams[control.key]).toFixed(2);
       onRender();
     });
 
@@ -836,14 +992,14 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
 
       const autoCheckbox = document.createElement("input");
       autoCheckbox.type = "checkbox";
-      autoCheckbox.checked = selected.params[control.key] === null;
+      autoCheckbox.checked = studioState.globalParams[control.key] === null;
       autoCheckbox.addEventListener("change", () => {
         if (autoCheckbox.checked) {
-          selected.params[control.key] = null;
+          studioState.globalParams[control.key] = null;
           valueNode.textContent = "auto";
         } else {
-          selected.params[control.key] = Number(slider.value);
-          valueNode.textContent = Number(selected.params[control.key]).toFixed(2);
+          studioState.globalParams[control.key] = Number(slider.value);
+          valueNode.textContent = Number(studioState.globalParams[control.key]).toFixed(2);
         }
         onRender();
       });
@@ -895,9 +1051,11 @@ function testCubePrincipalAxes() {
   const baseParams = _axisReadParams(search);
   const studioState = {
     seed: _axisReadSeed(search),
+    globalParams: _axisCloneGlobalParams(baseParams),
     sides: [],
     selectedSideId: "C1-A",
     showDebugDirection: search.get("debugDirection") === "1",
+    showSideLabels: search.get("sideLabels") === "1",
   };
 
   const rebuildFromSeed = () => {

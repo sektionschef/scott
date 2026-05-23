@@ -65,7 +65,7 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 4. Create hatch candidates by sweeping parallel lines through the polygon and intersecting with polygon edges.
 5. Convert each valid segment into a real filledPath stroke (`filledPath.js`) with bend/width/jitter.
 6. No clip mask is used for hatch containment. Strokes are drawn from geometrically clipped segment endpoints.
-7. Labels (`C?-? b=?`) are placed outside each face in gray for readability.
+7. Optional labels (`C?-? b=?`) can be enabled and are placed in the center of each side in gray.
 
 ### Side Brightness Strategy
 
@@ -91,6 +91,12 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 - When enabled, each side shows:
   - principal axis (green)
   - perpendicular direction arrow (red)
+
+### Side Labels Toggle
+
+- "Side labels" is OFF by default.
+- When enabled, each side shows a gray label in its center, e.g. `C1-B b=0.15`.
+- Label visibility is stored in URL/studio state and restored on reload.
 
 ### Parameters (query string)
 
