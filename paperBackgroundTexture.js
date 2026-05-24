@@ -31,7 +31,7 @@
     width: 1200,
     height: 900,
     seed: 12345,
-    paperColor: "#f5f1e8",
+    paperColor: "#d2cab7",
     grainColor: "#44413c",
     grainOpacity: 0.2,
     grainFrequencyX: 0.85,
@@ -52,7 +52,7 @@
     fiberLengthMax: 16,
     fiberStrokeWidth: 0.68,
     fiberOpacity: 0.17,
-    fiberColor: "#9d8d79"
+    fiberColor: "#6a6053"
   };
 
   function PaperBackgroundTexture(svgNode, options) {

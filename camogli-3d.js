@@ -64,7 +64,7 @@ const DEBUG_EXPORT_HATCH_LABELS = searchParams.get("debugExportHatchLabels") ===
 const DEBUG_EXPORT_HATCH_VERBOSE = searchParams.get("debugExportHatchVerbose") === "1";
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x11151b);
+scene.background = new THREE.Color(0xffffff);
 
 const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 120);
 camera.position.set(11, 9.5, 13);
@@ -86,11 +86,11 @@ controls.maxPolarAngle = Math.PI * 0.495;
 controls.update();
 
 // Rembrandt: minimal ambient so shadows go deep
-const ambient = new THREE.AmbientLight(0xd8cfc4, 0.28);
+const ambient = new THREE.AmbientLight(0xffffff, 0.28);
 scene.add(ambient);
 
 // Key light: warm, steep (70°), offset 30° to the left — one face blazing
-const keyLight = new THREE.DirectionalLight(0xffe4b5, 4.2);
+const keyLight = new THREE.DirectionalLight(0xffffff, 4.2);
 keyLight.position.set(-5, 18, 6);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(2048, 2048);
@@ -103,12 +103,12 @@ keyLight.shadow.camera.far = 40;
 scene.add(keyLight);
 
 // Fill: very cool, very dim — just enough to reveal shadow-side form
-const fillLight = new THREE.DirectionalLight(0x7090c8, 0.18);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.18);
 fillLight.position.set(10, 6, -8);
 scene.add(fillLight);
 
 // Rim: faint warm edge light from behind to silhouette the tower
-const rimLight = new THREE.DirectionalLight(0xffa040, 0.32);
+const rimLight = new THREE.DirectionalLight(0xffffff, 0.32);
 rimLight.position.set(2, 4, -14);
 scene.add(rimLight);
 
@@ -121,11 +121,11 @@ world.defaultContactMaterial.friction = 0.88;
 world.defaultContactMaterial.restitution = 0.01;
 
 const materials = {
-  ground: new THREE.MeshStandardMaterial({ color: 0x14181d, roughness: 0.98, metalness: 0.0 }),
+  ground: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.98, metalness: 0.0 }),
   cube: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.0 }),
   cubeDark: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.0 }),
   cubeLight: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.0 }),
-  wall: new THREE.MeshStandardMaterial({ color: 0x65615d, roughness: 0.98, metalness: 0.01 }),
+  wall: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.98, metalness: 0.01 }),
 };
 
 const sceneObjects = [];
@@ -200,9 +200,9 @@ function makeGround() {
   scene.add(groundMesh);
   sceneObjects.push({ body: groundBody, mesh: groundMesh });
 
-  const grid = new THREE.GridHelper(28, 28, 0x707070, 0x404040);
+  const grid = new THREE.GridHelper(28, 28, 0xffffff, 0xffffff);
   grid.position.y = 0.01;
-  grid.material.opacity = 0.12;
+  grid.material.opacity = 0.05;
   grid.material.transparent = true;
   scene.add(grid);
   sceneObjects.push({ body: null, mesh: grid });
@@ -2110,7 +2110,7 @@ function readPaperBackgroundPresetFromStorage() {
 function buildPaperBackgroundForExport(width, height) {
   const fallback = {
     defs: "",
-    content: `<rect x="0" y="0" width="${width}" height="${height}" fill="#1b2129" />`,
+    content: `<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" />`,
   };
 
   if (typeof window === "undefined" || typeof window.PaperBackgroundTexture !== "function") {

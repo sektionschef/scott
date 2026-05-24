@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Paper Background Debug</title>
-        <style>
+        <head>
+                <meta charset="utf-8" />
+                <meta name="viewport"
+                        content="width=device-width, initial-scale=1" />
+                <title>Paper Background Debug</title>
+                <style>
       :root {
         --bg: #e7e3d8;
         --panel: #f5f1e8;
@@ -159,170 +160,302 @@
         }
       }
     </style>
-    </head>
-    <body>
-        <div class="layout">
-            <form id="paperControls" class="panel" autocomplete="off">
-                <div class="header">
-                    <h1>Paper Texture Lab</h1>
-                    <div class="sub">Interactive SVG paper background with
-                        grain, fibers, and dirt.</div>
+        </head>
+        <body>
+                <div class="layout">
+                        <form id="paperControls" class="panel"
+                                autocomplete="off">
+                                <div class="header">
+                                        <h1>Paper Texture Lab</h1>
+                                        <div class="sub">Interactive SVG paper
+                                                background with
+                                                grain, fibers, and dirt.</div>
+                                </div>
+
+                                <div class="section">
+                                        <h2>Canvas</h2>
+                                        <div class="row"><label
+                                                        for="width">Width</label><span
+                                                        id="widthValue"
+                                                        class="value">1200</span></div>
+                                        <div class="row"><input id="width"
+                                                        type="number" min="200"
+                                                        max="4000" step="10"
+                                                        value="1200" /></div>
+                                        <div class="row"><label
+                                                        for="height">Height</label><span
+                                                        id="heightValue"
+                                                        class="value">900</span></div>
+                                        <div class="row"><input id="height"
+                                                        type="number" min="200"
+                                                        max="4000" step="10"
+                                                        value="900" /></div>
+                                        <div class="row"><label
+                                                        for="seed">Seed</label><span
+                                                        id="seedValue"
+                                                        class="value">12345</span></div>
+                                        <div class="row"><input id="seed"
+                                                        type="number" min="1"
+                                                        max="999999999" step="1"
+                                                        value="12345" /></div>
+                                </div>
+
+                                <div class="section">
+                                        <h2>Paper + Grain</h2>
+                                        <div class="row"><label
+                                                        for="paperColor">Paper
+                                                        Color</label></div>
+                                        <div class="row"><input id="paperColor"
+                                                        type="color"
+                                                        value="#d2cab7" /></div>
+                                        <div class="row"><label
+                                                        for="grainColor">Grain
+                                                        Color</label></div>
+                                        <div class="row"><input id="grainColor"
+                                                        type="color"
+                                                        value="#44413c" /></div>
+                                        <div class="row"><label
+                                                        for="grainOpacity">Grain
+                                                        Opacity</label><span
+                                                        id="grainOpacityValue"
+                                                        class="value">0.20</span></div>
+                                        <div class="row"><input
+                                                        id="grainOpacity"
+                                                        type="range"
+                                                        min="0" max="1"
+                                                        step="0.01"
+                                                        value="0.20" /></div>
+                                        <div class="row"><label
+                                                        for="grainFrequencyX">Grain
+                                                        Frequency X</label><span
+                                                        id="grainFrequencyXValue"
+                                                        class="value">0.85</span></div>
+                                        <div class="row"><input
+                                                        id="grainFrequencyX"
+                                                        type="range"
+                                                        min="0.05" max="2"
+                                                        step="0.01"
+                                                        value="0.85" /></div>
+                                        <div class="row"><label
+                                                        for="grainFrequencyY">Grain
+                                                        Frequency Y</label><span
+                                                        id="grainFrequencyYValue"
+                                                        class="value">0.65</span></div>
+                                        <div class="row"><input
+                                                        id="grainFrequencyY"
+                                                        type="range"
+                                                        min="0.05" max="2"
+                                                        step="0.01"
+                                                        value="0.65" /></div>
+                                        <div class="row"><label
+                                                        for="grainOctaves">Grain
+                                                        Octaves</label><span
+                                                        id="grainOctavesValue"
+                                                        class="value">4</span></div>
+                                        <div class="row"><input
+                                                        id="grainOctaves"
+                                                        type="range"
+                                                        min="1" max="7" step="1"
+                                                        value="4" /></div>
+                                        <div class="row"><label
+                                                        for="embossStrength">Emboss
+                                                        Strength</label><span
+                                                        id="embossStrengthValue"
+                                                        class="value">1.50</span></div>
+                                        <div class="row"><input
+                                                        id="embossStrength"
+                                                        type="range"
+                                                        min="0" max="3"
+                                                        step="0.01"
+                                                        value="1.50" /></div>
+                                        <div class="row"><label
+                                                        for="embossAzimuth">Light
+                                                        Azimuth</label><span
+                                                        id="embossAzimuthValue"
+                                                        class="value">77</span></div>
+                                        <div class="row"><input
+                                                        id="embossAzimuth"
+                                                        type="range"
+                                                        min="0" max="360"
+                                                        step="1"
+                                                        value="77" /></div>
+                                        <div class="row"><label
+                                                        for="embossElevation">Light
+                                                        Elevation</label><span
+                                                        id="embossElevationValue"
+                                                        class="value">35</span></div>
+                                        <div class="row"><input
+                                                        id="embossElevation"
+                                                        type="range"
+                                                        min="0" max="90"
+                                                        step="1"
+                                                        value="35" /></div>
+                                </div>
+
+                                <div class="section">
+                                        <h2>Fiber Grain</h2>
+                                        <div class="row"><label
+                                                        for="includeFibers">Enable
+                                                        Fibers</label><input
+                                                        id="includeFibers"
+                                                        type="checkbox"
+                                                        checked /></div>
+                                        <div class="row"><label
+                                                        for="fiberColor">Fiber
+                                                        Color</label></div>
+                                        <div class="row"><input id="fiberColor"
+                                                        type="color"
+                                                        value="#6a6053" /></div>
+                                        <div class="row"><label
+                                                        for="fiberCount">Fiber
+                                                        Count</label><span
+                                                        id="fiberCountValue"
+                                                        class="value">1200</span></div>
+                                        <div class="row"><input id="fiberCount"
+                                                        type="range" min="0"
+                                                        max="1200" step="1"
+                                                        value="1200" /></div>
+                                        <div class="row"><label
+                                                        for="fiberLengthMin">Fiber
+                                                        Min
+                                                        Length</label><span
+                                                        id="fiberLengthMinValue"
+                                                        class="value">4.0</span></div>
+                                        <div class="row"><input
+                                                        id="fiberLengthMin"
+                                                        type="range"
+                                                        min="1" max="40"
+                                                        step="0.5"
+                                                        value="4" /></div>
+                                        <div class="row"><label
+                                                        for="fiberLengthMax">Fiber
+                                                        Max
+                                                        Length</label><span
+                                                        id="fiberLengthMaxValue"
+                                                        class="value">16.0</span></div>
+                                        <div class="row"><input
+                                                        id="fiberLengthMax"
+                                                        type="range"
+                                                        min="2" max="100"
+                                                        step="0.5"
+                                                        value="16" /></div>
+                                        <div class="row"><label
+                                                        for="fiberStrokeWidth">Fiber
+                                                        Width</label><span
+                                                        id="fiberStrokeWidthValue"
+                                                        class="value">0.68</span></div>
+                                        <div class="row"><input
+                                                        id="fiberStrokeWidth"
+                                                        type="range"
+                                                        min="0.1" max="2"
+                                                        step="0.01"
+                                                        value="0.68" /></div>
+                                        <div class="row"><label
+                                                        for="fiberOpacity">Fiber
+                                                        Opacity</label><span
+                                                        id="fiberOpacityValue"
+                                                        class="value">0.17</span></div>
+                                        <div class="row"><input
+                                                        id="fiberOpacity"
+                                                        type="range"
+                                                        min="0" max="0.6"
+                                                        step="0.01"
+                                                        value="0.17" /></div>
+                                </div>
+
+                                <div class="section">
+                                        <h2>Dirt Spots</h2>
+                                        <div class="row"><label
+                                                        for="dirtColor">Dirt
+                                                        Color</label></div>
+                                        <div class="row"><input id="dirtColor"
+                                                        type="color"
+                                                        value="#6c5847" /></div>
+                                        <div class="row"><label
+                                                        for="dirtCount">Dirt
+                                                        Count</label><span
+                                                        id="dirtCountValue"
+                                                        class="value">800</span></div>
+                                        <div class="row"><input id="dirtCount"
+                                                        type="range" min="0"
+                                                        max="800" step="1"
+                                                        value="800" /></div>
+                                        <div class="row"><label
+                                                        for="dirtMinRadius">Dirt
+                                                        Min
+                                                        Radius</label><span
+                                                        id="dirtMinRadiusValue"
+                                                        class="value">0.4</span></div>
+                                        <div class="row"><input
+                                                        id="dirtMinRadius"
+                                                        type="range"
+                                                        min="0.2" max="6"
+                                                        step="0.1"
+                                                        value="0.4" /></div>
+                                        <div class="row"><label
+                                                        for="dirtMaxRadius">Dirt
+                                                        Max
+                                                        Radius</label><span
+                                                        id="dirtMaxRadiusValue"
+                                                        class="value">2.5</span></div>
+                                        <div class="row"><input
+                                                        id="dirtMaxRadius"
+                                                        type="range"
+                                                        min="0.3" max="18"
+                                                        step="0.1"
+                                                        value="2.5" /></div>
+                                        <div class="row"><label
+                                                        for="dirtOpacity">Dirt
+                                                        Opacity</label><span
+                                                        id="dirtOpacityValue"
+                                                        class="value">0.18</span></div>
+                                        <div class="row"><input id="dirtOpacity"
+                                                        type="range"
+                                                        min="0" max="1"
+                                                        step="0.01"
+                                                        value="0.18" /></div>
+                                        <div class="row"><label
+                                                        for="dirtBlur">Dirt
+                                                        Blur</label><span
+                                                        id="dirtBlurValue"
+                                                        class="value">1.95</span></div>
+                                        <div class="row"><input id="dirtBlur"
+                                                        type="range" min="0"
+                                                        max="6" step="0.05"
+                                                        value="1.95" /></div>
+                                </div>
+
+                                <div class="buttons">
+                                        <button id="randomizeSeed"
+                                                type="button">New Seed</button>
+                                        <button id="downloadSvg"
+                                                type="button">Download
+                                                SVG</button>
+                                        <button id="savePresetUrl"
+                                                type="button">Save URL</button>
+                                        <button id="copyPreset"
+                                                type="button">Copy Preset
+                                                JSON</button>
+                                        <button id="downloadPreset"
+                                                type="button">Download
+                                                Preset</button>
+                                        <button id="loadPreset"
+                                                type="button">Load
+                                                Preset</button>
+                                </div>
+                                <div id="presetStatus" class="status"></div>
+                                <input id="loadPresetInput" type="file"
+                                        accept="application/json"
+                                        style="display:none" />
+                        </form>
+
+                        <div class="preview">
+                                <svg id="paperDebugSvg" viewBox="0 0 1200 900"
+                                        aria-label="Paper background preview"></svg>
+                        </div>
                 </div>
 
-                <div class="section">
-                    <h2>Canvas</h2>
-                    <div class="row"><label for="width">Width</label><span
-                            id="widthValue" class="value">1200</span></div>
-                    <div class="row"><input id="width" type="number" min="200"
-                            max="4000" step="10" value="1200" /></div>
-                    <div class="row"><label for="height">Height</label><span
-                            id="heightValue" class="value">900</span></div>
-                    <div class="row"><input id="height" type="number" min="200"
-                            max="4000" step="10" value="900" /></div>
-                    <div class="row"><label for="seed">Seed</label><span
-                            id="seedValue" class="value">12345</span></div>
-                    <div class="row"><input id="seed" type="number" min="1"
-                            max="999999999" step="1" value="12345" /></div>
-                </div>
-
-                <div class="section">
-                    <h2>Paper + Grain</h2>
-                    <div class="row"><label for="paperColor">Paper
-                            Color</label></div>
-                    <div class="row"><input id="paperColor" type="color"
-                            value="#f5f1e8" /></div>
-                    <div class="row"><label for="grainColor">Grain
-                            Color</label></div>
-                    <div class="row"><input id="grainColor" type="color"
-                            value="#44413c" /></div>
-                    <div class="row"><label for="grainOpacity">Grain
-                            Opacity</label><span id="grainOpacityValue"
-                            class="value">0.20</span></div>
-                    <div class="row"><input id="grainOpacity" type="range"
-                            min="0" max="1" step="0.01" value="0.20" /></div>
-                    <div class="row"><label for="grainFrequencyX">Grain
-                            Frequency X</label><span id="grainFrequencyXValue"
-                            class="value">0.85</span></div>
-                    <div class="row"><input id="grainFrequencyX" type="range"
-                            min="0.05" max="2" step="0.01" value="0.85" /></div>
-                    <div class="row"><label for="grainFrequencyY">Grain
-                            Frequency Y</label><span id="grainFrequencyYValue"
-                            class="value">0.65</span></div>
-                    <div class="row"><input id="grainFrequencyY" type="range"
-                            min="0.05" max="2" step="0.01" value="0.65" /></div>
-                    <div class="row"><label for="grainOctaves">Grain
-                            Octaves</label><span id="grainOctavesValue"
-                            class="value">4</span></div>
-                    <div class="row"><input id="grainOctaves" type="range"
-                            min="1" max="7" step="1" value="4" /></div>
-                    <div class="row"><label for="embossStrength">Emboss
-                            Strength</label><span id="embossStrengthValue"
-                            class="value">1.50</span></div>
-                    <div class="row"><input id="embossStrength" type="range"
-                            min="0" max="3" step="0.01" value="1.50" /></div>
-                    <div class="row"><label for="embossAzimuth">Light
-                            Azimuth</label><span id="embossAzimuthValue"
-                            class="value">77</span></div>
-                    <div class="row"><input id="embossAzimuth" type="range"
-                            min="0" max="360" step="1" value="77" /></div>
-                    <div class="row"><label for="embossElevation">Light
-                            Elevation</label><span id="embossElevationValue"
-                            class="value">35</span></div>
-                    <div class="row"><input id="embossElevation" type="range"
-                            min="0" max="90" step="1" value="35" /></div>
-                </div>
-
-                <div class="section">
-                    <h2>Fiber Grain</h2>
-                    <div class="row"><label for="includeFibers">Enable
-                            Fibers</label><input id="includeFibers"
-                            type="checkbox" checked /></div>
-                    <div class="row"><label for="fiberColor">Fiber
-                            Color</label></div>
-                    <div class="row"><input id="fiberColor" type="color"
-                            value="#9d8d79" /></div>
-                    <div class="row"><label for="fiberCount">Fiber
-                            Count</label><span id="fiberCountValue"
-                            class="value">1200</span></div>
-                    <div class="row"><input id="fiberCount" type="range" min="0"
-                            max="1200" step="1" value="1200" /></div>
-                    <div class="row"><label for="fiberLengthMin">Fiber Min
-                            Length</label><span id="fiberLengthMinValue"
-                            class="value">4.0</span></div>
-                    <div class="row"><input id="fiberLengthMin" type="range"
-                            min="1" max="40" step="0.5" value="4" /></div>
-                    <div class="row"><label for="fiberLengthMax">Fiber Max
-                            Length</label><span id="fiberLengthMaxValue"
-                            class="value">16.0</span></div>
-                    <div class="row"><input id="fiberLengthMax" type="range"
-                            min="2" max="100" step="0.5" value="16" /></div>
-                    <div class="row"><label for="fiberStrokeWidth">Fiber
-                            Width</label><span id="fiberStrokeWidthValue"
-                            class="value">0.68</span></div>
-                    <div class="row"><input id="fiberStrokeWidth" type="range"
-                            min="0.1" max="2" step="0.01" value="0.68" /></div>
-                    <div class="row"><label for="fiberOpacity">Fiber
-                            Opacity</label><span id="fiberOpacityValue"
-                            class="value">0.17</span></div>
-                    <div class="row"><input id="fiberOpacity" type="range"
-                            min="0" max="0.6" step="0.01" value="0.17" /></div>
-                </div>
-
-                <div class="section">
-                    <h2>Dirt Spots</h2>
-                    <div class="row"><label for="dirtColor">Dirt
-                            Color</label></div>
-                    <div class="row"><input id="dirtColor" type="color"
-                            value="#6c5847" /></div>
-                    <div class="row"><label for="dirtCount">Dirt
-                            Count</label><span id="dirtCountValue"
-                            class="value">800</span></div>
-                    <div class="row"><input id="dirtCount" type="range" min="0"
-                            max="800" step="1" value="800" /></div>
-                    <div class="row"><label for="dirtMinRadius">Dirt Min
-                            Radius</label><span id="dirtMinRadiusValue"
-                            class="value">0.4</span></div>
-                    <div class="row"><input id="dirtMinRadius" type="range"
-                            min="0.2" max="6" step="0.1" value="0.4" /></div>
-                    <div class="row"><label for="dirtMaxRadius">Dirt Max
-                            Radius</label><span id="dirtMaxRadiusValue"
-                            class="value">2.5</span></div>
-                    <div class="row"><input id="dirtMaxRadius" type="range"
-                            min="0.3" max="18" step="0.1" value="2.5" /></div>
-                    <div class="row"><label for="dirtOpacity">Dirt
-                            Opacity</label><span id="dirtOpacityValue"
-                            class="value">0.18</span></div>
-                    <div class="row"><input id="dirtOpacity" type="range"
-                            min="0" max="1" step="0.01" value="0.18" /></div>
-                    <div class="row"><label for="dirtBlur">Dirt
-                            Blur</label><span id="dirtBlurValue"
-                            class="value">1.95</span></div>
-                    <div class="row"><input id="dirtBlur" type="range" min="0"
-                            max="6" step="0.05" value="1.95" /></div>
-                </div>
-
-                <div class="buttons">
-                    <button id="randomizeSeed" type="button">New Seed</button>
-                    <button id="downloadSvg" type="button">Download SVG</button>
-                    <button id="savePresetUrl" type="button">Save URL</button>
-                    <button id="copyPreset" type="button">Copy Preset
-                        JSON</button>
-                    <button id="downloadPreset" type="button">Download
-                        Preset</button>
-                    <button id="loadPreset" type="button">Load Preset</button>
-                </div>
-                <div id="presetStatus" class="status"></div>
-                <input id="loadPresetInput" type="file"
-                    accept="application/json" style="display:none" />
-            </form>
-
-            <div class="preview">
-                <svg id="paperDebugSvg" viewBox="0 0 1200 900"
-                    aria-label="Paper background preview"></svg>
-            </div>
-        </div>
-
-        <script src="./paperBackgroundTexture.js"></script>
-        <script src="./debugPaperBackground.js"></script>
-    </body>
+                <script src="./paperBackgroundTexture.js"></script>
+                <script src="./debugPaperBackground.js"></script>
+        </body>
 </html>
