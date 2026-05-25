@@ -14,7 +14,6 @@
 * different hatching sttyles
   * https://i1-e.pinimg.com/1200x/d9/7f/79/d97f7922b641e9fc0ec8a89c46354dda.jpg 
   * https://i1-e.pinimg.com/736x/0b/70/b4/0b70b4595e5fdd9dd95e4e29e940d5c6.jpg 
-  * result: http://localhost:3301/?debugHatching=1 
 * test with complex cubes
 * check 3d generation
   * Three.js scene: cube, plane, camera, light, shadows.
@@ -41,14 +40,15 @@ camera position:
 }
 ```
 
-debug hatching styles: http://localhost:3301/?debugHatching=1
 debug cube principal/perpendicular axes: http://localhost:3301/?debugCubeAxes=1
 debug indivdual hatching: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.8&hatchBend=0.04&hatchSpacing=0.4 
 debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1
+
+#### remove
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
 debug stroke params: http://localhost:3301/?debugFilledPathParams=1 
-debug composition: http://localhost:3301/?debugComposition=1 
+
 
 new
 * http://localhost:3301/camogli-3d.html - result

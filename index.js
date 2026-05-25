@@ -33,12 +33,12 @@ if (sp.get("zoom") === "1") {
 
 const DEBUG_GRID = sp.get("debugGrid") === "1" || sp.get("debug") === "grid";
 const DEBUG_CUBE = sp.get("debugCube") === "1" || sp.get("debug") === "cube";
-const DEBUG_HATCHING = sp.get("debugHatching") === "1" || sp.get("debug") === "hatching";
+const DEBUG_HATCHING = false;
 const DEBUG_STROKE = sp.get("debugStroke") === "1" || sp.get("debug") === "stroke";
 const DEBUG_FILLED_PATH = sp.get("debugFilledPath") === "1" || sp.get("debug") === "filledPath";
 const DEBUG_FILLED_PATH_PARAMS = sp.get("debugFilledPathParams") === "1" || sp.get("debug") === "filledPathParams";
 const DEBUG_SINGLE_CIRCLE = sp.get("debugSingleCircle") === "1";
-const DEBUG_COMPOSITION = sp.get("debugComposition") === "1";
+const DEBUG_COMPOSITION = false;
 const DEBUG_CUBE_AXES = sp.get("debugCubeAxes") === "1" || sp.get("debug") === "cubeAxes";
 if (DEBUG_GRID || DEBUG_CUBE || DEBUG_HATCHING || DEBUG_STROKE || DEBUG_FILLED_PATH || DEBUG_FILLED_PATH_PARAMS || DEBUG_SINGLE_CIRCLE || DEBUG_COMPOSITION || DEBUG_CUBE_AXES) {
   TEST = true;
@@ -540,10 +540,6 @@ function main() {
       testCubeComposition();
     } else if (DEBUG_GRID) {
       testGrid();
-    } else if (DEBUG_HATCHING) {
-      testHatchingStyles();
-    } else if (DEBUG_COMPOSITION) {
-      testComposition();
     } else if (DEBUG_SINGLE_CIRCLE) {
       testSingleCircle();
     } else if (DEBUG_STROKE) {
