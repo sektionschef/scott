@@ -174,6 +174,11 @@ const CUBE_FACE_DEFS = [
   { name: "top", indices: [7, 6, 2, 3], normal: new THREE.Vector3(0, 1, 0) },
   { name: "bottom", indices: [0, 1, 5, 4], normal: new THREE.Vector3(0, -1, 0) },
 ];
+const CUBE_EDGE_PAIRS = [
+  [0, 1], [1, 2], [2, 3], [3, 0],
+  [4, 5], [5, 6], [6, 7], [7, 4],
+  [0, 4], [1, 5], [2, 6], [3, 7],
+];
 
 controls.addEventListener("change", () => {
   renderer.render(scene, camera);
@@ -1983,6 +1988,158 @@ function convexHullXZ(points) {
   return lower.concat(upper);
 }
 
+function expandHullXZ(points, scale = 1.05, minOffset = 0.06) {
+  if (!Array.isArray(points) || points.length < 3) {
+    return points;
+  }
+  let cx = 0;
+  let cz = 0;
+  for (const p of points) {
+    cx += p.x;
+    cz += p.z;
+  }
+  cx /= points.length;
+  cz /= points.length;
+
+  return points.map((p) => {
+    const dx = p.x - cx;
+    const dz = p.z - cz;
+    const len = Math.hypot(dx, dz);
+    if (len < 0.0001) {
+      return { ...p };
+    }
+    const targetLen = len * scale + minOffset;
+    const factor = targetLen / len;
+    return {
+      x: cx + dx * factor,
+      z: cz + dz * factor,
+    };
+  });
+}
+
+function buildShadowSamplePoints(vertices) {
+  const samples = vertices.slice();
+
+  // Include edge midpoints to better capture cast-shadow silhouette corners.
+  for (const [a, b] of CUBE_EDGE_PAIRS) {
+    const mid = vertices[a].clone().add(vertices[b]).multiplyScalar(0.5);
+    samples.push(mid);
+  }
+
+  // Include face centers to stabilize hull when cubes are strongly tilted.
+  for (const faceDef of CUBE_FACE_DEFS) {
+    const center = faceDef.indices
+      .map((index) => vertices[index])
+      .reduce((acc, p) => acc.add(p.clone()), new THREE.Vector3())
+      .multiplyScalar(0.25);
+    samples.push(center);
+  }
+
+  const cubeCenter = averagePoint(vertices);
+  samples.push(cubeCenter);
+  return samples;
+}
+
+function buildCubeShadowStrengthMap(faces) {
+  const map = new Map();
+  for (const face of faces) {
+    const current = map.get(face.cubeIndex) || {
+      minBrightness: 1,
+      maxShadowStrength: 0,
+    };
+    current.minBrightness = Math.min(current.minBrightness, clamp01(face.brightness));
+    current.maxShadowStrength = Math.max(current.maxShadowStrength, clamp01(face.shadowStrength || 0));
+    map.set(face.cubeIndex, current);
+  }
+  return map;
+}
+
+const DROP_SHADOW_HATCH_STYLE = 0.9;
+const DROP_SHADOW_HATCH_PRESET = {
+  brightness: 0.95,
+  hatchWidth: 1.25,
+  hatchJitter: 1.3,
+  hatchBend: -0.02,
+  hatchSpacing: 0.5,
+  hatchTrimRatio: 0.6,
+  hatchMinVisible: 12,
+  circleSpacing: 0.5,
+  circleRadius: 0.5,
+  circleJitter: 0.68,
+};
+
+function buildShadowHatchStyleForPolygon(polygon, darkness = 0, densityScale = 1) {
+  const dirs = hatchPrincipalDirections(polygon);
+  const hatchDir = hatchNormalize(dirs?.principal || { x: 1, y: 0 });
+  const sweepDir = hatchNormalize(dirs?.perpendicular || { x: 0, y: 1 });
+  const brightness = clamp01(DROP_SHADOW_HATCH_PRESET.brightness);
+  const area = Math.max(1, hatchPolygonArea(polygon));
+  const shortSide = Math.max(1, Math.min(
+    hatchPolygonBounds(polygon).maxX - hatchPolygonBounds(polygon).minX,
+    hatchPolygonBounds(polygon).maxY - hatchPolygonBounds(polygon).minY,
+  ));
+  const spacingBase = Math.max(4.5, Math.sqrt(area) * 0.16 + shortSide * 0.08);
+  const spacing = Math.max(4.0, spacingBase * Math.max(1, densityScale) * (1.15 - brightness * 0.25) * 1.8);
+
+  return {
+    hatchDir,
+    sweepDir,
+    style: {
+      spacing,
+      edgeInset: Math.min(0.5, shortSide * 0.12),
+      stroke: "#141414",
+      strokeOpacity: 0.05 + darkness * 0.08,
+      hatchParams: {
+        strokeWidth: DROP_SHADOW_HATCH_PRESET.hatchWidth,
+        jitter: DROP_SHADOW_HATCH_PRESET.hatchJitter,
+        bend: DROP_SHADOW_HATCH_PRESET.hatchBend,
+        trimRatio: DROP_SHADOW_HATCH_PRESET.hatchTrimRatio,
+        minVisible: DROP_SHADOW_HATCH_PRESET.hatchMinVisible,
+      },
+    },
+  };
+}
+
+function buildDropShadowHatchedPolygonSvg(shadow, polygon, hatchStyle = DROP_SHADOW_HATCH_STYLE) {
+  if (!Array.isArray(polygon) || polygon.length < 3) {
+    return "";
+  }
+  const styleAmount = clamp01(hatchStyle);
+  const { hatchDir, sweepDir, style: hatchStyleConfig } = buildShadowHatchStyleForPolygon(polygon, styleAmount, 1.1);
+
+  const single = buildStudioPolygonHatchStrokeSvg(
+    polygon,
+    hatchStyleConfig,
+    hatchDir,
+    sweepDir,
+    1,
+  );
+
+  return `<g data-layer="shadow" data-cube="${shadow.cubeIndex}" data-hatch-style="${styleAmount.toFixed(2)}">${single.svg}</g>`;
+}
+
+function buildDarkestShadowHatchedPolygonSvg(shadow, polygon, darkness, cubeStats) {
+  if (!Array.isArray(polygon) || polygon.length < 3) {
+    return "";
+  }
+  const { hatchDir, sweepDir, style: config } = buildShadowHatchStyleForPolygon(polygon, darkness, 0.85);
+
+  const single = buildStudioPolygonHatchStrokeSvg(polygon, config, hatchDir, sweepDir, 1);
+  return `<g data-layer="shadowDarkest" data-cube="${shadow.cubeIndex}" data-darkest-brightness="${cubeStats.minBrightness.toFixed(4)}" data-shadow-strength="${cubeStats.maxShadowStrength.toFixed(4)}">${single.svg}</g>`;
+}
+
+function buildFaceShadowCellHatchedSvg(face, cell) {
+  const polygon = cell?.points;
+  if (!Array.isArray(polygon) || polygon.length < 3) {
+    return "";
+  }
+  const darkness = clamp01(cell.darkness || 0);
+  const { hatchDir, sweepDir, style: config } = buildShadowHatchStyleForPolygon(polygon, darkness, 0.75);
+
+  const single = buildStudioPolygonHatchStrokeSvg(polygon, config, hatchDir, sweepDir, 1);
+  return `<g data-layer="faceShadow" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-shadow="${darkness.toFixed(4)}">${single.svg}</g>`;
+}
+
 function cubeWorldVertices(cube) {
   const { mesh, edge } = cube;
   return CUBE_LOCAL_VERTICES.map((vertex) => (
@@ -2059,9 +2216,7 @@ function buildShadowData(width, height) {
   for (let cubeIndex = 0; cubeIndex < cubeObjects.length; cubeIndex += 1) {
     const cube = cubeObjects[cubeIndex];
     const vertices = cubeWorldVertices(cube);
-    const cubeCenter = averagePoint(vertices);
-    const topFaceCenter = vertices[7].clone().add(vertices[6]).add(vertices[2]).add(vertices[3]).multiplyScalar(0.25);
-    const shadowSamples = vertices.concat([cubeCenter, topFaceCenter]);
+    const shadowSamples = buildShadowSamplePoints(vertices);
     const groundPoints = [];
 
     for (const sample of shadowSamples) {
@@ -2074,7 +2229,7 @@ function buildShadowData(width, height) {
       continue;
     }
 
-    const hull = convexHullXZ(groundPoints);
+    const hull = expandHullXZ(convexHullXZ(groundPoints));
     const worldHull = hull.map((point) => new THREE.Vector3(point.x, SHADOW_PLANE_Y + 0.002, point.z));
     const screenHull = worldHull.map((point) => projectWorldToSvg(point, width, height));
     const shadowPolygon = sanitizeScreenPolygon(screenHull);
@@ -2191,14 +2346,26 @@ function buildSceneSvgExport() {
 
   const shadowPolygons = shadows.flatMap((shadow) => (
     (shadow.clippedScreenPolygons || []).map((polygon) => (
-      `<polygon points="${pointsToSvgString(polygon)}" fill="#2a3038" opacity="0.34" stroke="none" data-layer="shadow" data-cube="${shadow.cubeIndex}" />`
+      buildDropShadowHatchedPolygonSvg(shadow, polygon, DROP_SHADOW_HATCH_STYLE)
     ))
   )).join("\n");
+
+  const cubeShadowStrengthMap = buildCubeShadowStrengthMap(faces);
+  const darkestShadowPolygons = shadows.flatMap((shadow) => {
+    const cubeStats = cubeShadowStrengthMap.get(shadow.cubeIndex);
+    if (!cubeStats) {
+      return [];
+    }
+    const darkness = clamp01((1 - cubeStats.minBrightness) * 0.72 + cubeStats.maxShadowStrength * 0.45);
+    return (shadow.clippedScreenPolygons || []).map((polygon) => (
+      buildDarkestShadowHatchedPolygonSvg(shadow, polygon, darkness, cubeStats)
+    ));
+  }).join("\n");
 
   const faceShadowPolygons = faces.flatMap((face) => (
     clipFaceShadowCells(face)
       .map((cell) => (
-        `<polygon points="${pointsToSvgString(cell.points)}" fill="#1a1a1a" opacity="${(0.08 + cell.darkness * 0.34).toFixed(3)}" stroke="none" data-layer="faceShadow" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-shadow="${cell.darkness.toFixed(4)}" />`
+        buildFaceShadowCellHatchedSvg(face, cell)
       ))
   )).join("\n");
 
@@ -2235,6 +2402,7 @@ function buildSceneSvgExport() {
 <defs>${paperBackground.defs}\n${clipDefs.join("\n")}</defs>
 ${paperBackground.content}
 <g id="dropShadows">${shadowPolygons}</g>
+<g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
 ${hatchDebugOverlay}
@@ -2438,14 +2606,26 @@ function buildGrayscaleSceneSvgExport() {
 
   const shadowPolygons = shadows.flatMap((shadow) => (
     (shadow.clippedScreenPolygons || []).map((polygon) => (
-      `<polygon points="${pointsToSvgString(polygon)}" fill="#2a3038" opacity="0.34" stroke="none" data-layer="shadow" data-cube="${shadow.cubeIndex}" />`
+      buildDropShadowHatchedPolygonSvg(shadow, polygon, DROP_SHADOW_HATCH_STYLE)
     ))
   )).join("\n");
+
+  const cubeShadowStrengthMap = buildCubeShadowStrengthMap(faces);
+  const darkestShadowPolygons = shadows.flatMap((shadow) => {
+    const cubeStats = cubeShadowStrengthMap.get(shadow.cubeIndex);
+    if (!cubeStats) {
+      return [];
+    }
+    const darkness = clamp01((1 - cubeStats.minBrightness) * 0.72 + cubeStats.maxShadowStrength * 0.45);
+    return (shadow.clippedScreenPolygons || []).map((polygon) => (
+      buildDarkestShadowHatchedPolygonSvg(shadow, polygon, darkness, cubeStats)
+    ));
+  }).join("\n");
 
   const faceShadowPolygons = faces.flatMap((face) => (
     clipFaceShadowCells(face)
       .map((cell) => (
-        `<polygon points="${pointsToSvgString(cell.points)}" fill="#1a1a1a" opacity="${(0.08 + cell.darkness * 0.34).toFixed(3)}" stroke="none" data-layer="faceShadow" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-shadow="${cell.darkness.toFixed(4)}" />`
+        buildFaceShadowCellHatchedSvg(face, cell)
       ))
   )).join("\n");
 
@@ -2471,6 +2651,7 @@ function buildGrayscaleSceneSvgExport() {
 <defs>${paperBackground.defs}</defs>
 ${paperBackground.content}
 <g id="dropShadows">${shadowPolygons}</g>
+<g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
 <metadata>${metadata}</metadata>
