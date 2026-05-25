@@ -155,7 +155,31 @@ function sanitizeHexColor(value, fallback) {
 const exportVisualSettings = {
   frameColor: sanitizeHexColor(searchParams.get("frameColor"), EXPORT_FRAME_COLOR),
   backgroundColor: sanitizeHexColor(searchParams.get("bgColor"), EXPORT_BACKGROUND_COLOR),
+  noiseEnabled: searchParams.get("noiseEnabled") === "1",
+  noiseOpacity: readNumberParam("noiseOpacity", 0.06, 0, 0.6),
+  noiseFrequency: readNumberParam("noiseFrequency", 0.9, 0.05, 3),
+  noiseOctaves: Math.round(readNumberParam("noiseOctaves", 2, 1, 5)),
+  noiseSeed: Math.round(readNumberParam("noiseSeed", 17, 1, 9999)),
 };
+
+function buildSvgNoiseLayer(width, height, idPrefix, visualOptions = {}) {
+  const enabled = Boolean(visualOptions.noiseEnabled);
+  if (!enabled) {
+    return {
+      defs: "",
+      content: "",
+    };
+  }
+  const opacity = Math.min(0.6, Math.max(0, Number(visualOptions.noiseOpacity ?? 0.06)));
+  const frequency = Math.min(3, Math.max(0.05, Number(visualOptions.noiseFrequency ?? 0.9)));
+  const octaves = Math.min(5, Math.max(1, Math.round(Number(visualOptions.noiseOctaves ?? 2))));
+  const seed = Math.min(9999, Math.max(1, Math.round(Number(visualOptions.noiseSeed ?? 17))));
+  const filterId = `${idPrefix}SvgNoiseFilter`;
+  return {
+    defs: `<filter id="${filterId}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="${frequency.toFixed(3)}" numOctaves="${octaves}" seed="${seed}" result="n" /><feColorMatrix in="n" type="saturate" values="0" result="g" /></filter>`,
+    content: `<rect x="0" y="0" width="${width}" height="${height}" filter="url(#${filterId})" opacity="${opacity.toFixed(3)}" pointer-events="none" />`,
+  };
+}
 
 function computeCanvasFrame() {
   const viewportWidth = Math.max(320, window.innerWidth - CANVAS_MARGIN_PX * 2);
@@ -2016,6 +2040,11 @@ const LAB_DEFAULT_PAPER_OPTIONS = {
 const LAB_DEFAULT_VISUAL_OPTIONS = {
   frameColor: exportVisualSettings.frameColor,
   backgroundColor: exportVisualSettings.backgroundColor,
+  noiseEnabled: exportVisualSettings.noiseEnabled,
+  noiseOpacity: exportVisualSettings.noiseOpacity,
+  noiseFrequency: exportVisualSettings.noiseFrequency,
+  noiseOctaves: exportVisualSettings.noiseOctaves,
+  noiseSeed: exportVisualSettings.noiseSeed,
 };
 
 function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onSelectFace = null) {
@@ -2038,8 +2067,9 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
   svgNode.setAttribute("height", String(height));
 
   const frameParts = buildSvgFrameParts(width, height, "labPreviewFrame", labState?.visualOptions || exportVisualSettings);
+  const noiseParts = buildSvgNoiseLayer(width, height, "labPreview", labState?.visualOptions || exportVisualSettings);
 
-  let html = `<defs>${paperBackground.defs}${frameParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}`;
+  let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}`;
 
   if (floorShadowPolygons.length === 0 && cubeShadowPolygons.length === 0) {
     for (const shadow of shadowPolygons) {
@@ -2099,7 +2129,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
     html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
   }
 
-  html += `${frameParts.after}${frameParts.overlay}`;
+  html += `${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
 
   svgNode.innerHTML = html;
 
@@ -2537,9 +2567,19 @@ function initSvgHatchingLab(initialParsedScene = null) {
         ...labState.visualOptions,
         frameColor: sanitizeHexColor(preset.visualOptions.frameColor, labState.visualOptions.frameColor),
         backgroundColor: sanitizeHexColor(preset.visualOptions.backgroundColor, labState.visualOptions.backgroundColor),
+        noiseEnabled: Boolean(preset.visualOptions.noiseEnabled),
+        noiseOpacity: Math.min(0.6, Math.max(0, Number(preset.visualOptions.noiseOpacity ?? labState.visualOptions.noiseOpacity))),
+        noiseFrequency: Math.min(3, Math.max(0.05, Number(preset.visualOptions.noiseFrequency ?? labState.visualOptions.noiseFrequency))),
+        noiseOctaves: Math.min(5, Math.max(1, Math.round(Number(preset.visualOptions.noiseOctaves ?? labState.visualOptions.noiseOctaves)))),
+        noiseSeed: Math.min(9999, Math.max(1, Math.round(Number(preset.visualOptions.noiseSeed ?? labState.visualOptions.noiseSeed)))),
       };
       exportVisualSettings.frameColor = labState.visualOptions.frameColor;
       exportVisualSettings.backgroundColor = labState.visualOptions.backgroundColor;
+      exportVisualSettings.noiseEnabled = labState.visualOptions.noiseEnabled;
+      exportVisualSettings.noiseOpacity = labState.visualOptions.noiseOpacity;
+      exportVisualSettings.noiseFrequency = labState.visualOptions.noiseFrequency;
+      exportVisualSettings.noiseOctaves = labState.visualOptions.noiseOctaves;
+      exportVisualSettings.noiseSeed = labState.visualOptions.noiseSeed;
       applyLabBackgroundColor();
       if (frameColorInput) {
         frameColorInput.value = labState.visualOptions.frameColor;
@@ -2710,6 +2750,11 @@ function initSvgHatchingLab(initialParsedScene = null) {
       `circleJitter=${gv.circleJitter.toFixed(2)}`,
       `frameColor=${encodeURIComponent(labState.visualOptions.frameColor)}`,
       `bgColor=${encodeURIComponent(labState.visualOptions.backgroundColor)}`,
+      `noiseEnabled=${labState.visualOptions.noiseEnabled ? "1" : "0"}`,
+      `noiseOpacity=${Number(labState.visualOptions.noiseOpacity).toFixed(3)}`,
+      `noiseFrequency=${Number(labState.visualOptions.noiseFrequency).toFixed(3)}`,
+      `noiseOctaves=${Math.round(Number(labState.visualOptions.noiseOctaves))}`,
+      `noiseSeed=${Math.round(Number(labState.visualOptions.noiseSeed))}`,
     ];
     if (labState.studioState) {
       const payload = {
@@ -2868,6 +2913,53 @@ function initSvgHatchingLab(initialParsedScene = null) {
 
   appearanceSection.appendChild(frameColorWrap);
   appearanceSection.appendChild(backgroundColorWrap);
+
+  const noiseEnabledWrap = document.createElement("label");
+  noiseEnabledWrap.style.cssText = "display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#d2dbe7;margin-bottom:10px;";
+  noiseEnabledWrap.textContent = "Enable SVG Noise";
+  const noiseEnabledInput = document.createElement("input");
+  noiseEnabledInput.type = "checkbox";
+  noiseEnabledInput.checked = Boolean(labState.visualOptions.noiseEnabled);
+  noiseEnabledInput.addEventListener("change", () => {
+    labState.visualOptions.noiseEnabled = Boolean(noiseEnabledInput.checked);
+    exportVisualSettings.noiseEnabled = labState.visualOptions.noiseEnabled;
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+  noiseEnabledWrap.appendChild(noiseEnabledInput);
+  appearanceSection.appendChild(noiseEnabledWrap);
+
+  function createAppearanceSlider(labelText, key, min, max, step, digits = 2) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+    const lbl = document.createElement("label");
+    lbl.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;";
+    lbl.textContent = labelText;
+    const valSpan = document.createElement("span");
+    valSpan.textContent = Number(labState.visualOptions[key]).toFixed(digits);
+    lbl.appendChild(valSpan);
+    const inp = document.createElement("input");
+    inp.type = "range";
+    inp.min = String(min);
+    inp.max = String(max);
+    inp.step = String(step);
+    inp.value = String(labState.visualOptions[key]);
+    inp.style.width = "100%";
+    inp.addEventListener("input", () => {
+      const value = Number(inp.value);
+      labState.visualOptions[key] = value;
+      exportVisualSettings[key] = value;
+      valSpan.textContent = value.toFixed(digits);
+      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    });
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    return wrap;
+  }
+
+  appearanceSection.appendChild(createAppearanceSlider("Noise Opacity", "noiseOpacity", 0, 0.6, 0.01, 2));
+  appearanceSection.appendChild(createAppearanceSlider("Noise Frequency", "noiseFrequency", 0.05, 3, 0.01, 2));
+  appearanceSection.appendChild(createAppearanceSlider("Noise Octaves", "noiseOctaves", 1, 5, 1, 0));
+  appearanceSection.appendChild(createAppearanceSlider("Noise Seed", "noiseSeed", 1, 9999, 1, 0));
   function onSelectFace(faceId) {
     if (!labState.studioState) {
       return;
@@ -4038,9 +4130,10 @@ function buildSceneSvgExport() {
 
   const paperBackground = buildPaperBackgroundForExport(width, height);
   const frameParts = buildSvgFrameParts(width, height, "exportFrame", exportVisualSettings);
+  const noiseParts = buildSvgNoiseLayer(width, height, "export", exportVisualSettings);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-<defs>${paperBackground.defs}\n${clipDefs.join("\n")}\n${frameParts.defs}</defs>
+<defs>${paperBackground.defs}\n${clipDefs.join("\n")}\n${frameParts.defs}\n${noiseParts.defs}</defs>
 ${frameParts.background}
 ${frameParts.before}
 ${paperBackground.content}
@@ -4049,6 +4142,7 @@ ${shadowDebugFillLayer}
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+${noiseParts.content}
 ${frameParts.after}
 ${frameParts.overlay}
 ${hatchDebugOverlay}
@@ -4381,9 +4475,10 @@ function buildGrayscaleSceneSvgExport() {
 
   const paperBackground = buildPaperBackgroundForExport(width, height);
   const frameParts = buildSvgFrameParts(width, height, "grayscaleFrame", exportVisualSettings);
+  const noiseParts = buildSvgNoiseLayer(width, height, "grayscale", exportVisualSettings);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-<defs>${paperBackground.defs}\n${frameParts.defs}</defs>
+<defs>${paperBackground.defs}\n${frameParts.defs}\n${noiseParts.defs}</defs>
 ${frameParts.background}
 ${frameParts.before}
 ${paperBackground.content}
@@ -4392,6 +4487,7 @@ ${shadowDebugFillLayer}
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+${noiseParts.content}
 ${frameParts.after}
 ${frameParts.overlay}
 <metadata>${metadata}</metadata>
