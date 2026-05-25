@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Camogli Cubes fxhash</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #ffffff;
+        font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+      }
+
+      #app {
+        position: fixed;
+        inset: 0;
+      }
+
+      #status {
+        position: fixed;
+        left: 12px;
+        top: 12px;
+        z-index: 5;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.82);
+        color: #111111;
+        font-size: 12px;
+        line-height: 1.35;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="status"><strong>Initializing</strong> - Simulating cubes...</div>
+
+    <script src="./gaussian.js"></script>
+    <script src="./utilsSVG.js"></script>
+    <script src="./paperBackgroundTexture.js"></script>
+    <script>
+      window.CAMOGLI_RUNTIME_CONFIG = {
+        fxhashMode: true,
+        fxAutoFinalize: true,
+      };
+    </script>
+    <script type="module" src="./polygon-clipping.umd.min.js"></script>
+    <script type="module" src="./camogli-3d.js"></script>
+  </body>
+</html>
