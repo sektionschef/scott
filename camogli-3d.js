@@ -104,7 +104,7 @@ function resolveCubeCount() {
   const fxParam = FXHASH_MODE && typeof $fx?.getParam === "function"
     ? Number($fx.getParam("cubeCount"))
     : Number.NaN;
-  const urlParam = Number(searchParams.get("cubeCount"));
+  const urlParam = FXHASH_MODE ? Number(searchParams.get("cubeCount")) : Number.NaN;
   const raw = Number.isFinite(fxParam)
     ? fxParam
     : (Number.isFinite(urlParam) ? urlParam : FXHASH_DEFAULT_CUBE_COUNT);
@@ -138,16 +138,86 @@ let pendingLayoutRestore = false;
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
 
-const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 120);
+const CANVAS_ASPECT = 16 / 9;
+const CANVAS_MARGIN_PX = 24;
+const EXPORT_FRAME_PX = 24;
+const EXPORT_FRAME_COLOR = "#f2f2f2";
+const EXPORT_BACKGROUND_COLOR = "#121212";
+
+function sanitizeHexColor(value, fallback) {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+  const normalized = value.trim();
+  return /^#([0-9a-fA-F]{6})$/.test(normalized) ? normalized : fallback;
+}
+
+const exportVisualSettings = {
+  frameColor: sanitizeHexColor(searchParams.get("frameColor"), EXPORT_FRAME_COLOR),
+  backgroundColor: sanitizeHexColor(searchParams.get("bgColor"), EXPORT_BACKGROUND_COLOR),
+};
+
+function computeCanvasFrame() {
+  const viewportWidth = Math.max(320, window.innerWidth - CANVAS_MARGIN_PX * 2);
+  const viewportHeight = Math.max(180, window.innerHeight - CANVAS_MARGIN_PX * 2);
+  let width = viewportWidth;
+  let height = Math.round(width / CANVAS_ASPECT);
+  if (height > viewportHeight) {
+    height = viewportHeight;
+    width = Math.round(height * CANVAS_ASPECT);
+  }
+  return {
+    width: Math.max(1, width),
+    height: Math.max(1, height),
+  };
+}
+
+function buildSvgFrameParts(width, height, idPrefix = "exportFrame", visualOptions = {}) {
+  const frameColor = sanitizeHexColor(visualOptions.frameColor, EXPORT_FRAME_COLOR);
+  const backgroundColor = sanitizeHexColor(visualOptions.backgroundColor, EXPORT_BACKGROUND_COLOR);
+  const frame = Math.max(0, Math.min(EXPORT_FRAME_PX, Math.floor(Math.min(width, height) * 0.12)));
+  if (frame <= 0 || width <= 2 || height <= 2) {
+    return {
+      defs: "",
+      background: `<rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}" />`,
+      before: "",
+      after: "",
+      overlay: "",
+    };
+  }
+  const innerWidth = Math.max(1, width - frame * 2);
+  const innerHeight = Math.max(1, height - frame * 2);
+  const clipId = `${idPrefix}InnerClip`;
+  return {
+    defs: `<clipPath id="${clipId}"><rect x="${frame}" y="${frame}" width="${innerWidth}" height="${innerHeight}" /></clipPath>`,
+    background: `<rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}" />`,
+    before: `<g id="framedArtwork" clip-path="url(#${clipId})">`,
+    after: "</g>",
+    overlay: `<g id="canvasFrame" pointer-events="none"><rect x="0" y="0" width="${width}" height="${height}" fill="none" stroke="${frameColor}" stroke-width="${frame * 2}" /><rect x="${frame + 0.5}" y="${frame + 0.5}" width="${Math.max(0, innerWidth - 1)}" height="${Math.max(0, innerHeight - 1)}" fill="none" stroke="rgba(25,30,36,0.11)" stroke-width="1" /></g>`,
+  };
+}
+
+const camera = new THREE.PerspectiveCamera(42, CANVAS_ASPECT, 0.1, 120);
 camera.position.set(11, 9.5, 13);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
+{
+  const initialFrame = computeCanvasFrame();
+  renderer.setSize(initialFrame.width, initialFrame.height);
+}
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 container.appendChild(renderer.domElement);
+
+function applyCanvasFrame() {
+  const frame = computeCanvasFrame();
+  camera.aspect = CANVAS_ASPECT;
+  camera.updateProjectionMatrix();
+  renderer.setSize(frame.width, frame.height);
+  renderer.render(scene, camera);
+}
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -1176,7 +1246,7 @@ function hatchPolygonBounds(points) {
   };
 }
 
-function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNormalization = null) {
+function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNormalization = null, sideOverride = null) {
   const g = globals ?? SVG_EXPORT_STUDIO_GLOBALS;
   const rawBrightness = faceStudioBrightness(face);
   const brightness = normalizeFaceBrightness(rawBrightness, brightnessNormalization);
@@ -1185,7 +1255,9 @@ function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNorm
   const shortSide = Math.max(1, Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY));
   const area = hatchPolygonArea(polygon);
   const spacingFactor = 1.35 - brightness * 0.95;
-  const sideSpacing = Math.max(0.2, Math.min(2.0, studioDefaultSpacingForBrightness(brightness)));
+  const defaultSpacing = studioDefaultSpacingForBrightness(brightness);
+  const overrideSpacing = Number(sideOverride?.hatchSpacing);
+  const sideSpacing = Math.max(0.2, Math.min(2.0, Number.isFinite(overrideSpacing) ? overrideSpacing : defaultSpacing));
   const minSpacing = Math.max(0.9, Math.min(4, shortSide * 0.22));
   const spacing = Math.max(minSpacing, Math.sqrt(area) * 0.1 * sideSpacing * spacingFactor);
   const baseEdgeInset = g.hatchEdgeInset !== null
@@ -1200,8 +1272,12 @@ function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNorm
     g.hatchMinVisible,
     Math.max(0.6, shortSide * 0.18),
   );
-  const hatchMode = studioDefaultHatchMode(brightness);
-  const circleSpacing = studioDefaultSpacingForBrightness(brightness);
+  const defaultMode = studioDefaultHatchMode(brightness);
+  const hatchMode = (sideOverride?.hatchMode === "none" || sideOverride?.hatchMode === "single" || sideOverride?.hatchMode === "cross")
+    ? sideOverride.hatchMode
+    : defaultMode;
+  const overrideCircleSpacing = Number(sideOverride?.circleSpacing);
+  const circleSpacing = Math.max(0.2, Math.min(2.0, Number.isFinite(overrideCircleSpacing) ? overrideCircleSpacing : defaultSpacing));
   const directions = hatchPrincipalDirections(polygon);
   const sourceHatchWidth = g.hatchWidth;
   const sourceHatchJitter = g.hatchJitter;
@@ -1694,34 +1770,352 @@ function parseFacesFromExportedSvg(svgText) {
     });
   });
 
-  return { faces, shadowPolygons, bgFill, width, height, viewBox };
+  let floorShadowPolygons = [];
+  let cubeShadowPolygons = [];
+  const metadataEl = doc.querySelector("svg > metadata");
+  if (metadataEl?.textContent) {
+    try {
+      const metadata = JSON.parse(metadataEl.textContent);
+      const fromFloor = metadata?.shadowLab?.floorPolygons;
+      const fromCube = metadata?.shadowLab?.cubePolygons;
+      if (Array.isArray(fromFloor)) {
+        floorShadowPolygons = fromFloor
+          .map((polygon) => sanitizeScreenPolygon(polygon))
+          .filter((polygon) => Array.isArray(polygon) && polygon.length >= 3);
+      }
+      if (Array.isArray(fromCube)) {
+        cubeShadowPolygons = fromCube
+          .map((polygon) => sanitizeScreenPolygon(polygon))
+          .filter((polygon) => Array.isArray(polygon) && polygon.length >= 3);
+      }
+    } catch (_error) {
+      floorShadowPolygons = [];
+      cubeShadowPolygons = [];
+    }
+  }
+
+  return { faces, shadowPolygons, floorShadowPolygons, cubeShadowPolygons, bgFill, width, height, viewBox };
 }
 
-function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals) {
-  const { faces, shadowPolygons, bgFill, width, height, viewBox } = parsedScene;
+function buildLabSceneFromExportData(exportData) {
+  if (!exportData || !Array.isArray(exportData.faces)) {
+    return null;
+  }
+  const faces = [];
+  for (const face of exportData.faces) {
+    const polygons = Array.isArray(face.clippedScreenPolygons) ? face.clippedScreenPolygons : [];
+    for (const polygon of polygons) {
+      const sanitized = sanitizeScreenPolygon(polygon);
+      if (!sanitized || sanitized.length < 3) {
+        continue;
+      }
+      faces.push({
+        brightness: Number(face.brightness || 0),
+        shadowStrength: Number(face.shadowStrength || 0),
+        cubeIndex: face.cubeIndex || "?",
+        faceName: face.faceName || "face",
+        background: "none",
+        polygon: sanitized,
+      });
+    }
+  }
+  return {
+    faces,
+    shadowPolygons: [],
+    floorShadowPolygons: Array.isArray(exportData.floorShadowPolygons) ? exportData.floorShadowPolygons : [],
+    cubeShadowPolygons: Array.isArray(exportData.cubeShadowPolygons) ? exportData.cubeShadowPolygons : [],
+    bgFill: "#ffffff",
+    width: Number(exportData.width || 1200),
+    height: Number(exportData.height || 900),
+    viewBox: `0 0 ${Number(exportData.width || 1200)} ${Number(exportData.height || 900)}`,
+  };
+}
+
+function buildPaperBackgroundForLab(width, height, paperOptions) {
+  const fallback = {
+    defs: "",
+    content: `<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" />`,
+  };
+  if (typeof window === "undefined" || typeof window.PaperBackgroundTexture !== "function") {
+    return fallback;
+  }
+  try {
+    const tempSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const texture = new window.PaperBackgroundTexture(tempSvg, {
+      ...(paperOptions || {}),
+      width,
+      height,
+    });
+    texture.render();
+    const defsNode = tempSvg.querySelector("defs");
+    const rootGroup = tempSvg.querySelector("#paperTextureRoot");
+    if (!rootGroup) {
+      return fallback;
+    }
+    return {
+      defs: defsNode ? defsNode.innerHTML : "",
+      content: rootGroup.outerHTML,
+    };
+  } catch (_error) {
+    return fallback;
+  }
+}
+
+function buildLabStudioState(parsedScene) {
+  const sides = [];
+  parsedScene.faces.forEach((face, index) => {
+    const id = `face:${face.cubeIndex}:${face.faceName}:${index}`;
+    const defaultBrightness = faceStudioBrightness(face);
+    sides.push({
+      id,
+      target: "face",
+      targetIndex: index,
+      hatchMode: studioDefaultHatchMode(defaultBrightness),
+      hatchSpacing: studioDefaultSpacingForBrightness(defaultBrightness),
+      circleSpacing: studioDefaultSpacingForBrightness(defaultBrightness),
+    });
+  });
+
+  (parsedScene.floorShadowPolygons || []).forEach((_polygon, index) => {
+    sides.push({
+      id: `floorShadow:${index}`,
+      target: "floorShadow",
+      targetIndex: index,
+      hatchMode: "cross",
+      hatchSpacing: 0.85,
+      circleSpacing: 0.85,
+    });
+  });
+
+  (parsedScene.cubeShadowPolygons || []).forEach((_polygon, index) => {
+    sides.push({
+      id: `cubeShadow:${index}`,
+      target: "cubeShadow",
+      targetIndex: index,
+      hatchMode: "cross",
+      hatchSpacing: 0.75,
+      circleSpacing: 0.75,
+    });
+  });
+  return {
+    sides,
+    selectedFaceId: sides[0]?.id || null,
+  };
+}
+
+function applyLabStudioFromSearch(studioState, search) {
+  const encoded = search.get("studio");
+  if (!encoded || !studioState) {
+    return;
+  }
+  try {
+    const payload = JSON.parse(decodeURIComponent(encoded));
+    if (!payload || !Array.isArray(payload.d)) {
+      return;
+    }
+    const byId = new Map(studioState.sides.map((side) => [side.id, side]));
+    for (let i = 0; i < payload.d.length; i += 1) {
+      const row = payload.d[i];
+      const side = byId.get(row.id) || studioState.sides[i];
+      if (!side) {
+        continue;
+      }
+      if (row.mode === "none" || row.mode === "single" || row.mode === "cross") {
+        side.hatchMode = row.mode;
+      }
+      if (Array.isArray(row.p) && row.p.length > 0) {
+        const hatchSpacing = Number(row.p[0]);
+        if (Number.isFinite(hatchSpacing)) {
+          side.hatchSpacing = hatchSpacing;
+        }
+      }
+      if (Array.isArray(row.p) && row.p.length > 1) {
+        const circleSpacing = Number(row.p[1]);
+        if (Number.isFinite(circleSpacing)) {
+          side.circleSpacing = circleSpacing;
+        }
+      }
+    }
+    if (typeof payload.s === "string") {
+      studioState.selectedFaceId = payload.s;
+    }
+  } catch (_error) {
+    // ignore malformed studio payload
+  }
+}
+
+function encodePaperPresetForUrl(paperOptions) {
+  try {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(paperOptions))));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function decodePaperPresetFromSearch(search) {
+  const encoded = search.get("preset");
+  if (!encoded) {
+    return null;
+  }
+  try {
+    return JSON.parse(decodeURIComponent(escape(atob(encoded))));
+  } catch (_error) {
+    return null;
+  }
+}
+
+function decodeStudioPayloadFromSearch(search) {
+  const encoded = search.get("studio");
+  if (!encoded) {
+    return null;
+  }
+  try {
+    return JSON.parse(decodeURIComponent(encoded));
+  } catch (_error) {
+    return null;
+  }
+}
+
+const LAB_PRESETS_STORAGE_KEY = "camogli3d.exportStudio.namedPresets.v1";
+const LAB_DEFAULT_GLOBALS = {
+  hatchWidth: 1.0,
+  hatchJitter: 1.85,
+  hatchBend: -0.02,
+  hatchTrimRatio: 0.06,
+  hatchMinVisible: 0,
+  circleRadius: 0.25,
+  circleJitter: 1.0,
+};
+const LAB_DEFAULT_PAPER_OPTIONS = {
+  width: 1920,
+  height: 1047,
+  seed: 12345,
+  paperColor: "#dedede",
+  grainColor: "#57534c",
+  grainOpacity: 0.2,
+  grainFrequencyX: 0.85,
+  grainFrequencyY: 0.65,
+  grainOctaves: 4,
+  embossStrength: 1.5,
+  embossAzimuth: 77,
+  embossElevation: 35,
+  includeFibers: true,
+  fiberCount: 1200,
+  fiberLengthMin: 4,
+  fiberLengthMax: 16,
+  fiberStrokeWidth: 0.68,
+  fiberOpacity: 0.17,
+  fiberColor: "#6a6053",
+  dirtCount: 1400,
+  dirtMinRadius: 0.4,
+  dirtMaxRadius: 2.5,
+  dirtOpacity: 0.21,
+  dirtBlur: 1.95,
+  dirtColor: "#6c5847",
+};
+const LAB_DEFAULT_VISUAL_OPTIONS = {
+  frameColor: exportVisualSettings.frameColor,
+  backgroundColor: exportVisualSettings.backgroundColor,
+};
+
+function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onSelectFace = null) {
+  const {
+    faces,
+    shadowPolygons,
+    floorShadowPolygons = [],
+    cubeShadowPolygons = [],
+    width,
+    height,
+    viewBox,
+  } = parsedScene;
   const brightnessNormalization = buildFaceBrightnessNormalization(faces);
+  const studioState = labState?.studioState;
+  const sideById = new Map((studioState?.sides || []).map((side) => [side.id, side]));
+  const paperBackground = buildPaperBackgroundForLab(width, height, labState?.paperOptions || {});
+
   svgNode.setAttribute("viewBox", viewBox || `0 0 ${width} ${height}`);
   svgNode.setAttribute("width", String(width));
   svgNode.setAttribute("height", String(height));
 
-  let html = `<rect x="0" y="0" width="${width}" height="${height}" fill="${bgFill}" />`;
+  const frameParts = buildSvgFrameParts(width, height, "labPreviewFrame", labState?.visualOptions || exportVisualSettings);
 
-  for (const shadow of shadowPolygons) {
-    const pts = shadow.points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-    html += `<polygon points="${pts}" fill="${shadow.fill}" opacity="${shadow.opacity}" stroke="none" />`;
+  let html = `<defs>${paperBackground.defs}${frameParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}`;
+
+  if (floorShadowPolygons.length === 0 && cubeShadowPolygons.length === 0) {
+    for (const shadow of shadowPolygons) {
+      const pts = shadow.points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+      html += `<polygon points="${pts}" fill="${shadow.fill}" opacity="${shadow.opacity}" stroke="none" />`;
+    }
   }
 
-  for (const face of faces) {
-    const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization);
+  for (let index = 0; index < floorShadowPolygons.length; index += 1) {
+    const polygon = floorShadowPolygons[index];
+    const sideId = `floorShadow:${index}`;
+    const side = sideById.get(sideId) || null;
+    const pseudoFace = {
+      brightness: 0.12,
+      shadowStrength: 1,
+      cubeIndex: "floorShadow",
+      faceName: "floor",
+    };
+    const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
+    const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
+    const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+    const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
+    const highlightStroke = isSelected ? "#d6a65f" : "none";
+    const highlightWidth = isSelected ? "2.2" : "0";
+    html += `<g data-face-id="${sideId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${sideId}" style="cursor:pointer;" /></g>`;
+  }
+
+  for (let index = 0; index < cubeShadowPolygons.length; index += 1) {
+    const polygon = cubeShadowPolygons[index];
+    const sideId = `cubeShadow:${index}`;
+    const side = sideById.get(sideId) || null;
+    const pseudoFace = {
+      brightness: 0.08,
+      shadowStrength: 1,
+      cubeIndex: "cubeShadow",
+      faceName: "cube",
+    };
+    const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
+    const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
+    const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+    const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
+    const highlightStroke = isSelected ? "#d6a65f" : "none";
+    const highlightWidth = isSelected ? "2.2" : "0";
+    html += `<g data-face-id="${sideId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${sideId}" style="cursor:pointer;" /></g>`;
+  }
+
+  for (let index = 0; index < faces.length; index += 1) {
+    const face = faces[index];
+    const faceId = `face:${face.cubeIndex}:${face.faceName}:${index}`;
+    const side = sideById.get(faceId) || null;
+    const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization, side);
     const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
     const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-    html += `<g><polygon points="${pts}" fill="${style.background}" stroke="none" />${hatchSvg}</g>`;
+    const isSelected = Boolean(studioState && studioState.selectedFaceId === faceId);
+    const highlightStroke = isSelected ? "#d6a65f" : "none";
+    const highlightWidth = isSelected ? "2.2" : "0";
+    html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
   }
 
+  html += `${frameParts.after}${frameParts.overlay}`;
+
   svgNode.innerHTML = html;
+
+  if (typeof onSelectFace === "function") {
+    svgNode.querySelectorAll("[data-face-hit='1']").forEach((node) => {
+      node.addEventListener("click", () => {
+        const id = node.getAttribute("data-face-id");
+        if (id) {
+          onSelectFace(id);
+        }
+      });
+    });
+  }
 }
 
-function initSvgHatchingLab() {
+function initSvgHatchingLab(initialParsedScene = null) {
   const hud = document.querySelector(".hud");
   if (hud) {
     hud.style.display = "none";
@@ -1730,21 +2124,27 @@ function initSvgHatchingLab() {
   container.innerHTML = "";
   container.style.position = "fixed";
   container.style.inset = "0";
+  container.style.height = "100vh";
   container.style.display = "grid";
   container.style.gridTemplateColumns = "minmax(0, 1fr) 340px";
-  container.style.background = "linear-gradient(180deg, #131820 0%, #0d1118 100%)";
+  container.style.background = exportVisualSettings.backgroundColor;
+  container.style.overflow = "hidden";
 
   const previewPane = document.createElement("div");
-  previewPane.style.padding = "12px";
-  previewPane.style.overflow = "auto";
+  previewPane.style.padding = "18px";
+  previewPane.style.overflowY = "auto";
+  previewPane.style.overflowX = "hidden";
+  previewPane.style.minHeight = "0";
+  previewPane.style.boxSizing = "border-box";
 
   const svgNode = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svgNode.style.display = "block";
   svgNode.style.width = "100%";
+  svgNode.style.maxWidth = "100%";
   svgNode.style.height = "auto";
-  svgNode.style.border = "1px solid rgba(255,255,255,0.14)";
-  svgNode.style.background = "#161d28";
-  svgNode.style.borderRadius = "12px";
+  svgNode.style.border = "1px solid rgba(25,30,36,0.12)";
+  svgNode.style.background = "#f8f5ed";
+  svgNode.style.boxSizing = "border-box";
   previewPane.appendChild(svgNode);
 
   const pane = document.createElement("aside");
@@ -1753,32 +2153,66 @@ function initSvgHatchingLab() {
   pane.style.background = "rgba(9, 13, 20, 0.92)";
   pane.style.color = "#edf2f7";
   pane.style.fontFamily = "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif";
-  pane.style.overflow = "auto";
+  pane.style.overflowY = "auto";
+  pane.style.minHeight = "0";
+  pane.style.height = "100vh";
+  pane.style.maxHeight = "100vh";
+  pane.style.overscrollBehavior = "contain";
+  pane.style.webkitOverflowScrolling = "touch";
 
   const title = document.createElement("h2");
-  title.textContent = "SVG Hatching Lab";
+  title.textContent = "3D Export Studio";
   title.style.margin = "0 0 8px";
   title.style.fontSize = "16px";
   title.style.letterSpacing = "0.04em";
 
   const hint = document.createElement("p");
-  hint.textContent = "Load an exported 3D SVG, tune hatching globals live, then copy URL params.";
+  hint.textContent = "Tune paper, global hatch, and per-face settings. Click any face in the preview to edit that side.";
   hint.style.margin = "0 0 14px";
   hint.style.color = "#9aa7b7";
   hint.style.fontSize = "12px";
 
   // 3D Scene controls
-  const labGlobals = { ...SVG_EXPORT_STUDIO_GLOBALS };
+  const labGlobals = {
+    ...SVG_EXPORT_STUDIO_GLOBALS,
+    ...LAB_DEFAULT_GLOBALS,
+  };
   let labParsedScene = null;
+  const labState = {
+    studioState: null,
+    paperOptions: {
+      ...LAB_DEFAULT_PAPER_OPTIONS,
+    },
+    visualOptions: {
+      ...LAB_DEFAULT_VISUAL_OPTIONS,
+    },
+  };
+  const presetFromSearch = decodePaperPresetFromSearch(searchParams);
+  if (presetFromSearch) {
+    labState.paperOptions = {
+      ...labState.paperOptions,
+      ...presetFromSearch,
+    };
+  }
   const sceneSection = document.createElement("div");
 
-  const fileLabel = document.createElement("label");
-  fileLabel.textContent = "Load exported 3D SVG";
-  fileLabel.style.cssText = "display:block;font-size:12px;color:#9aa7b7;margin-bottom:6px;";
-  const fileInput = document.createElement("input");
-  fileInput.type = "file";
-  fileInput.accept = ".svg,image/svg+xml";
-  fileInput.style.cssText = "width:100%;margin-bottom:14px;color:#d8e4f0;font-size:11px;";
+  function applyLabBackgroundColor() {
+    container.style.background = sanitizeHexColor(labState.visualOptions.backgroundColor, EXPORT_BACKGROUND_COLOR);
+  }
+
+  function createAccordion(titleText, open = false) {
+    const details = document.createElement("details");
+    details.open = open;
+    details.style.cssText = "margin:10px 0;border:1px solid rgba(255,255,255,0.16);border-radius:8px;background:rgba(255,255,255,0.03);";
+    const summary = document.createElement("summary");
+    summary.textContent = titleText;
+    summary.style.cssText = "cursor:pointer;list-style:none;padding:10px 12px;font-size:12px;letter-spacing:0.03em;text-transform:uppercase;color:#d2dbe7;";
+    const content = document.createElement("div");
+    content.style.cssText = "padding:0 12px 12px;";
+    details.appendChild(summary);
+    details.appendChild(content);
+    return { details, content };
+  }
 
   const sceneSlidersRoot = document.createElement("div");
 
@@ -1803,7 +2237,7 @@ function initSvgHatchingLab() {
       const v = Number(inp.value);
       labGlobals[key] = v;
       valSpan.textContent = v.toFixed(2);
-      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
+      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
     });
     wrap.appendChild(lbl);
     wrap.appendChild(inp);
@@ -1839,13 +2273,13 @@ function initSvgHatchingLab() {
       edgeInsetSlider.disabled = true;
       edgeInsetValSpan.textContent = "auto";
     }
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
   });
   edgeInsetSlider.addEventListener("input", () => {
     const v = Number(edgeInsetSlider.value);
     labGlobals.hatchEdgeInset = v;
     edgeInsetValSpan.textContent = v.toFixed(1);
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
   });
   edgeInsetRow.appendChild(edgeInsetLbl);
   edgeInsetRow.appendChild(edgeInsetSlider);
@@ -1859,20 +2293,410 @@ function initSvgHatchingLab() {
   sceneSlidersRoot.appendChild(createSceneSlider("Circle Jitter",  "circleJitter",  0,    1,    0.05));
   sceneSlidersRoot.appendChild(edgeInsetRow);
 
+  const faceSection = document.createElement("div");
+  faceSection.style.cssText = "margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);";
+  const faceTitle = document.createElement("div");
+  faceTitle.style.cssText = "font-size:12px;color:#9aa7b7;margin-bottom:8px;";
+  faceTitle.textContent = "Selected face: none";
+  const faceBrightnessInfo = document.createElement("div");
+  faceBrightnessInfo.style.cssText = "font-size:11px;color:#aeb9c7;margin-bottom:8px;";
+  faceBrightnessInfo.textContent = "Brightness: n/a";
+
+  const faceModeLabel = document.createElement("label");
+  faceModeLabel.textContent = "Hatch Mode";
+  faceModeLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const faceModeSelect = document.createElement("select");
+  faceModeSelect.style.cssText = "width:100%;margin-bottom:10px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+  ["none", "single", "cross"].forEach((mode) => {
+    const option = document.createElement("option");
+    option.value = mode;
+    option.textContent = mode;
+    faceModeSelect.appendChild(option);
+  });
+
+  function createFaceSlider(labelText, min, max, step) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+    const lbl = document.createElement("label");
+    lbl.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;";
+    lbl.textContent = labelText;
+    const valSpan = document.createElement("span");
+    valSpan.textContent = "0.50";
+    lbl.appendChild(valSpan);
+    const inp = document.createElement("input");
+    inp.type = "range";
+    inp.min = String(min);
+    inp.max = String(max);
+    inp.step = String(step);
+    inp.style.width = "100%";
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    return { wrap, inp, valSpan };
+  }
+
+  const hatchSpacingSlider = createFaceSlider("Hatch Spacing", 0.2, 2.0, 0.05);
+  const circleSpacingSlider = createFaceSlider("Circle Spacing", 0.2, 2.0, 0.05);
+
+  function selectedSide() {
+    if (!labState.studioState?.selectedFaceId) {
+      return null;
+    }
+    return labState.studioState.sides.find((side) => side.id === labState.studioState.selectedFaceId) || null;
+  }
+
+  function selectedSideBrightness(sideId) {
+    if (!labParsedScene || !sideId) {
+      return null;
+    }
+    if (sideId.startsWith("face:")) {
+      const parts = sideId.split(":");
+      const index = Number(parts[parts.length - 1]);
+      const face = Number.isFinite(index) ? labParsedScene.faces[index] : null;
+      return Number.isFinite(face?.brightness) ? face.brightness : null;
+    }
+    if (sideId.startsWith("floorShadow:")) {
+      return 0.12;
+    }
+    if (sideId.startsWith("cubeShadow:")) {
+      return 0.08;
+    }
+    return null;
+  }
+
+  function refreshFaceControls() {
+    const side = selectedSide();
+    if (!side) {
+      faceTitle.textContent = "Selected face: none";
+      faceBrightnessInfo.textContent = "Brightness: n/a";
+      faceModeSelect.disabled = true;
+      hatchSpacingSlider.inp.disabled = true;
+      circleSpacingSlider.inp.disabled = true;
+      return;
+    }
+    faceTitle.textContent = `Selected face: ${side.id}`;
+    const brightness = selectedSideBrightness(side.id);
+    faceBrightnessInfo.textContent = Number.isFinite(brightness)
+      ? `Brightness: ${brightness.toFixed(3)} (0=bright, 1=dark)`
+      : "Brightness: n/a";
+    faceModeSelect.disabled = false;
+    faceModeSelect.value = side.hatchMode;
+    hatchSpacingSlider.inp.disabled = false;
+    circleSpacingSlider.inp.disabled = false;
+    hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
+    hatchSpacingSlider.valSpan.textContent = side.hatchSpacing.toFixed(2);
+    circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
+    circleSpacingSlider.valSpan.textContent = side.circleSpacing.toFixed(2);
+  }
+
+  faceModeSelect.addEventListener("change", () => {
+    const side = selectedSide();
+    if (!side) return;
+    side.hatchMode = faceModeSelect.value;
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
+  hatchSpacingSlider.inp.addEventListener("input", () => {
+    const side = selectedSide();
+    if (!side) return;
+    side.hatchSpacing = Number(hatchSpacingSlider.inp.value);
+    hatchSpacingSlider.valSpan.textContent = side.hatchSpacing.toFixed(2);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
+  circleSpacingSlider.inp.addEventListener("input", () => {
+    const side = selectedSide();
+    if (!side) return;
+    side.circleSpacing = Number(circleSpacingSlider.inp.value);
+    circleSpacingSlider.valSpan.textContent = side.circleSpacing.toFixed(2);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
+  faceSection.appendChild(faceTitle);
+  faceSection.appendChild(faceBrightnessInfo);
+  faceSection.appendChild(faceModeLabel);
+  faceSection.appendChild(faceModeSelect);
+  faceSection.appendChild(hatchSpacingSlider.wrap);
+  faceSection.appendChild(circleSpacingSlider.wrap);
   const sceneActions = document.createElement("div");
   sceneActions.style.cssText = "display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;";
+
+  function readPresetStore() {
+    const studioPayloadFromSearch = decodeStudioPayloadFromSearch(searchParams);
+    const paperPresetFromSearch = decodePaperPresetFromSearch(searchParams);
+    const visualDefaultsFromSearch = {
+      frameColor: sanitizeHexColor(searchParams.get("frameColor"), LAB_DEFAULT_VISUAL_OPTIONS.frameColor),
+      backgroundColor: sanitizeHexColor(searchParams.get("bgColor"), LAB_DEFAULT_VISUAL_OPTIONS.backgroundColor),
+    };
+
+    try {
+      const raw = window.localStorage.getItem(LAB_PRESETS_STORAGE_KEY);
+      if (!raw) {
+        return {
+          defaultPresetName: "Scott Default",
+          presets: [
+            {
+              name: "Scott Default",
+              globals: { ...LAB_DEFAULT_GLOBALS },
+              paperOptions: {
+                ...LAB_DEFAULT_PAPER_OPTIONS,
+                ...(paperPresetFromSearch || {}),
+              },
+              visualOptions: {
+                ...LAB_DEFAULT_VISUAL_OPTIONS,
+                ...visualDefaultsFromSearch,
+              },
+              studioPayload: studioPayloadFromSearch,
+            },
+          ],
+        };
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || !Array.isArray(parsed.presets)) {
+        throw new Error("invalid preset store");
+      }
+      return parsed;
+    } catch (_error) {
+      return {
+        defaultPresetName: "Scott Default",
+        presets: [
+          {
+            name: "Scott Default",
+            globals: { ...LAB_DEFAULT_GLOBALS },
+            paperOptions: {
+              ...LAB_DEFAULT_PAPER_OPTIONS,
+              ...(paperPresetFromSearch || {}),
+            },
+            visualOptions: {
+              ...LAB_DEFAULT_VISUAL_OPTIONS,
+              ...visualDefaultsFromSearch,
+            },
+            studioPayload: studioPayloadFromSearch,
+          },
+        ],
+      };
+    }
+  }
+
+  function writePresetStore(store) {
+    try {
+      window.localStorage.setItem(LAB_PRESETS_STORAGE_KEY, JSON.stringify(store));
+    } catch (_error) {
+      // ignore storage failures
+    }
+  }
+
+  function buildCurrentStudioPayload() {
+    if (!labState.studioState) {
+      return null;
+    }
+    return {
+      v: 2,
+      s: labState.studioState.selectedFaceId,
+      d: labState.studioState.sides.map((side) => ({
+        id: side.id,
+        mode: side.hatchMode,
+        p: [
+          Number(side.hatchSpacing.toFixed(2)),
+          Number(side.circleSpacing.toFixed(2)),
+        ],
+      })),
+    };
+  }
+
+  let frameColorInput = null;
+  let backgroundColorInput = null;
+
+  function applyPresetSnapshot(preset, rerender = true) {
+    if (!preset) {
+      return;
+    }
+    const globals = preset.globals || {};
+    const globalKeys = [
+      "hatchWidth",
+      "hatchJitter",
+      "hatchBend",
+      "hatchEdgeInset",
+      "hatchTrimRatio",
+      "hatchMinVisible",
+      "circleRadius",
+      "circleJitter",
+    ];
+    for (const key of globalKeys) {
+      if (Object.prototype.hasOwnProperty.call(globals, key)) {
+        labGlobals[key] = globals[key];
+      }
+    }
+    if (preset.paperOptions) {
+      labState.paperOptions = {
+        ...labState.paperOptions,
+        ...preset.paperOptions,
+      };
+    }
+    if (preset.visualOptions) {
+      labState.visualOptions = {
+        ...labState.visualOptions,
+        frameColor: sanitizeHexColor(preset.visualOptions.frameColor, labState.visualOptions.frameColor),
+        backgroundColor: sanitizeHexColor(preset.visualOptions.backgroundColor, labState.visualOptions.backgroundColor),
+      };
+      exportVisualSettings.frameColor = labState.visualOptions.frameColor;
+      exportVisualSettings.backgroundColor = labState.visualOptions.backgroundColor;
+      applyLabBackgroundColor();
+      if (frameColorInput) {
+        frameColorInput.value = labState.visualOptions.frameColor;
+      }
+      if (backgroundColorInput) {
+        backgroundColorInput.value = labState.visualOptions.backgroundColor;
+      }
+    }
+    if (preset.studioPayload && labState.studioState) {
+      const temp = new URLSearchParams();
+      temp.set("studio", encodeURIComponent(JSON.stringify(preset.studioPayload)));
+      applyLabStudioFromSearch(labState.studioState, temp);
+    }
+    if (rerender && labParsedScene) {
+      refreshFaceControls();
+      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    }
+  }
+
+  const presetSection = document.createElement("div");
+  presetSection.style.cssText = "margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);";
+  const presetTitle = document.createElement("div");
+  presetTitle.style.cssText = "font-size:12px;color:#9aa7b7;margin-bottom:8px;";
+  presetTitle.textContent = "Named Presets";
+  const presetNameInput = document.createElement("input");
+  presetNameInput.type = "text";
+  presetNameInput.placeholder = "Preset name";
+  presetNameInput.style.cssText = "width:100%;margin-bottom:8px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+  const presetSelect = document.createElement("select");
+  presetSelect.style.cssText = "width:100%;margin-bottom:8px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+  const presetButtons = document.createElement("div");
+  presetButtons.style.cssText = "display:flex;gap:6px;flex-wrap:wrap;";
+
+  const savePresetBtn = document.createElement("button");
+  savePresetBtn.type = "button";
+  savePresetBtn.textContent = "Save";
+  savePresetBtn.style.cssText = "padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#e6eef8;font-size:12px;cursor:pointer;";
+  const loadPresetBtn = document.createElement("button");
+  loadPresetBtn.type = "button";
+  loadPresetBtn.textContent = "Load";
+  loadPresetBtn.style.cssText = savePresetBtn.style.cssText;
+  const setDefaultPresetBtn = document.createElement("button");
+  setDefaultPresetBtn.type = "button";
+  setDefaultPresetBtn.textContent = "Set Default";
+  setDefaultPresetBtn.style.cssText = savePresetBtn.style.cssText;
+  const deletePresetBtn = document.createElement("button");
+  deletePresetBtn.type = "button";
+  deletePresetBtn.textContent = "Delete";
+  deletePresetBtn.style.cssText = "padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(180,60,60,0.22);color:#ffe5e5;font-size:12px;cursor:pointer;";
+
+  let presetStore = readPresetStore();
+  writePresetStore(presetStore);
+
+  function refreshPresetSelect() {
+    const current = presetSelect.value;
+    presetSelect.innerHTML = "";
+    for (const preset of presetStore.presets) {
+      const option = document.createElement("option");
+      option.value = preset.name;
+      option.textContent = preset.name === presetStore.defaultPresetName
+        ? `${preset.name} (default)`
+        : preset.name;
+      presetSelect.appendChild(option);
+    }
+    if (presetStore.presets.some((preset) => preset.name === current)) {
+      presetSelect.value = current;
+    } else if (presetStore.defaultPresetName && presetStore.presets.some((preset) => preset.name === presetStore.defaultPresetName)) {
+      presetSelect.value = presetStore.defaultPresetName;
+    }
+  }
+
+  savePresetBtn.addEventListener("click", () => {
+    const name = (presetNameInput.value || "").trim();
+    if (!name) {
+      updateStatus("Hatch lab", "Enter a preset name first.");
+      return;
+    }
+    const nextPreset = {
+      name,
+      globals: { ...labGlobals },
+      paperOptions: { ...labState.paperOptions },
+      visualOptions: { ...labState.visualOptions },
+      studioPayload: buildCurrentStudioPayload(),
+    };
+    const existingIndex = presetStore.presets.findIndex((preset) => preset.name === name);
+    if (existingIndex >= 0) {
+      presetStore.presets[existingIndex] = nextPreset;
+    } else {
+      presetStore.presets.push(nextPreset);
+    }
+    writePresetStore(presetStore);
+    refreshPresetSelect();
+    presetSelect.value = name;
+    updateStatus("Hatch lab", `Preset '${name}' saved.`);
+  });
+
+  loadPresetBtn.addEventListener("click", () => {
+    const name = presetSelect.value;
+    const preset = presetStore.presets.find((entry) => entry.name === name);
+    if (!preset) {
+      updateStatus("Hatch lab", "Select a preset to load.");
+      return;
+    }
+    applyPresetSnapshot(preset, true);
+    updateStatus("Hatch lab", `Preset '${name}' loaded.`);
+  });
+
+  setDefaultPresetBtn.addEventListener("click", () => {
+    const name = presetSelect.value;
+    if (!name) {
+      return;
+    }
+    presetStore.defaultPresetName = name;
+    writePresetStore(presetStore);
+    refreshPresetSelect();
+    presetSelect.value = name;
+    updateStatus("Hatch lab", `Preset '${name}' set as default.`);
+  });
+
+  deletePresetBtn.addEventListener("click", () => {
+    const name = presetSelect.value;
+    if (!name) {
+      return;
+    }
+    if (name === "Scott Default") {
+      updateStatus("Hatch lab", "'Scott Default' is protected.");
+      return;
+    }
+    presetStore.presets = presetStore.presets.filter((preset) => preset.name !== name);
+    if (presetStore.defaultPresetName === name) {
+      presetStore.defaultPresetName = "Scott Default";
+    }
+    writePresetStore(presetStore);
+    refreshPresetSelect();
+    updateStatus("Hatch lab", `Preset '${name}' deleted.`);
+  });
+
+  presetButtons.appendChild(savePresetBtn);
+  presetButtons.appendChild(loadPresetBtn);
+  presetButtons.appendChild(setDefaultPresetBtn);
+  presetButtons.appendChild(deletePresetBtn);
+  presetSection.appendChild(presetTitle);
+  presetSection.appendChild(presetNameInput);
+  presetSection.appendChild(presetSelect);
+  presetSection.appendChild(presetButtons);
 
   const rerollSceneBtn = document.createElement("button");
   rerollSceneBtn.type = "button";
   rerollSceneBtn.textContent = "Re-roll Randomness";
   rerollSceneBtn.style.cssText = "padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#e6eef8;font-size:12px;cursor:pointer;";
   rerollSceneBtn.addEventListener("click", () => {
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
   });
 
   const copyParamsBtn = document.createElement("button");
   copyParamsBtn.type = "button";
-  copyParamsBtn.textContent = "Copy URL Params";
+  copyParamsBtn.textContent = "Copy Studio + Paper Params";
   copyParamsBtn.style.cssText = "padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(214,166,95,0.2);color:#f7ead6;font-size:12px;cursor:pointer;";
   copyParamsBtn.addEventListener("click", async () => {
     const gv = labGlobals;
@@ -1884,7 +2708,28 @@ function initSvgHatchingLab() {
       `hatchMinVisible=${gv.hatchMinVisible.toFixed(1)}`,
       `circleRadius=${gv.circleRadius.toFixed(2)}`,
       `circleJitter=${gv.circleJitter.toFixed(2)}`,
+      `frameColor=${encodeURIComponent(labState.visualOptions.frameColor)}`,
+      `bgColor=${encodeURIComponent(labState.visualOptions.backgroundColor)}`,
     ];
+    if (labState.studioState) {
+      const payload = {
+        v: 2,
+        s: labState.studioState.selectedFaceId,
+        d: labState.studioState.sides.map((side) => ({
+          id: side.id,
+          mode: side.hatchMode,
+          p: [
+            Number(side.hatchSpacing.toFixed(2)),
+            Number(side.circleSpacing.toFixed(2)),
+          ],
+        })),
+      };
+      parts.push(`studio=${encodeURIComponent(JSON.stringify(payload))}`);
+    }
+    const encodedPreset = encodePaperPresetForUrl(labState.paperOptions);
+    if (encodedPreset) {
+      parts.push(`preset=${encodeURIComponent(encodedPreset)}`);
+    }
     if (gv.hatchEdgeInset !== null) parts.push(`hatchEdgeInset=${gv.hatchEdgeInset.toFixed(1)}`);
     const paramStr = "?" + parts.join("&");
     window.lastLabGlobals = { ...gv };
@@ -1899,28 +2744,185 @@ function initSvgHatchingLab() {
   sceneActions.appendChild(rerollSceneBtn);
   sceneActions.appendChild(copyParamsBtn);
 
-  fileInput.addEventListener("change", () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target?.result;
-      if (typeof text !== "string") return;
-      labParsedScene = parseFacesFromExportedSvg(text);
-      if (!labParsedScene || labParsedScene.faces.length === 0) {
-        updateStatus("Hatch lab", "No face data found — ensure the SVG was exported from the 3D view.");
-        return;
-      }
-      updateStatus("Hatch lab", `Loaded ${labParsedScene.faces.length} faces. Adjust sliders to tune, then Copy URL Params.`);
-      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
-    };
-    reader.readAsText(file);
-  });
+  const paperSection = document.createElement("div");
+  paperSection.style.cssText = "margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);";
+  const paperTitle = document.createElement("div");
+  paperTitle.style.cssText = "font-size:12px;color:#9aa7b7;margin-bottom:8px;";
+  paperTitle.textContent = "Paper Texture";
+  paperSection.appendChild(paperTitle);
 
-  sceneSection.appendChild(fileLabel);
-  sceneSection.appendChild(fileInput);
-  sceneSection.appendChild(sceneSlidersRoot);
-  sceneSection.appendChild(sceneActions);
+  function createPaperSlider(labelText, key, min, max, step, digits = 2) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+    const lbl = document.createElement("label");
+    lbl.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;";
+    lbl.textContent = labelText;
+    const valSpan = document.createElement("span");
+    valSpan.textContent = Number(labState.paperOptions[key]).toFixed(digits);
+    lbl.appendChild(valSpan);
+    const inp = document.createElement("input");
+    inp.type = "range";
+    inp.min = String(min);
+    inp.max = String(max);
+    inp.step = String(step);
+    inp.value = String(labState.paperOptions[key]);
+    inp.style.width = "100%";
+    inp.addEventListener("input", () => {
+      const v = Number(inp.value);
+      labState.paperOptions[key] = v;
+      valSpan.textContent = v.toFixed(digits);
+      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    });
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    return wrap;
+  }
+
+  function createPaperColor(labelText, key) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+    const lbl = document.createElement("label");
+    lbl.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+    lbl.textContent = labelText;
+    const inp = document.createElement("input");
+    inp.type = "color";
+    inp.value = String(labState.paperOptions[key]);
+    inp.style.width = "100%";
+    inp.addEventListener("input", () => {
+      labState.paperOptions[key] = inp.value;
+      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    });
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    return wrap;
+  }
+
+  const fiberToggleWrap = document.createElement("label");
+  fiberToggleWrap.style.cssText = "display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#d2dbe7;margin-bottom:10px;";
+  fiberToggleWrap.textContent = "Include Fibers";
+  const fiberToggle = document.createElement("input");
+  fiberToggle.type = "checkbox";
+  fiberToggle.checked = Boolean(labState.paperOptions.includeFibers);
+  fiberToggle.addEventListener("change", () => {
+    labState.paperOptions.includeFibers = Boolean(fiberToggle.checked);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+  fiberToggleWrap.appendChild(fiberToggle);
+
+  paperSection.appendChild(createPaperSlider("Seed", "seed", 1, 999999999, 1, 0));
+  paperSection.appendChild(createPaperColor("Paper Color", "paperColor"));
+  paperSection.appendChild(createPaperColor("Grain Color", "grainColor"));
+  paperSection.appendChild(createPaperSlider("Grain Opacity", "grainOpacity", 0, 1, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Grain Frequency X", "grainFrequencyX", 0.05, 2, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Grain Frequency Y", "grainFrequencyY", 0.05, 2, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Grain Octaves", "grainOctaves", 1, 7, 1, 0));
+  paperSection.appendChild(createPaperSlider("Emboss Strength", "embossStrength", 0, 3, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Emboss Azimuth", "embossAzimuth", 0, 360, 1, 0));
+  paperSection.appendChild(createPaperSlider("Emboss Elevation", "embossElevation", 0, 90, 1, 0));
+  paperSection.appendChild(fiberToggleWrap);
+  paperSection.appendChild(createPaperSlider("Fiber Count", "fiberCount", 0, 1600, 1, 0));
+  paperSection.appendChild(createPaperSlider("Dirt Count", "dirtCount", 0, 1400, 1, 0));
+  paperSection.appendChild(createPaperSlider("Dirt Opacity", "dirtOpacity", 0, 1, 0.01, 2));
+
+  const appearanceSection = document.createElement("div");
+  appearanceSection.style.cssText = "margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);";
+  const appearanceTitle = document.createElement("div");
+  appearanceTitle.style.cssText = "font-size:12px;color:#9aa7b7;margin-bottom:8px;";
+  appearanceTitle.textContent = "Frame & Background";
+  appearanceSection.appendChild(appearanceTitle);
+
+  const frameColorWrap = document.createElement("div");
+  frameColorWrap.style.marginBottom = "10px";
+  const frameColorLabel = document.createElement("label");
+  frameColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  frameColorLabel.textContent = "Margin Color";
+  frameColorInput = document.createElement("input");
+  frameColorInput.type = "color";
+  frameColorInput.value = sanitizeHexColor(labState.visualOptions.frameColor, EXPORT_FRAME_COLOR);
+  frameColorInput.style.width = "100%";
+  frameColorInput.addEventListener("input", () => {
+    labState.visualOptions.frameColor = sanitizeHexColor(frameColorInput.value, labState.visualOptions.frameColor);
+    exportVisualSettings.frameColor = labState.visualOptions.frameColor;
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+  frameColorWrap.appendChild(frameColorLabel);
+  frameColorWrap.appendChild(frameColorInput);
+
+  const backgroundColorWrap = document.createElement("div");
+  backgroundColorWrap.style.marginBottom = "10px";
+  const backgroundColorLabel = document.createElement("label");
+  backgroundColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  backgroundColorLabel.textContent = "Background Color";
+  backgroundColorInput = document.createElement("input");
+  backgroundColorInput.type = "color";
+  backgroundColorInput.value = sanitizeHexColor(labState.visualOptions.backgroundColor, EXPORT_BACKGROUND_COLOR);
+  backgroundColorInput.style.width = "100%";
+  backgroundColorInput.addEventListener("input", () => {
+    labState.visualOptions.backgroundColor = sanitizeHexColor(backgroundColorInput.value, labState.visualOptions.backgroundColor);
+    exportVisualSettings.backgroundColor = labState.visualOptions.backgroundColor;
+    applyLabBackgroundColor();
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+  backgroundColorWrap.appendChild(backgroundColorLabel);
+  backgroundColorWrap.appendChild(backgroundColorInput);
+
+  appearanceSection.appendChild(frameColorWrap);
+  appearanceSection.appendChild(backgroundColorWrap);
+  function onSelectFace(faceId) {
+    if (!labState.studioState) {
+      return;
+    }
+    labState.studioState.selectedFaceId = faceId;
+    refreshFaceControls();
+    if (labParsedScene) {
+      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    }
+  }
+
+  function loadParsedScene(parsedScene) {
+    labParsedScene = parsedScene;
+    if (!labParsedScene) {
+      return;
+    }
+    labState.paperOptions.width = labParsedScene.width;
+    labState.paperOptions.height = labParsedScene.height;
+    labState.studioState = buildLabStudioState(labParsedScene);
+    const defaultPreset = presetStore.presets.find((preset) => preset.name === presetStore.defaultPresetName)
+      || presetStore.presets.find((preset) => preset.name === "Scott Default")
+      || null;
+    if (defaultPreset) {
+      applyPresetSnapshot(defaultPreset, false);
+    }
+    applyLabStudioFromSearch(labState.studioState, searchParams);
+    refreshPresetSelect();
+    refreshFaceControls();
+    renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  }
+
+  const globalAccordion = createAccordion("Global Hatch", true);
+  globalAccordion.content.appendChild(sceneSlidersRoot);
+
+  const sideAccordion = createAccordion("Selected Side", true);
+  sideAccordion.content.appendChild(faceSection);
+
+  const paperAccordion = createAccordion("Paper", false);
+  paperAccordion.content.appendChild(paperSection);
+
+  const appearanceAccordion = createAccordion("Appearance", false);
+  appearanceAccordion.content.appendChild(appearanceSection);
+
+  const presetAccordion = createAccordion("Presets", false);
+  presetAccordion.content.appendChild(presetSection);
+
+  const actionsAccordion = createAccordion("Actions", true);
+  actionsAccordion.content.appendChild(sceneActions);
+
+  sceneSection.appendChild(globalAccordion.details);
+  sceneSection.appendChild(sideAccordion.details);
+  sceneSection.appendChild(paperAccordion.details);
+  sceneSection.appendChild(appearanceAccordion.details);
+  sceneSection.appendChild(presetAccordion.details);
+  sceneSection.appendChild(actionsAccordion.details);
 
   pane.appendChild(title);
   pane.appendChild(hint);
@@ -1931,11 +2933,25 @@ function initSvgHatchingLab() {
 
   const rerender = () => {
     if (labParsedScene) {
-      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals);
+      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
     }
   };
+  applyLabBackgroundColor();
   window.addEventListener("resize", rerender);
-  updateStatus("Hatch lab", "Load an exported 3D SVG to tune export defaults.");
+  if (initialParsedScene && initialParsedScene.faces?.length) {
+    loadParsedScene(initialParsedScene);
+    updateStatus("Hatch lab", `Loaded ${initialParsedScene.faces.length} faces from latest export.`);
+  } else {
+    const fallbackScene = window.lastCamogliSvgExport
+      ? buildLabSceneFromExportData(window.lastCamogliSvgExport)
+      : null;
+    if (fallbackScene?.faces?.length) {
+      loadParsedScene(fallbackScene);
+      updateStatus("Hatch lab", `Loaded ${fallbackScene.faces.length} faces from last export.`);
+    } else {
+      updateStatus("Hatch lab", "Export from 3D first, then studio opens with that scene.");
+    }
+  }
 }
 
 function quadPoint(worldFace, u, v) {
@@ -3005,6 +4021,10 @@ function buildSceneSvgExport() {
       simplifyFloor: shadowExportSettings.simplifyFloor,
       simplifyCube: shadowExportSettings.simplifyCube,
     },
+    shadowLab: {
+      floorPolygons: floorDebugPolygons,
+      cubePolygons: cubeDebugPolygons,
+    },
     hatchDebugFaces: DEBUG_EXPORT_HATCH_VERBOSE ? hatchDebugFaces : undefined,
     rawFaces,
     rawShadows,
@@ -3017,15 +4037,20 @@ function buildSceneSvgExport() {
     : "";
 
   const paperBackground = buildPaperBackgroundForExport(width, height);
+  const frameParts = buildSvgFrameParts(width, height, "exportFrame", exportVisualSettings);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-<defs>${paperBackground.defs}\n${clipDefs.join("\n")}</defs>
+<defs>${paperBackground.defs}\n${clipDefs.join("\n")}\n${frameParts.defs}</defs>
+${frameParts.background}
+${frameParts.before}
 ${paperBackground.content}
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+${frameParts.after}
+${frameParts.overlay}
 ${hatchDebugOverlay}
 <metadata>${metadata}</metadata>
 </svg>`;
@@ -3040,6 +4065,8 @@ ${hatchDebugOverlay}
       rawShadows,
       faces: exportFaces,
       shadows,
+      floorShadowPolygons: floorDebugPolygons,
+      cubeShadowPolygons: cubeDebugPolygons,
     },
   };
 }
@@ -3113,6 +4140,12 @@ function exportSceneToSvg() {
     window.lastCamogliSvgMarkup = svg;
     downloadTextAsFile(svg, `camogli-cubes-${timestamp}.svg`, "image/svg+xml;charset=utf-8");
     window.lastCamogliSvgExport = data;
+    if (!FXHASH_MODE) {
+      const parsedScene = buildLabSceneFromExportData(data) || parseFacesFromExportedSvg(svg);
+      if (parsedScene?.faces?.length) {
+        initSvgHatchingLab(parsedScene);
+      }
+    }
     updateStatus("SVG exported", `${data.faces.length} visible faces and ${data.shadows.length} drop shadows.`);
   } catch (error) {
     console.error("SVG export failed", error);
@@ -3246,12 +4279,7 @@ function resetScene() {
   window.location.reload();
 }
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.render(scene, camera);
-});
+window.addEventListener("resize", applyCanvasFrame);
 
 resetButton?.addEventListener("click", resetScene);
 focusButton?.addEventListener("click", focusCamera);
@@ -3352,15 +4380,20 @@ function buildGrayscaleSceneSvgExport() {
   }));
 
   const paperBackground = buildPaperBackgroundForExport(width, height);
+  const frameParts = buildSvgFrameParts(width, height, "grayscaleFrame", exportVisualSettings);
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
-<defs>${paperBackground.defs}</defs>
+<defs>${paperBackground.defs}\n${frameParts.defs}</defs>
+${frameParts.background}
+${frameParts.before}
 ${paperBackground.content}
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+${frameParts.after}
+${frameParts.overlay}
 <metadata>${metadata}</metadata>
 </svg>`;
 

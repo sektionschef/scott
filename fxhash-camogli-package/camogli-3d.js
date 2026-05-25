@@ -104,7 +104,7 @@ function resolveCubeCount() {
   const fxParam = FXHASH_MODE && typeof $fx?.getParam === "function"
     ? Number($fx.getParam("cubeCount"))
     : Number.NaN;
-  const urlParam = Number(searchParams.get("cubeCount"));
+  const urlParam = FXHASH_MODE ? Number(searchParams.get("cubeCount")) : Number.NaN;
   const raw = Number.isFinite(fxParam)
     ? fxParam
     : (Number.isFinite(urlParam) ? urlParam : FXHASH_DEFAULT_CUBE_COUNT);

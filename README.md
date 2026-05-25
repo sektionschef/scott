@@ -12,9 +12,7 @@
 ## todos
 
 * different hatching sttyles
-  * https://i1-e.pinimg.com/1200x/d9/7f/79/d97f7922b641e9fc0ec8a89c46354dda.jpg 
-  * https://i1-e.pinimg.com/736x/0b/70/b4/0b70b4595e5fdd9dd95e4e29e940d5c6.jpg 
-* test with complex cubes
+
 * check 3d generation
   * Three.js scene: cube, plane, camera, light, shadows.
   * Physics: use cannon-es or rapier to drop the cube.
@@ -24,21 +22,7 @@
  
 
 3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
-camera position:
-```
-{
-  "camera": {
-    "x": 5.298777684117101,
-    "y": 6.0417509403890035,
-    "z": 2.2597841262231078
-  },
-  "target": {
-    "x": 0,
-    "y": 1.5,
-    "z": 0.19999999999999998
-  }
-}
-```
+
 
 debug cube principal/perpendicular axes: http://localhost:3301/?debugCubeAxes=1
 debug indivdual hatching: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.8&hatchBend=0.04&hatchSpacing=0.4 
