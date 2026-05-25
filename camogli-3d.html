@@ -121,6 +121,59 @@
         <button id="exportSvgButton" type="button">Export SVG</button>
         <button id="exportGrayscaleSvgButton" type="button">Export Grayscale
           SVG</button>
+        <button id="saveLayoutButton" type="button">Save settled layout</button>
+        <button id="restoreLayoutButton" type="button">Restore layout</button>
+      </div>
+      <div class="status" style="margin-top:10px; font-size:11px; opacity:0.9;">
+        Shadow debug
+      </div>
+      <div class="buttons" style="margin-top:6px; gap:6px;">
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Switch shadow extraction mode: raster uses image-diff detection, geometry uses the analytic path.">
+          raster
+          <input id="shadowRasterToggle" type="checkbox" checked
+            title="On: raster shadow detection. Off: geometry-based shadow detection." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Brightness difference threshold. Higher catches only stronger shadows; lower is more sensitive.">
+          delta
+          <input id="shadowDeltaInput" type="number" step="0.001" min="0.005"
+            max="0.08" style="width:62px;" value="0.028"
+            title="Raster threshold. Typical range: 0.015-0.045." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Minimum connected component size ratio. Higher removes tiny noise blobs.">
+          minComp
+          <input id="shadowMinCompInput" type="number" step="0.00001"
+            min="0.00002" max="0.002" style="width:72px;" value="0.00012"
+            title="Minimum blob size ratio. Typical range: 0.00008-0.0006." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Floor shadow polygon simplification. Higher gives smoother/simpler outlines.">
+          simpFloor
+          <input id="shadowSimplifyFloorInput" type="number" step="0.1"
+            min="0.5" max="8" style="width:62px;" value="2.4"
+            title="Floor polygon simplify epsilon. Typical range: 1.5-3.5." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Cube shadow polygon simplification. Higher gives smoother/simpler outlines.">
+          simpCube
+          <input id="shadowSimplifyCubeInput" type="number" step="0.1" min="0.5"
+            max="8" style="width:62px;" value="2.2"
+            title="Cube polygon simplify epsilon. Typical range: 1.3-3.2." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Overlay debug fills in SVG export: green for floor shadow polygons, red for cube shadow polygons.">
+          fills
+          <input id="shadowDebugFillToggle" type="checkbox"
+            title="Enable red/green diagnostic fills in the exported SVG." />
+        </label>
       </div>
       <div class="status" id="status">Loading physics...</div>
     </div>

@@ -57,11 +57,43 @@ const saveViewButton = document.getElementById("saveViewButton");
 const toggleWallsButton = document.getElementById("toggleWallsButton");
 const exportSvgButton = document.getElementById("exportSvgButton");
 const exportGrayscaleSvgButton = document.getElementById("exportGrayscaleSvgButton");
+const saveLayoutButton = document.getElementById("saveLayoutButton");
+const restoreLayoutButton = document.getElementById("restoreLayoutButton");
+const shadowDeltaInput = document.getElementById("shadowDeltaInput");
+const shadowMinCompInput = document.getElementById("shadowMinCompInput");
+const shadowSimplifyFloorInput = document.getElementById("shadowSimplifyFloorInput");
+const shadowSimplifyCubeInput = document.getElementById("shadowSimplifyCubeInput");
+const shadowRasterToggle = document.getElementById("shadowRasterToggle");
+const shadowDebugFillToggle = document.getElementById("shadowDebugFillToggle");
 const searchParams = new URLSearchParams(window.location.search);
 const DEBUG_SVG_HATCHING_LAB = searchParams.get("debugSvgHatching") === "1" || searchParams.get("debug") === "svgHatching";
 const DEBUG_EXPORT_HATCH = searchParams.get("debugExportHatch") === "1" || searchParams.get("debug") === "exportHatch";
 const DEBUG_EXPORT_HATCH_LABELS = searchParams.get("debugExportHatchLabels") === "1" || DEBUG_EXPORT_HATCH;
 const DEBUG_EXPORT_HATCH_VERBOSE = searchParams.get("debugExportHatchVerbose") === "1";
+const EXPERIMENTAL_RASTER_SHADOW_EXPORT = searchParams.get("rasterShadowExport") !== "0";
+
+function readNumberParam(key, fallback, min = -Infinity, max = Infinity) {
+  const value = Number(searchParams.get(key));
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(max, Math.max(min, value));
+}
+
+const shadowExportSettings = {
+  useRaster: EXPERIMENTAL_RASTER_SHADOW_EXPORT,
+  deltaThreshold: readNumberParam("shadowDelta", 0.028, 0.005, 0.08),
+  minComponentRatio: readNumberParam("shadowMinComp", 0.00012, 0.00002, 0.002),
+  simplifyFloor: readNumberParam("shadowSimplifyFloor", 2.4, 0.5, 8),
+  simplifyCube: readNumberParam("shadowSimplifyCube", 2.2, 0.5, 8),
+  debugFillOverlay: searchParams.get("shadowDebugFill") === "1",
+  debugFloorFill: "#1db55a",
+  debugCubeFill: "#d64040",
+  debugFillOpacity: 0.2,
+};
+
+const SCENE_LAYOUT_STORAGE_KEY = "camogli3d.settledLayout.v1";
+let pendingLayoutRestore = false;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xffffff);
@@ -344,6 +376,7 @@ function buildScene() {
   wallOutlineMeshes.length = 0;
   spawnedCount = 0;
   spawnComplete = false;
+  pendingLayoutRestore = false;
 
   makeGround();
   makeContainerWalls();
@@ -380,6 +413,66 @@ function updateStatus(state, detail) {
   statusNode.innerHTML = `<strong>${state}</strong>${detail ? ` - ${detail}` : ""}`;
 }
 
+function syncShadowSettingsFromUi() {
+  if (shadowRasterToggle) {
+    shadowExportSettings.useRaster = Boolean(shadowRasterToggle.checked);
+  }
+  if (shadowDeltaInput) {
+    const value = Number(shadowDeltaInput.value);
+    if (Number.isFinite(value)) {
+      shadowExportSettings.deltaThreshold = Math.min(0.08, Math.max(0.005, value));
+    }
+  }
+  if (shadowMinCompInput) {
+    const value = Number(shadowMinCompInput.value);
+    if (Number.isFinite(value)) {
+      shadowExportSettings.minComponentRatio = Math.min(0.002, Math.max(0.00002, value));
+    }
+  }
+  if (shadowSimplifyFloorInput) {
+    const value = Number(shadowSimplifyFloorInput.value);
+    if (Number.isFinite(value)) {
+      shadowExportSettings.simplifyFloor = Math.min(8, Math.max(0.5, value));
+    }
+  }
+  if (shadowSimplifyCubeInput) {
+    const value = Number(shadowSimplifyCubeInput.value);
+    if (Number.isFinite(value)) {
+      shadowExportSettings.simplifyCube = Math.min(8, Math.max(0.5, value));
+    }
+  }
+  if (shadowDebugFillToggle) {
+    shadowExportSettings.debugFillOverlay = Boolean(shadowDebugFillToggle.checked);
+  }
+}
+
+function bindShadowSettingInputs() {
+  if (shadowRasterToggle) {
+    shadowRasterToggle.checked = shadowExportSettings.useRaster;
+    shadowRasterToggle.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (shadowDeltaInput) {
+    shadowDeltaInput.value = shadowExportSettings.deltaThreshold.toFixed(3);
+    shadowDeltaInput.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (shadowMinCompInput) {
+    shadowMinCompInput.value = shadowExportSettings.minComponentRatio.toFixed(5);
+    shadowMinCompInput.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (shadowSimplifyFloorInput) {
+    shadowSimplifyFloorInput.value = shadowExportSettings.simplifyFloor.toFixed(1);
+    shadowSimplifyFloorInput.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (shadowSimplifyCubeInput) {
+    shadowSimplifyCubeInput.value = shadowExportSettings.simplifyCube.toFixed(1);
+    shadowSimplifyCubeInput.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (shadowDebugFillToggle) {
+    shadowDebugFillToggle.checked = shadowExportSettings.debugFillOverlay;
+    shadowDebugFillToggle.addEventListener("change", syncShadowSettingsFromUi);
+  }
+}
+
 function syncBodies() {
   for (const object of cubeObjects) {
     object.mesh.position.copy(object.body.position);
@@ -398,6 +491,100 @@ function allCubesSleeping() {
     const lowMotion = linearSpeed < 0.025 && angularSpeed < 0.02;
     return body.sleepState === CANNON.Body.SLEEPING || lowMotion;
   });
+}
+
+function snapshotCurrentCubeLayout() {
+  return cubeObjects.map((object, index) => ({
+    index,
+    edge: object.edge,
+    position: {
+      x: object.body.position.x,
+      y: object.body.position.y,
+      z: object.body.position.z,
+    },
+    quaternion: {
+      x: object.body.quaternion.x,
+      y: object.body.quaternion.y,
+      z: object.body.quaternion.z,
+      w: object.body.quaternion.w,
+    },
+  }));
+}
+
+function saveSettledLayout() {
+  if (cubeObjects.length < CUBE_COUNT) {
+    updateStatus("Save blocked", `Wait for full spawn (${cubeObjects.length}/${CUBE_COUNT}).`);
+    return;
+  }
+  try {
+    const payload = {
+      savedAt: new Date().toISOString(),
+      view: getCurrentView(),
+      cubes: snapshotCurrentCubeLayout(),
+    };
+    window.localStorage.setItem(SCENE_LAYOUT_STORAGE_KEY, JSON.stringify(payload));
+    updateStatus("Layout saved", `${payload.cubes.length} cubes stored for restore.`);
+  } catch (_error) {
+    updateStatus("Save failed", "Could not write layout to local storage.");
+  }
+}
+
+function applySettledLayout(layoutPayload) {
+  if (!layoutPayload?.cubes || cubeObjects.length < CUBE_COUNT) {
+    return false;
+  }
+  const cubes = layoutPayload.cubes;
+  if (!Array.isArray(cubes) || cubes.length !== cubeObjects.length) {
+    return false;
+  }
+  for (let i = 0; i < cubeObjects.length; i += 1) {
+    const object = cubeObjects[i];
+    const saved = cubes[i];
+    if (!saved?.position || !saved?.quaternion) {
+      return false;
+    }
+    object.body.position.set(saved.position.x, saved.position.y, saved.position.z);
+    object.body.quaternion.set(saved.quaternion.x, saved.quaternion.y, saved.quaternion.z, saved.quaternion.w);
+    object.body.velocity.set(0, 0, 0);
+    object.body.angularVelocity.set(0, 0, 0);
+    object.body.sleep();
+    object.mesh.position.copy(object.body.position);
+    object.mesh.quaternion.copy(object.body.quaternion);
+  }
+  if (layoutPayload.view) {
+    applyView(layoutPayload.view);
+  }
+  settledSeconds = 2;
+  freezeFrame = true;
+  setWallDebugVisible(false);
+  renderer.render(scene, camera);
+  return true;
+}
+
+function restoreSettledLayout() {
+  let payload = null;
+  try {
+    const raw = window.localStorage.getItem(SCENE_LAYOUT_STORAGE_KEY);
+    payload = raw ? JSON.parse(raw) : null;
+  } catch (_error) {
+    payload = null;
+  }
+  if (!payload) {
+    updateStatus("No saved layout", "Save a settled layout first.");
+    return;
+  }
+  if (cubeObjects.length < CUBE_COUNT || !spawnComplete) {
+    pendingLayoutRestore = true;
+    updateStatus("Restore queued", "Will apply layout once all cubes are spawned.");
+    return;
+  }
+  const ok = applySettledLayout(payload);
+  if (ok) {
+    pendingLayoutRestore = false;
+    updateStatus("Layout restored", "Scene frozen; tweak params and export variants.");
+  } else {
+    updateStatus("Restore failed", "Saved layout is incompatible with current scene.");
+  }
 }
 
 function stepPhysics(deltaSeconds) {
@@ -1815,6 +2002,328 @@ function safePolygonOp(polygonClipping, operation, ...args) {
   }
 }
 
+function simplifyPolylineRdp(points, epsilon) {
+  if (!Array.isArray(points) || points.length <= 2) {
+    return points ? points.slice() : [];
+  }
+  const start = points[0];
+  const end = points[points.length - 1];
+  let maxDistance = -1;
+  let index = -1;
+
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const denom = Math.max(1e-8, Math.sqrt(dx * dx + dy * dy));
+
+  for (let i = 1; i < points.length - 1; i += 1) {
+    const point = points[i];
+    const distance = Math.abs(dy * point.x - dx * point.y + end.x * start.y - end.y * start.x) / denom;
+    if (distance > maxDistance) {
+      maxDistance = distance;
+      index = i;
+    }
+  }
+
+  if (maxDistance <= epsilon || index < 0) {
+    return [start, end];
+  }
+
+  const left = simplifyPolylineRdp(points.slice(0, index + 1), epsilon);
+  const right = simplifyPolylineRdp(points.slice(index), epsilon);
+  return left.slice(0, -1).concat(right);
+}
+
+function simplifyClosedScreenPolygon(points, epsilon = 2.2) {
+  if (!Array.isArray(points) || points.length < 4) {
+    return points;
+  }
+  const open = points.concat([points[0]]);
+  const simplified = simplifyPolylineRdp(open, epsilon).slice(0, -1);
+  return sanitizeScreenPolygon(simplified) || points;
+}
+
+function buildFaceVisibleUnion(clippedFaces) {
+  const polygonClipping = getPolygonClipping();
+  if (!polygonClipping) {
+    return null;
+  }
+  let faceUnion = null;
+  for (const face of clippedFaces) {
+    for (const polygon of face.clippedScreenPolygons || []) {
+      const poly = screenPointsToPcPolygon(polygon);
+      if (!poly) {
+        continue;
+      }
+      faceUnion = faceUnion ? (safePolygonOp(polygonClipping, "union", faceUnion, poly) || faceUnion) : poly;
+    }
+  }
+  return faceUnion;
+}
+
+function withTemporaryShadowRenderState(includeShadows, callback) {
+  const previousShadowMapEnabled = renderer.shadowMap.enabled;
+  const previousKeyCastShadow = keyLight.castShadow;
+  const meshStates = [];
+
+  for (const object of sceneObjects) {
+    const mesh = object?.mesh;
+    if (!mesh || !mesh.isMesh) {
+      continue;
+    }
+    meshStates.push({
+      mesh,
+      castShadow: mesh.castShadow,
+      receiveShadow: mesh.receiveShadow,
+    });
+    if (!includeShadows) {
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+    }
+  }
+
+  renderer.shadowMap.enabled = includeShadows;
+  keyLight.castShadow = includeShadows;
+
+  try {
+    renderer.render(scene, camera);
+    return callback();
+  } finally {
+    renderer.shadowMap.enabled = previousShadowMapEnabled;
+    keyLight.castShadow = previousKeyCastShadow;
+    for (const state of meshStates) {
+      state.mesh.castShadow = state.castShadow;
+      state.mesh.receiveShadow = state.receiveShadow;
+    }
+    renderer.render(scene, camera);
+  }
+}
+
+function captureRendererPassImageData(sampleWidth, sampleHeight, includeShadows) {
+  return withTemporaryShadowRenderState(includeShadows, () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = sampleWidth;
+    canvas.height = sampleHeight;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
+      return null;
+    }
+    context.drawImage(renderer.domElement, 0, 0, sampleWidth, sampleHeight);
+    return context.getImageData(0, 0, sampleWidth, sampleHeight).data;
+  });
+}
+
+function closeBinaryMask(mask, width, height) {
+  const dilated = new Uint8Array(mask.length);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      let on = 0;
+      for (let oy = -1; oy <= 1 && !on; oy += 1) {
+        for (let ox = -1; ox <= 1; ox += 1) {
+          const nx = x + ox;
+          const ny = y + oy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
+            continue;
+          }
+          if (mask[ny * width + nx]) {
+            on = 1;
+            break;
+          }
+        }
+      }
+      dilated[y * width + x] = on;
+    }
+  }
+
+  const eroded = new Uint8Array(mask.length);
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      let on = 1;
+      for (let oy = -1; oy <= 1 && on; oy += 1) {
+        for (let ox = -1; ox <= 1; ox += 1) {
+          const nx = x + ox;
+          const ny = y + oy;
+          if (nx < 0 || ny < 0 || nx >= width || ny >= height || !dilated[ny * width + nx]) {
+            on = 0;
+            break;
+          }
+        }
+      }
+      eroded[y * width + x] = on;
+    }
+  }
+  return eroded;
+}
+
+function filterBinaryMaskComponents(mask, width, height, minPixels) {
+  const filtered = new Uint8Array(mask);
+  const visited = new Uint8Array(mask.length);
+  const queueX = [];
+  const queueY = [];
+
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const startIndex = y * width + x;
+      if (!filtered[startIndex] || visited[startIndex]) {
+        continue;
+      }
+      let count = 0;
+      const component = [];
+      queueX.length = 0;
+      queueY.length = 0;
+      queueX.push(x);
+      queueY.push(y);
+      visited[startIndex] = 1;
+      while (queueX.length > 0) {
+        const cx = queueX.pop();
+        const cy = queueY.pop();
+        const idx = cy * width + cx;
+        component.push(idx);
+        count += 1;
+        for (let oy = -1; oy <= 1; oy += 1) {
+          for (let ox = -1; ox <= 1; ox += 1) {
+            if (ox === 0 && oy === 0) continue;
+            const nx = cx + ox;
+            const ny = cy + oy;
+            if (nx < 0 || ny < 0 || nx >= width || ny >= height) {
+              continue;
+            }
+            const nidx = ny * width + nx;
+            if (!filtered[nidx] || visited[nidx]) {
+              continue;
+            }
+            visited[nidx] = 1;
+            queueX.push(nx);
+            queueY.push(ny);
+          }
+        }
+      }
+      if (count < minPixels) {
+        for (const idx of component) {
+          filtered[idx] = 0;
+        }
+      }
+    }
+  }
+  return filtered;
+}
+
+function buildShadowMaskPcPolygon(mask, width, height, exportWidth, exportHeight) {
+  const polygonClipping = getPolygonClipping();
+  if (!polygonClipping) {
+    return null;
+  }
+  const cellWidth = exportWidth / width;
+  const cellHeight = exportHeight / height;
+  const rectangles = [];
+
+  for (let y = 0; y < height; y += 1) {
+    let x = 0;
+    while (x < width) {
+      const index = y * width + x;
+      if (!mask[index]) {
+        x += 1;
+        continue;
+      }
+      let end = x + 1;
+      while (end < width && mask[y * width + end]) {
+        end += 1;
+      }
+      rectangles.push([[
+        [x * cellWidth, y * cellHeight],
+        [end * cellWidth, y * cellHeight],
+        [end * cellWidth, (y + 1) * cellHeight],
+        [x * cellWidth, (y + 1) * cellHeight],
+      ]]);
+      x = end;
+    }
+  }
+
+  if (rectangles.length === 0) {
+    return null;
+  }
+
+  let unioned = null;
+  const chunkSize = 120;
+  for (let i = 0; i < rectangles.length; i += chunkSize) {
+    const chunk = rectangles.slice(i, i + chunkSize);
+    const chunkUnion = chunk.length === 1
+      ? chunk[0]
+      : safePolygonOp(polygonClipping, "union", ...chunk);
+    if (!chunkUnion) {
+      continue;
+    }
+    unioned = unioned ? (safePolygonOp(polygonClipping, "union", unioned, chunkUnion) || unioned) : chunkUnion;
+  }
+  return unioned;
+}
+
+function buildExperimentalRasterShadowExtraction(width, height, clippedFaces) {
+  const polygonClipping = getPolygonClipping();
+  if (!polygonClipping) {
+    return null;
+  }
+
+  const sampleScale = Math.min(1, 360 / Math.max(width, height));
+  const sampleWidth = Math.max(120, Math.round(width * sampleScale));
+  const sampleHeight = Math.max(90, Math.round(height * sampleScale));
+  const noShadowImage = captureRendererPassImageData(sampleWidth, sampleHeight, false);
+  const withShadowImage = captureRendererPassImageData(sampleWidth, sampleHeight, true);
+  if (!noShadowImage || !withShadowImage) {
+    return null;
+  }
+
+  const mask = new Uint8Array(sampleWidth * sampleHeight);
+  for (let i = 0; i < mask.length; i += 1) {
+    const offset = i * 4;
+    const noShadowLuma = (0.2126 * noShadowImage[offset] + 0.7152 * noShadowImage[offset + 1] + 0.0722 * noShadowImage[offset + 2]) / 255;
+    const withShadowLuma = (0.2126 * withShadowImage[offset] + 0.7152 * withShadowImage[offset + 1] + 0.0722 * withShadowImage[offset + 2]) / 255;
+    const delta = noShadowLuma - withShadowLuma;
+    mask[i] = delta > shadowExportSettings.deltaThreshold ? 1 : 0;
+  }
+
+  const closedMask = closeBinaryMask(mask, sampleWidth, sampleHeight);
+  const filteredMask = filterBinaryMaskComponents(
+    closedMask,
+    sampleWidth,
+    sampleHeight,
+    Math.max(8, Math.round(sampleWidth * sampleHeight * shadowExportSettings.minComponentRatio)),
+  );
+  const shadowMaskPoly = buildShadowMaskPcPolygon(filteredMask, sampleWidth, sampleHeight, width, height);
+  if (!shadowMaskPoly) {
+    return null;
+  }
+
+  const faceUnion = buildFaceVisibleUnion(clippedFaces);
+  const cubeShadowPart = faceUnion ? safePolygonOp(polygonClipping, "intersection", shadowMaskPoly, faceUnion) : null;
+  const floorShadowPart = faceUnion ? (safePolygonOp(polygonClipping, "difference", shadowMaskPoly, faceUnion) || shadowMaskPoly) : shadowMaskPoly;
+
+  return {
+    floorPolygons: multiPolygonToScreenPolygons(floorShadowPart)
+      .map((polygon) => simplifyClosedScreenPolygon(polygon, shadowExportSettings.simplifyFloor))
+      .filter((polygon) => polygon.length >= 3),
+    cubePolygons: multiPolygonToScreenPolygons(cubeShadowPart)
+      .map((polygon) => simplifyClosedScreenPolygon(polygon, shadowExportSettings.simplifyCube))
+      .filter((polygon) => polygon.length >= 3),
+    sampleWidth,
+    sampleHeight,
+  };
+}
+
+function buildShadowDebugFillLayer(floorPolygons, cubePolygons) {
+  if (!shadowExportSettings.debugFillOverlay) {
+    return "";
+  }
+  const floorFill = (floorPolygons || [])
+    .filter((polygon) => polygon.length >= 3)
+    .map((polygon) => `<polygon points="${pointsToSvgString(polygon)}" fill="${shadowExportSettings.debugFloorFill}" fill-opacity="${shadowExportSettings.debugFillOpacity}" stroke="none" data-layer="floorShadowDebugFill" />`)
+    .join("\n");
+  const cubeFill = (cubePolygons || [])
+    .filter((polygon) => polygon.length >= 3)
+    .map((polygon) => `<polygon points="${pointsToSvgString(polygon)}" fill="${shadowExportSettings.debugCubeFill}" fill-opacity="${shadowExportSettings.debugFillOpacity}" stroke="none" data-layer="cubeShadowDebugFill" />`)
+    .join("\n");
+  return `<g id="shadowDebugFill">${floorFill}\n${cubeFill}</g>`;
+}
+
 function clipFacesByScreenOcclusion(faces) {
   const polygonClipping = getPolygonClipping();
   if (!polygonClipping || faces.length === 0) {
@@ -2306,6 +2815,8 @@ function buildSceneSvgExport() {
   const rawShadows = buildShadowData(width, height);
   const faces = clipFacesByScreenOcclusion(rawFaces);
   const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
+  syncShadowSettingsFromUi();
+  const rasterShadows = shadowExportSettings.useRaster ? buildExperimentalRasterShadowExtraction(width, height, faces) : null;
 
   const hatchedFaces = [];
   const clipDefs = [];
@@ -2344,14 +2855,16 @@ function buildSceneSvgExport() {
     examples: [],
   });
 
-  const shadowPolygons = shadows.flatMap((shadow) => (
-    (shadow.clippedScreenPolygons || []).map((polygon) => (
-      buildDropShadowHatchedPolygonSvg(shadow, polygon, DROP_SHADOW_HATCH_STYLE)
-    ))
-  )).join("\n");
+  const shadowPolygons = rasterShadows
+    ? rasterShadows.floorPolygons.map((polygon, index) => buildDropShadowHatchedPolygonSvg({ cubeIndex: `raster-${index}` }, polygon, DROP_SHADOW_HATCH_STYLE)).join("\n")
+    : shadows.flatMap((shadow) => (
+      (shadow.clippedScreenPolygons || []).map((polygon) => (
+        buildDropShadowHatchedPolygonSvg(shadow, polygon, DROP_SHADOW_HATCH_STYLE)
+      ))
+    )).join("\n");
 
   const cubeShadowStrengthMap = buildCubeShadowStrengthMap(faces);
-  const darkestShadowPolygons = shadows.flatMap((shadow) => {
+  const darkestShadowPolygons = rasterShadows ? "" : shadows.flatMap((shadow) => {
     const cubeStats = cubeShadowStrengthMap.get(shadow.cubeIndex);
     if (!cubeStats) {
       return [];
@@ -2362,12 +2875,22 @@ function buildSceneSvgExport() {
     ));
   }).join("\n");
 
-  const faceShadowPolygons = faces.flatMap((face) => (
-    clipFaceShadowCells(face)
-      .map((cell) => (
-        buildFaceShadowCellHatchedSvg(face, cell)
-      ))
-  )).join("\n");
+  const faceShadowPolygons = rasterShadows
+    ? rasterShadows.cubePolygons.map((polygon, index) => buildFaceShadowCellHatchedSvg({ cubeIndex: `raster-${index}`, faceName: "raster" }, { points: polygon, darkness: 0.95 })).join("\n")
+    : faces.flatMap((face) => (
+      clipFaceShadowCells(face)
+        .map((cell) => (
+          buildFaceShadowCellHatchedSvg(face, cell)
+        ))
+    )).join("\n");
+
+  const floorDebugPolygons = rasterShadows
+    ? rasterShadows.floorPolygons
+    : shadows.flatMap((shadow) => shadow.clippedScreenPolygons || []);
+  const cubeDebugPolygons = rasterShadows
+    ? rasterShadows.cubePolygons
+    : faces.flatMap((face) => clipFaceShadowCells(face).map((cell) => cell.points));
+  const shadowDebugFillLayer = buildShadowDebugFillLayer(floorDebugPolygons, cubeDebugPolygons);
 
   const exportFaces = faces.map((face) => ({
     ...face,
@@ -2385,6 +2908,15 @@ function buildSceneSvgExport() {
       debugExportHatchVerbose: DEBUG_EXPORT_HATCH_VERBOSE,
     },
     hatchDebugSummary,
+    shadowDetection: rasterShadows ? "raster-experimental" : "geometry",
+    shadowDebugFillOverlay: shadowExportSettings.debugFillOverlay,
+    shadowSettings: {
+      useRaster: shadowExportSettings.useRaster,
+      deltaThreshold: shadowExportSettings.deltaThreshold,
+      minComponentRatio: shadowExportSettings.minComponentRatio,
+      simplifyFloor: shadowExportSettings.simplifyFloor,
+      simplifyCube: shadowExportSettings.simplifyCube,
+    },
     hatchDebugFaces: DEBUG_EXPORT_HATCH_VERBOSE ? hatchDebugFaces : undefined,
     rawFaces,
     rawShadows,
@@ -2401,6 +2933,7 @@ function buildSceneSvgExport() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
 <defs>${paperBackground.defs}\n${clipDefs.join("\n")}</defs>
 ${paperBackground.content}
+${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
@@ -2514,6 +3047,23 @@ function animate(now) {
   controls.update();
   renderer.render(scene, camera);
 
+  if (pendingLayoutRestore && spawnComplete && cubeObjects.length >= CUBE_COUNT) {
+    let payload = null;
+    try {
+      const raw = window.localStorage.getItem(SCENE_LAYOUT_STORAGE_KEY);
+      payload = raw ? JSON.parse(raw) : null;
+    } catch (_error) {
+      payload = null;
+    }
+    if (payload && applySettledLayout(payload)) {
+      pendingLayoutRestore = false;
+      updateStatus("Layout restored", "Scene frozen; tweak params and export variants.");
+      return;
+    }
+    pendingLayoutRestore = false;
+    updateStatus("Restore failed", "Saved layout is missing or incompatible.");
+  }
+
   if (allCubesSleeping()) {
     settledSeconds += deltaSeconds;
   } else {
@@ -2570,11 +3120,15 @@ window.addEventListener("resize", () => {
 resetButton?.addEventListener("click", resetScene);
 focusButton?.addEventListener("click", focusCamera);
 saveViewButton?.addEventListener("click", saveCurrentViewAsDefault);
+saveLayoutButton?.addEventListener("click", saveSettledLayout);
+restoreLayoutButton?.addEventListener("click", restoreSettledLayout);
 toggleWallsButton?.addEventListener("click", () => {
   setWallDebugVisible(!wallsDebugVisible);
 });
 exportSvgButton?.addEventListener("click", exportSceneToSvg);
 exportGrayscaleSvgButton?.addEventListener("click", exportGrayscaleSceneToSvg);
+
+bindShadowSettingInputs();
 
 // Expose camera state for debugging/persistence
 window.getCameraState = () => getCurrentView();
@@ -2597,6 +3151,8 @@ function buildGrayscaleSceneSvgExport() {
   const rawShadows = buildShadowData(width, height);
   const faces = clipFacesByScreenOcclusion(rawFaces);
   const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
+  syncShadowSettingsFromUi();
+  const rasterShadows = shadowExportSettings.useRaster ? buildExperimentalRasterShadowExtraction(width, height, faces) : null;
 
   const facePolygons = faces.flatMap((face) => (
     (face.clippedScreenPolygons || []).map((polygon) => (
@@ -2604,14 +3160,16 @@ function buildGrayscaleSceneSvgExport() {
     ))
   )).join("\n");
 
-  const shadowPolygons = shadows.flatMap((shadow) => (
-    (shadow.clippedScreenPolygons || []).map((polygon) => (
-      buildDropShadowHatchedPolygonSvg(shadow, polygon, DROP_SHADOW_HATCH_STYLE)
-    ))
-  )).join("\n");
+  const shadowPolygons = rasterShadows
+    ? rasterShadows.floorPolygons.map((polygon, index) => buildDropShadowHatchedPolygonSvg({ cubeIndex: `raster-${index}` }, polygon, DROP_SHADOW_HATCH_STYLE)).join("\n")
+    : shadows.flatMap((shadow) => (
+      (shadow.clippedScreenPolygons || []).map((polygon) => (
+        buildDropShadowHatchedPolygonSvg(shadow, polygon, DROP_SHADOW_HATCH_STYLE)
+      ))
+    )).join("\n");
 
   const cubeShadowStrengthMap = buildCubeShadowStrengthMap(faces);
-  const darkestShadowPolygons = shadows.flatMap((shadow) => {
+  const darkestShadowPolygons = rasterShadows ? "" : shadows.flatMap((shadow) => {
     const cubeStats = cubeShadowStrengthMap.get(shadow.cubeIndex);
     if (!cubeStats) {
       return [];
@@ -2622,12 +3180,22 @@ function buildGrayscaleSceneSvgExport() {
     ));
   }).join("\n");
 
-  const faceShadowPolygons = faces.flatMap((face) => (
-    clipFaceShadowCells(face)
-      .map((cell) => (
-        buildFaceShadowCellHatchedSvg(face, cell)
-      ))
-  )).join("\n");
+  const faceShadowPolygons = rasterShadows
+    ? rasterShadows.cubePolygons.map((polygon, index) => buildFaceShadowCellHatchedSvg({ cubeIndex: `raster-${index}`, faceName: "raster" }, { points: polygon, darkness: 0.95 })).join("\n")
+    : faces.flatMap((face) => (
+      clipFaceShadowCells(face)
+        .map((cell) => (
+          buildFaceShadowCellHatchedSvg(face, cell)
+        ))
+    )).join("\n");
+
+  const floorDebugPolygons = rasterShadows
+    ? rasterShadows.floorPolygons
+    : shadows.flatMap((shadow) => shadow.clippedScreenPolygons || []);
+  const cubeDebugPolygons = rasterShadows
+    ? rasterShadows.cubePolygons
+    : faces.flatMap((face) => clipFaceShadowCells(face).map((cell) => cell.points));
+  const shadowDebugFillLayer = buildShadowDebugFillLayer(floorDebugPolygons, cubeDebugPolygons);
 
   const exportFaces = faces.map((face) => ({
     ...face,
@@ -2639,6 +3207,8 @@ function buildGrayscaleSceneSvgExport() {
     camera: getCurrentView(),
     width,
     height,
+    shadowDetection: rasterShadows ? "raster-experimental" : "geometry",
+    shadowDebugFillOverlay: shadowExportSettings.debugFillOverlay,
     rawFaces,
     rawShadows,
     faces: exportFaces,
@@ -2650,6 +3220,7 @@ function buildGrayscaleSceneSvgExport() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
 <defs>${paperBackground.defs}</defs>
 ${paperBackground.content}
+${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
