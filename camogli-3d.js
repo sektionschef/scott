@@ -810,6 +810,42 @@ function faceStudioBrightness(face) {
   return clamp01(toneDarkness + shadowBoost);
 }
 
+function buildFaceBrightnessNormalization(faces) {
+  const values = (faces || [])
+    .map((face) => faceStudioBrightness(face))
+    .filter((value) => Number.isFinite(value));
+  if (values.length === 0) {
+    return {
+      min: 0,
+      max: 1,
+      range: 1,
+      enabled: false,
+    };
+  }
+  let min = values[0];
+  let max = values[0];
+  for (let index = 1; index < values.length; index += 1) {
+    const value = values[index];
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+  const range = max - min;
+  return {
+    min,
+    max,
+    range,
+    enabled: range > 1e-5,
+  };
+}
+
+function normalizeFaceBrightness(value, normalization) {
+  const clamped = clamp01(value);
+  if (!normalization?.enabled) {
+    return clamped;
+  }
+  return clamp01((clamped - normalization.min) / normalization.range);
+}
+
 const SVG_EXPORT_STUDIO_DEFAULT_GLOBALS = {
   hatchWidth: 1.0,
   hatchJitter: 1.5,
@@ -1093,9 +1129,10 @@ function hatchPolygonBounds(points) {
   };
 }
 
-function buildStudioFaceHatchStyle(face, polygon, globals = null) {
+function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNormalization = null) {
   const g = globals ?? SVG_EXPORT_STUDIO_GLOBALS;
-  const brightness = faceStudioBrightness(face);
+  const rawBrightness = faceStudioBrightness(face);
+  const brightness = normalizeFaceBrightness(rawBrightness, brightnessNormalization);
   const tone = faceToneFromLight(face);
   const bounds = hatchPolygonBounds(polygon);
   const shortSide = Math.max(1, Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY));
@@ -1135,6 +1172,7 @@ function buildStudioFaceHatchStyle(face, polygon, globals = null) {
   return {
     tone,
     brightness,
+    rawBrightness,
     background: grayHexFromTone(clamp01(0.93 + tone * 0.03)),
     stroke: grayHexFromTone(clamp01(0.04 + tone * 0.03)),
     strokeOpacity: 1,
@@ -1524,23 +1562,23 @@ function buildHatchLayerSvg(layer, rect, style, shortSide) {
   return "";
 }
 
-function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height) {
+function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, brightnessNormalization = null) {
   const polygonPoints = pointsToSvgString(polygon);
-  const style = buildStudioFaceHatchStyle(face, polygon);
+  const style = buildStudioFaceHatchStyle(face, polygon, null, brightnessNormalization);
   const hatchBuild = buildStudioHatchSvgForFacePolygon(face, polygon, style);
   const hatchSvg = hatchBuild.svg;
   const totalPrimarySegments = hatchBuild.debug.singleSegments + hatchBuild.debug.crossSegments;
   const totalFallbackSegments = hatchBuild.debug.singleFallback + hatchBuild.debug.crossFallback;
   const totalSegments = totalPrimarySegments + totalFallbackSegments;
   const polygonCenter = hatchPolygonCentroid(polygon);
-  const debugLabel = `${face.cubeIndex}:${face.faceName} m=${hatchBuild.debug.mode} seg=${totalSegments} p=${totalPrimarySegments} fb=${totalFallbackSegments} c=${hatchBuild.debug.circleCount} hb=${style.brightness.toFixed(2)} raw=${face.brightness.toFixed(2)} sh=${face.shadowStrength.toFixed(2)}`;
+  const debugLabel = `${face.cubeIndex}:${face.faceName} m=${hatchBuild.debug.mode} seg=${totalSegments} p=${totalPrimarySegments} fb=${totalFallbackSegments} c=${hatchBuild.debug.circleCount} hb=${style.brightness.toFixed(2)} hraw=${style.rawBrightness.toFixed(2)} raw=${face.brightness.toFixed(2)} sh=${face.shadowStrength.toFixed(2)}`;
   const debugLabelSvg = DEBUG_EXPORT_HATCH_LABELS
     ? `<text x="${polygonCenter.x.toFixed(2)}" y="${polygonCenter.y.toFixed(2)}" fill="#bb1f1f" font-size="9" font-family="ui-monospace, Menlo, monospace" text-anchor="middle" dominant-baseline="middle" data-layer="hatchDebugLabel">${escapeXml(debugLabel)}</text>`
     : "";
 
   return {
     defs: "",
-    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-hatch-brightness="${style.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}" data-hatch-jitter="${style.hatchParams.jitter.toFixed(3)}" data-hatch-bend="${style.hatchParams.bend.toFixed(3)}" data-hatch-width="${style.hatchParams.strokeWidth.toFixed(3)}" data-hatch-jitter-src="${style.sourceHatchJitter.toFixed(3)}" data-hatch-bend-src="${style.sourceHatchBend.toFixed(3)}" data-hatch-width-src="${style.sourceHatchWidth.toFixed(3)}" data-hatch-mode="${hatchBuild.debug.mode}" data-hatch-segments="${totalSegments}" data-hatch-primary="${totalPrimarySegments}" data-hatch-fallback="${totalFallbackSegments}" data-hatch-circles="${hatchBuild.debug.circleCount}"><polygon points="${polygonPoints}" fill="none" stroke="none" />${hatchSvg}${debugLabelSvg}</g>`,
+    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-hatch-brightness="${style.brightness.toFixed(4)}" data-hatch-brightness-raw="${style.rawBrightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}" data-hatch-jitter="${style.hatchParams.jitter.toFixed(3)}" data-hatch-bend="${style.hatchParams.bend.toFixed(3)}" data-hatch-width="${style.hatchParams.strokeWidth.toFixed(3)}" data-hatch-jitter-src="${style.sourceHatchJitter.toFixed(3)}" data-hatch-bend-src="${style.sourceHatchBend.toFixed(3)}" data-hatch-width-src="${style.sourceHatchWidth.toFixed(3)}" data-hatch-mode="${hatchBuild.debug.mode}" data-hatch-segments="${totalSegments}" data-hatch-primary="${totalPrimarySegments}" data-hatch-fallback="${totalFallbackSegments}" data-hatch-circles="${hatchBuild.debug.circleCount}"><polygon points="${polygonPoints}" fill="none" stroke="none" />${hatchSvg}${debugLabelSvg}</g>`,
     debug: {
       cubeIndex: face.cubeIndex,
       faceName: face.faceName,
@@ -1614,6 +1652,7 @@ function parseFacesFromExportedSvg(svgText) {
 
 function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals) {
   const { faces, shadowPolygons, bgFill, width, height, viewBox } = parsedScene;
+  const brightnessNormalization = buildFaceBrightnessNormalization(faces);
   svgNode.setAttribute("viewBox", viewBox || `0 0 ${width} ${height}`);
   svgNode.setAttribute("width", String(width));
   svgNode.setAttribute("height", String(height));
@@ -1626,7 +1665,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals) {
   }
 
   for (const face of faces) {
-    const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals);
+    const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization);
     const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
     const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
     html += `<g><polygon points="${pts}" fill="${style.background}" stroke="none" />${hatchSvg}</g>`;
@@ -2814,6 +2853,7 @@ function buildSceneSvgExport() {
   const rawFaces = buildVisibleFaceData(width, height);
   const rawShadows = buildShadowData(width, height);
   const faces = clipFacesByScreenOcclusion(rawFaces);
+  const faceBrightnessNormalization = buildFaceBrightnessNormalization(faces);
   const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
   syncShadowSettingsFromUi();
   const rasterShadows = shadowExportSettings.useRaster ? buildExperimentalRasterShadowExtraction(width, height, faces) : null;
@@ -2823,7 +2863,7 @@ function buildSceneSvgExport() {
   const hatchDebugFaces = [];
   faces.forEach((face, faceIndex) => {
     (face.clippedScreenPolygons || []).forEach((polygon, polygonIndex) => {
-      const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height);
+      const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, faceBrightnessNormalization);
       clipDefs.push(hatchedFace.defs);
       hatchedFaces.push(hatchedFace.content);
       if (hatchedFace.debug) {
@@ -2909,6 +2949,7 @@ function buildSceneSvgExport() {
     },
     hatchDebugSummary,
     shadowDetection: rasterShadows ? "raster-experimental" : "geometry",
+    faceBrightnessNormalization,
     shadowDebugFillOverlay: shadowExportSettings.debugFillOverlay,
     shadowSettings: {
       useRaster: shadowExportSettings.useRaster,
