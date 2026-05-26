@@ -33,7 +33,7 @@ debug strokes boundaries: http://localhost:3301/?debugStroke=1
 debug single stroke: http://localhost:3301/?debugFilledPath=1&zoom=1 - scroll down
 debug stroke params: http://localhost:3301/?debugFilledPathParams=1 
 
-
+-
 new
 * http://localhost:3301/camogli-3d.html - result
 * http://localhost:3301/camogli-3d.html?debugSvgHatching=1 - studio
