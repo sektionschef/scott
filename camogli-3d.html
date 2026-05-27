@@ -183,6 +183,43 @@
             title="Enable red/green diagnostic fills in the exported SVG." />
         </label>
       </div>
+      <div class="status" style="margin-top:10px; font-size:11px; opacity:0.9;">
+        FilledPath export
+      </div>
+      <div class="buttons" style="margin-top:6px; gap:6px;">
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Ribbon width of each filledPath stroke. Larger values make strokes thicker.">
+          width
+          <input id="filledPathWidthInput" type="number" step="0.05" min="0.2"
+            max="3" style="width:62px;" value="1.0"
+            title="FilledPath ribbon width. Typical range: 0.6-1.8." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Random offset amount for filledPath endpoints. Higher values look rougher.">
+          jitter
+          <input id="filledPathJitterInput" type="number" step="0.05" min="0"
+            max="2" style="width:62px;" value="1.5"
+            title="FilledPath jitter amount. Typical range: 0.6-1.6." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Curve bend factor for filledPath shape. Negative and positive values change bow direction.">
+          bend
+          <input id="filledPathBendInput" type="number" step="0.01" min="-0.4"
+            max="0.4" style="width:62px;" value="-0.05"
+            title="FilledPath bend. Typical range: -0.12 to 0.12." />
+        </label>
+        <label
+          style="font-size:11px; display:flex; align-items:center; gap:4px;"
+          title="Stable seed for export hatching randomness. Keep this fixed while tuning parameters to preserve structure.">
+          seed
+          <input id="filledPathSeedInput" type="number" step="1" min="1"
+            max="2147483646" style="width:92px;" value="12345"
+            title="Hatching seed. Same seed keeps pattern identity stable across parameter edits." />
+        </label>
+      </div>
       <div class="status" id="status">Loading physics...</div>
     </div>
     <script src="./gaussian.js"></script>

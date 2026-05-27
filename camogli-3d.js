@@ -65,6 +65,10 @@ const shadowSimplifyFloorInput = document.getElementById("shadowSimplifyFloorInp
 const shadowSimplifyCubeInput = document.getElementById("shadowSimplifyCubeInput");
 const shadowRasterToggle = document.getElementById("shadowRasterToggle");
 const shadowDebugFillToggle = document.getElementById("shadowDebugFillToggle");
+const filledPathWidthInput = document.getElementById("filledPathWidthInput");
+const filledPathJitterInput = document.getElementById("filledPathJitterInput");
+const filledPathBendInput = document.getElementById("filledPathBendInput");
+const filledPathSeedInput = document.getElementById("filledPathSeedInput");
 const searchParams = new URLSearchParams(window.location.search);
 const runtimeConfig = (typeof window !== "undefined" && window.CAMOGLI_RUNTIME_CONFIG)
   ? window.CAMOGLI_RUNTIME_CONFIG
@@ -120,6 +124,39 @@ function readNumberParam(key, fallback, min = -Infinity, max = Infinity) {
   return Math.min(max, Math.max(min, value));
 }
 
+const HATCH_SEED_MIN = 1;
+const HATCH_SEED_MAX = 2147483646;
+const HATCH_SEED_DEFAULT = Math.round(readNumberParam("hatchSeed", 12345, HATCH_SEED_MIN, HATCH_SEED_MAX));
+
+function sanitizeIntegerSeed(value, fallback = HATCH_SEED_DEFAULT) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return fallback;
+  }
+  return Math.min(HATCH_SEED_MAX, Math.max(HATCH_SEED_MIN, Math.round(numeric)));
+}
+
+function createMulberry32(seed) {
+  let state = seed >>> 0;
+  return () => {
+    state += 0x6D2B79F5;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function withSeededMathRandom(seed, callback) {
+  const originalRandom = Math.random;
+  Math.random = createMulberry32(sanitizeIntegerSeed(seed));
+  try {
+    return callback();
+  } finally {
+    Math.random = originalRandom;
+  }
+}
+
 const shadowExportSettings = {
   useRaster: EXPERIMENTAL_RASTER_SHADOW_EXPORT,
   deltaThreshold: readNumberParam("shadowDelta", 0.028, 0.005, 0.08),
@@ -130,6 +167,10 @@ const shadowExportSettings = {
   debugFloorFill: "#1db55a",
   debugCubeFill: "#d64040",
   debugFillOpacity: 0.2,
+};
+
+const hatchExportSettings = {
+  seed: HATCH_SEED_DEFAULT,
 };
 
 const SCENE_LAYOUT_STORAGE_KEY = "camogli3d.settledLayout.v1";
@@ -585,6 +626,29 @@ function syncShadowSettingsFromUi() {
   if (shadowDebugFillToggle) {
     shadowExportSettings.debugFillOverlay = Boolean(shadowDebugFillToggle.checked);
   }
+  if (filledPathWidthInput) {
+    const value = Number(filledPathWidthInput.value);
+    if (Number.isFinite(value)) {
+      SVG_EXPORT_STUDIO_GLOBALS.hatchWidth = Math.min(3, Math.max(0.2, value));
+    }
+  }
+  if (filledPathJitterInput) {
+    const value = Number(filledPathJitterInput.value);
+    if (Number.isFinite(value)) {
+      SVG_EXPORT_STUDIO_GLOBALS.hatchJitter = Math.min(2, Math.max(0, value));
+    }
+  }
+  if (filledPathBendInput) {
+    const value = Number(filledPathBendInput.value);
+    if (Number.isFinite(value)) {
+      SVG_EXPORT_STUDIO_GLOBALS.hatchBend = Math.min(0.4, Math.max(-0.4, value));
+    }
+  }
+  if (filledPathSeedInput) {
+    hatchExportSettings.seed = sanitizeIntegerSeed(filledPathSeedInput.value, hatchExportSettings.seed);
+    SVG_EXPORT_STUDIO_GLOBALS.hatchSeed = hatchExportSettings.seed;
+    filledPathSeedInput.value = String(hatchExportSettings.seed);
+  }
 }
 
 function bindShadowSettingInputs() {
@@ -611,6 +675,22 @@ function bindShadowSettingInputs() {
   if (shadowDebugFillToggle) {
     shadowDebugFillToggle.checked = shadowExportSettings.debugFillOverlay;
     shadowDebugFillToggle.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (filledPathWidthInput) {
+    filledPathWidthInput.value = SVG_EXPORT_STUDIO_GLOBALS.hatchWidth.toFixed(2);
+    filledPathWidthInput.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (filledPathJitterInput) {
+    filledPathJitterInput.value = SVG_EXPORT_STUDIO_GLOBALS.hatchJitter.toFixed(2);
+    filledPathJitterInput.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (filledPathBendInput) {
+    filledPathBendInput.value = SVG_EXPORT_STUDIO_GLOBALS.hatchBend.toFixed(2);
+    filledPathBendInput.addEventListener("change", syncShadowSettingsFromUi);
+  }
+  if (filledPathSeedInput) {
+    filledPathSeedInput.value = String(hatchExportSettings.seed);
+    filledPathSeedInput.addEventListener("change", syncShadowSettingsFromUi);
   }
 }
 
@@ -991,6 +1071,7 @@ const SVG_EXPORT_STUDIO_DEFAULT_GLOBALS = {
   hatchWidth: 1.0,
   hatchJitter: 1.5,
   hatchBend: -0.05,
+  hatchSeed: HATCH_SEED_DEFAULT,
   hatchEdgeInset: null,
   hatchTrimRatio: 0.42,
   hatchMinVisible: 4,
@@ -1026,6 +1107,7 @@ function parseStudioGlobalsFromUrl(search) {
     hatchWidth: Number(search.get("hatchWidth")),
     hatchJitter: Number(search.get("hatchJitter")),
     hatchBend: Number(search.get("hatchBend")),
+    hatchSeed: Number(search.get("hatchSeed")),
     hatchTrimRatio: Number(search.get("hatchTrimRatio")),
     hatchMinVisible: Number(search.get("hatchMinVisible")),
     circleRadius: Number(search.get("circleRadius")),
@@ -1036,6 +1118,7 @@ function parseStudioGlobalsFromUrl(search) {
   globals.hatchWidth = sanitizeStudioParamValue(direct.hatchWidth, globals.hatchWidth, 0.2, 3);
   globals.hatchJitter = sanitizeStudioParamValue(direct.hatchJitter, globals.hatchJitter, 0, 2);
   globals.hatchBend = sanitizeStudioParamValue(direct.hatchBend, globals.hatchBend, -0.4, 0.4);
+  globals.hatchSeed = sanitizeIntegerSeed(direct.hatchSeed, globals.hatchSeed);
   globals.hatchTrimRatio = sanitizeStudioParamValue(direct.hatchTrimRatio, globals.hatchTrimRatio, 0, 0.9);
   globals.hatchMinVisible = sanitizeStudioParamValue(direct.hatchMinVisible, globals.hatchMinVisible, 0, 50);
   globals.circleRadius = sanitizeStudioParamValue(direct.circleRadius, globals.circleRadius, 0.1, 3);
@@ -2005,6 +2088,7 @@ const LAB_DEFAULT_GLOBALS = {
   hatchWidth: 1.0,
   hatchJitter: 1.85,
   hatchBend: -0.02,
+  hatchSeed: HATCH_SEED_DEFAULT,
   hatchTrimRatio: 0.06,
   hatchMinVisible: 0,
   circleRadius: 0.25,
@@ -2048,101 +2132,104 @@ const LAB_DEFAULT_VISUAL_OPTIONS = {
 };
 
 function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onSelectFace = null) {
-  const {
-    faces,
-    shadowPolygons,
-    floorShadowPolygons = [],
-    cubeShadowPolygons = [],
-    width,
-    height,
-    viewBox,
-  } = parsedScene;
-  const brightnessNormalization = buildFaceBrightnessNormalization(faces);
-  const studioState = labState?.studioState;
-  const sideById = new Map((studioState?.sides || []).map((side) => [side.id, side]));
-  const paperBackground = buildPaperBackgroundForLab(width, height, labState?.paperOptions || {});
+  const hatchSeed = sanitizeIntegerSeed(labGlobals?.hatchSeed, hatchExportSettings.seed);
+  withSeededMathRandom(hatchSeed, () => {
+    const {
+      faces,
+      shadowPolygons,
+      floorShadowPolygons = [],
+      cubeShadowPolygons = [],
+      width,
+      height,
+      viewBox,
+    } = parsedScene;
+    const brightnessNormalization = buildFaceBrightnessNormalization(faces);
+    const studioState = labState?.studioState;
+    const sideById = new Map((studioState?.sides || []).map((side) => [side.id, side]));
+    const paperBackground = buildPaperBackgroundForLab(width, height, labState?.paperOptions || {});
 
-  svgNode.setAttribute("viewBox", viewBox || `0 0 ${width} ${height}`);
-  svgNode.setAttribute("width", String(width));
-  svgNode.setAttribute("height", String(height));
+    svgNode.setAttribute("viewBox", viewBox || `0 0 ${width} ${height}`);
+    svgNode.setAttribute("width", String(width));
+    svgNode.setAttribute("height", String(height));
 
-  const frameParts = buildSvgFrameParts(width, height, "labPreviewFrame", labState?.visualOptions || exportVisualSettings);
-  const noiseParts = buildSvgNoiseLayer(width, height, "labPreview", labState?.visualOptions || exportVisualSettings);
+    const frameParts = buildSvgFrameParts(width, height, "labPreviewFrame", labState?.visualOptions || exportVisualSettings);
+    const noiseParts = buildSvgNoiseLayer(width, height, "labPreview", labState?.visualOptions || exportVisualSettings);
 
-  let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}`;
+    let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}`;
 
-  if (floorShadowPolygons.length === 0 && cubeShadowPolygons.length === 0) {
-    for (const shadow of shadowPolygons) {
-      const pts = shadow.points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-      html += `<polygon points="${pts}" fill="${shadow.fill}" opacity="${shadow.opacity}" stroke="none" />`;
+    if (floorShadowPolygons.length === 0 && cubeShadowPolygons.length === 0) {
+      for (const shadow of shadowPolygons) {
+        const pts = shadow.points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+        html += `<polygon points="${pts}" fill="${shadow.fill}" opacity="${shadow.opacity}" stroke="none" />`;
+      }
     }
-  }
 
-  for (let index = 0; index < floorShadowPolygons.length; index += 1) {
-    const polygon = floorShadowPolygons[index];
-    const sideId = `floorShadow:${index}`;
-    const side = sideById.get(sideId) || null;
-    const pseudoFace = {
-      brightness: 0.12,
-      shadowStrength: 1,
-      cubeIndex: "floorShadow",
-      faceName: "floor",
-    };
-    const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
-    const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
-    const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-    const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
-    const highlightStroke = isSelected ? "#d6a65f" : "none";
-    const highlightWidth = isSelected ? "2.2" : "0";
-    html += `<g data-face-id="${sideId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${sideId}" style="cursor:pointer;" /></g>`;
-  }
+    for (let index = 0; index < floorShadowPolygons.length; index += 1) {
+      const polygon = floorShadowPolygons[index];
+      const sideId = `floorShadow:${index}`;
+      const side = sideById.get(sideId) || null;
+      const pseudoFace = {
+        brightness: 0.12,
+        shadowStrength: 1,
+        cubeIndex: "floorShadow",
+        faceName: "floor",
+      };
+      const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
+      const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
+      const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+      const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
+      const highlightStroke = isSelected ? "#d6a65f" : "none";
+      const highlightWidth = isSelected ? "2.2" : "0";
+      html += `<g data-face-id="${sideId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${sideId}" style="cursor:pointer;" /></g>`;
+    }
 
-  for (let index = 0; index < cubeShadowPolygons.length; index += 1) {
-    const polygon = cubeShadowPolygons[index];
-    const sideId = `cubeShadow:${index}`;
-    const side = sideById.get(sideId) || null;
-    const pseudoFace = {
-      brightness: 0.08,
-      shadowStrength: 1,
-      cubeIndex: "cubeShadow",
-      faceName: "cube",
-    };
-    const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
-    const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
-    const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-    const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
-    const highlightStroke = isSelected ? "#d6a65f" : "none";
-    const highlightWidth = isSelected ? "2.2" : "0";
-    html += `<g data-face-id="${sideId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${sideId}" style="cursor:pointer;" /></g>`;
-  }
+    for (let index = 0; index < cubeShadowPolygons.length; index += 1) {
+      const polygon = cubeShadowPolygons[index];
+      const sideId = `cubeShadow:${index}`;
+      const side = sideById.get(sideId) || null;
+      const pseudoFace = {
+        brightness: 0.08,
+        shadowStrength: 1,
+        cubeIndex: "cubeShadow",
+        faceName: "cube",
+      };
+      const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
+      const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
+      const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+      const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
+      const highlightStroke = isSelected ? "#d6a65f" : "none";
+      const highlightWidth = isSelected ? "2.2" : "0";
+      html += `<g data-face-id="${sideId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${sideId}" style="cursor:pointer;" /></g>`;
+    }
 
-  for (let index = 0; index < faces.length; index += 1) {
-    const face = faces[index];
-    const faceId = `face:${face.cubeIndex}:${face.faceName}:${index}`;
-    const side = sideById.get(faceId) || null;
-    const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization, side);
-    const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
-    const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-    const isSelected = Boolean(studioState && studioState.selectedFaceId === faceId);
-    const highlightStroke = isSelected ? "#d6a65f" : "none";
-    const highlightWidth = isSelected ? "2.2" : "0";
-    html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
-  }
+    for (let index = 0; index < faces.length; index += 1) {
+      const face = faces[index];
+      const faceId = `face:${face.cubeIndex}:${face.faceName}:${index}`;
+      const side = sideById.get(faceId) || null;
+      const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization, side);
+      const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
+      const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+      const isSelected = Boolean(studioState && studioState.selectedFaceId === faceId);
+      const highlightStroke = isSelected ? "#d6a65f" : "none";
+      const highlightWidth = isSelected ? "2.2" : "0";
+      html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
+    }
 
-  html += `${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
+    html += `${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
 
-  svgNode.innerHTML = html;
+    svgNode.innerHTML = html;
 
-  if (typeof onSelectFace === "function") {
-    svgNode.querySelectorAll("[data-face-hit='1']").forEach((node) => {
-      node.addEventListener("click", () => {
-        const id = node.getAttribute("data-face-id");
-        if (id) {
-          onSelectFace(id);
-        }
+    if (typeof onSelectFace === "function") {
+      svgNode.querySelectorAll("[data-face-hit='1']").forEach((node) => {
+        node.addEventListener("click", () => {
+          const id = node.getAttribute("data-face-id");
+          if (id) {
+            onSelectFace(id);
+          }
+        });
       });
-    });
-  }
+    }
+  });
 }
 
 function initSvgHatchingLab(initialParsedScene = null) {
@@ -2731,6 +2818,9 @@ function initSvgHatchingLab(initialParsedScene = null) {
   rerollSceneBtn.textContent = "Re-roll Randomness";
   rerollSceneBtn.style.cssText = "padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#e6eef8;font-size:12px;cursor:pointer;";
   rerollSceneBtn.addEventListener("click", () => {
+    labGlobals.hatchSeed = sanitizeIntegerSeed((labGlobals.hatchSeed || hatchExportSettings.seed) + 1, hatchExportSettings.seed);
+    hatchExportSettings.seed = labGlobals.hatchSeed;
+    SVG_EXPORT_STUDIO_GLOBALS.hatchSeed = labGlobals.hatchSeed;
     if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
   });
 
@@ -2744,6 +2834,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
       `hatchWidth=${gv.hatchWidth.toFixed(2)}`,
       `hatchJitter=${gv.hatchJitter.toFixed(2)}`,
       `hatchBend=${gv.hatchBend.toFixed(2)}`,
+      `hatchSeed=${Math.round(gv.hatchSeed)}`,
       `hatchTrimRatio=${gv.hatchTrimRatio.toFixed(2)}`,
       `hatchMinVisible=${gv.hatchMinVisible.toFixed(1)}`,
       `circleRadius=${gv.circleRadius.toFixed(2)}`,
@@ -2976,6 +3067,9 @@ function initSvgHatchingLab(initialParsedScene = null) {
     if (!labParsedScene) {
       return;
     }
+    labGlobals.hatchSeed = sanitizeIntegerSeed(labParsedScene.hatchSeed, labGlobals.hatchSeed);
+    hatchExportSettings.seed = labGlobals.hatchSeed;
+    SVG_EXPORT_STUDIO_GLOBALS.hatchSeed = labGlobals.hatchSeed;
     labState.paperOptions.width = labParsedScene.width;
     labState.paperOptions.height = labParsedScene.height;
     labState.studioState = buildLabStudioState(labParsedScene);
@@ -4002,6 +4096,7 @@ function buildPaperBackgroundForExport(width, height) {
 }
 
 function buildSceneSvgExport() {
+  return withSeededMathRandom(hatchExportSettings.seed, () => {
   const width = Math.max(640, Math.round(renderer.domElement.clientWidth || window.innerWidth || 1600));
   const height = Math.max(360, Math.round(renderer.domElement.clientHeight || window.innerHeight || 900));
   renderer.render(scene, camera);
@@ -4113,6 +4208,7 @@ function buildSceneSvgExport() {
       simplifyFloor: shadowExportSettings.simplifyFloor,
       simplifyCube: shadowExportSettings.simplifyCube,
     },
+    hatchSeed: hatchExportSettings.seed,
     shadowLab: {
       floorPolygons: floorDebugPolygons,
       cubePolygons: cubeDebugPolygons,
@@ -4161,8 +4257,10 @@ ${hatchDebugOverlay}
       shadows,
       floorShadowPolygons: floorDebugPolygons,
       cubeShadowPolygons: cubeDebugPolygons,
+      hatchSeed: hatchExportSettings.seed,
     },
   };
+  });
 }
 
 function downloadTextAsFile(text, filename, mimeType) {
@@ -4402,6 +4500,7 @@ if (DEBUG_SVG_HATCHING_LAB) {
 
 // --- Grayscale SVG Export (legacy style) ---
 function buildGrayscaleSceneSvgExport() {
+  return withSeededMathRandom(hatchExportSettings.seed, () => {
   const width = Math.max(640, Math.round(renderer.domElement.clientWidth || window.innerWidth || 1600));
   const height = Math.max(360, Math.round(renderer.domElement.clientHeight || window.innerHeight || 900));
   renderer.render(scene, camera);
@@ -4467,6 +4566,7 @@ function buildGrayscaleSceneSvgExport() {
     height,
     shadowDetection: rasterShadows ? "raster-experimental" : "geometry",
     shadowDebugFillOverlay: shadowExportSettings.debugFillOverlay,
+    hatchSeed: hatchExportSettings.seed,
     rawFaces,
     rawShadows,
     faces: exportFaces,
@@ -4503,8 +4603,10 @@ ${frameParts.overlay}
       rawShadows,
       faces: exportFaces,
       shadows,
+      hatchSeed: hatchExportSettings.seed,
     },
   };
+  });
 }
 
 function exportGrayscaleSceneToSvg() {
