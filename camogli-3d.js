@@ -181,9 +181,10 @@ scene.background = new THREE.Color(0xffffff);
 
 const CANVAS_ASPECT = 16 / 9;
 const CANVAS_MARGIN_PX = 24;
-const EXPORT_FRAME_PX = 24;
+const EXPORT_FRAME_PX = 36;
 const EXPORT_FRAME_COLOR = "#f2f2f2";
 const EXPORT_BACKGROUND_COLOR = "#121212";
+const EXPORT_CUBE_FILL_COLOR = "rgba(217, 217, 217, 1)";
 
 function sanitizeHexColor(value, fallback) {
   if (typeof value !== "string") {
@@ -193,9 +194,49 @@ function sanitizeHexColor(value, fallback) {
   return /^#([0-9a-fA-F]{6})$/.test(normalized) ? normalized : fallback;
 }
 
+function sanitizeSvgColor(value, fallback) {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+  const normalized = value.trim();
+  if (!normalized) {
+    return fallback;
+  }
+  if (/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(normalized)) {
+    return normalized;
+  }
+  const rgbMatch = normalized.match(/^rgba?\(([^)]+)\)$/i);
+  if (!rgbMatch) {
+    return fallback;
+  }
+  const parts = rgbMatch[1].split(",").map((part) => part.trim());
+  if (parts.length !== 3 && parts.length !== 4) {
+    return fallback;
+  }
+  const r = Number(parts[0]);
+  const g = Number(parts[1]);
+  const b = Number(parts[2]);
+  if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) {
+    return fallback;
+  }
+  const red = Math.round(Math.min(255, Math.max(0, r)));
+  const green = Math.round(Math.min(255, Math.max(0, g)));
+  const blue = Math.round(Math.min(255, Math.max(0, b)));
+  if (parts.length === 4) {
+    const alpha = Number(parts[3]);
+    if (!Number.isFinite(alpha)) {
+      return fallback;
+    }
+    const a = Math.min(1, Math.max(0, alpha));
+    return `rgba(${red}, ${green}, ${blue}, ${Number(a.toFixed(3))})`;
+  }
+  return `rgb(${red}, ${green}, ${blue})`;
+}
+
 const exportVisualSettings = {
   frameColor: sanitizeHexColor(searchParams.get("frameColor"), EXPORT_FRAME_COLOR),
   backgroundColor: sanitizeHexColor(searchParams.get("bgColor"), EXPORT_BACKGROUND_COLOR),
+  cubeFillColor: sanitizeSvgColor(searchParams.get("cubeFillColor"), EXPORT_CUBE_FILL_COLOR),
   noiseEnabled: searchParams.get("noiseEnabled") === "1",
   noiseOpacity: readNumberParam("noiseOpacity", 0.06, 0, 0.6),
   noiseFrequency: readNumberParam("noiseFrequency", 0.9, 0.05, 3),
@@ -1398,13 +1439,15 @@ function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNorm
   if (hatchMode !== "none") layers.push("single");
   if (hatchMode === "cross") layers.push("cross");
   if (brightness > 0.8) layers.push("circles");
+  const overrideHatchColor = sanitizeSvgColor(sideOverride?.hatchColor, "");
+  const strokeColor = overrideHatchColor || grayHexFromTone(clamp01(0.04 + tone * 0.03));
 
   return {
     tone,
     brightness,
     rawBrightness,
     background: grayHexFromTone(clamp01(0.93 + tone * 0.03)),
-    stroke: grayHexFromTone(clamp01(0.04 + tone * 0.03)),
+    stroke: strokeColor,
     strokeOpacity: 1,
     strokeWidth: effectiveHatchWidth,
     sourceHatchWidth,
@@ -1797,6 +1840,7 @@ function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, widt
   const style = buildStudioFaceHatchStyle(face, polygon, null, brightnessNormalization);
   const hatchBuild = buildStudioHatchSvgForFacePolygon(face, polygon, style);
   const hatchSvg = hatchBuild.svg;
+  const cubeFillColor = sanitizeSvgColor(exportVisualSettings.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
   const totalPrimarySegments = hatchBuild.debug.singleSegments + hatchBuild.debug.crossSegments;
   const totalFallbackSegments = hatchBuild.debug.singleFallback + hatchBuild.debug.crossFallback;
   const totalSegments = totalPrimarySegments + totalFallbackSegments;
@@ -1808,7 +1852,7 @@ function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, widt
 
   return {
     defs: "",
-    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-hatch-brightness="${style.brightness.toFixed(4)}" data-hatch-brightness-raw="${style.rawBrightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}" data-hatch-jitter="${style.hatchParams.jitter.toFixed(3)}" data-hatch-bend="${style.hatchParams.bend.toFixed(3)}" data-hatch-width="${style.hatchParams.strokeWidth.toFixed(3)}" data-hatch-jitter-src="${style.sourceHatchJitter.toFixed(3)}" data-hatch-bend-src="${style.sourceHatchBend.toFixed(3)}" data-hatch-width-src="${style.sourceHatchWidth.toFixed(3)}" data-hatch-mode="${hatchBuild.debug.mode}" data-hatch-segments="${totalSegments}" data-hatch-primary="${totalPrimarySegments}" data-hatch-fallback="${totalFallbackSegments}" data-hatch-circles="${hatchBuild.debug.circleCount}"><polygon points="${polygonPoints}" fill="none" stroke="none" />${hatchSvg}${debugLabelSvg}</g>`,
+    content: `<g data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-hatch-brightness="${style.brightness.toFixed(4)}" data-hatch-brightness-raw="${style.rawBrightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${style.tone.toFixed(4)}" data-hatch="${style.layers.join(" ")}" data-hatch-jitter="${style.hatchParams.jitter.toFixed(3)}" data-hatch-bend="${style.hatchParams.bend.toFixed(3)}" data-hatch-width="${style.hatchParams.strokeWidth.toFixed(3)}" data-hatch-jitter-src="${style.sourceHatchJitter.toFixed(3)}" data-hatch-bend-src="${style.sourceHatchBend.toFixed(3)}" data-hatch-width-src="${style.sourceHatchWidth.toFixed(3)}" data-hatch-mode="${hatchBuild.debug.mode}" data-hatch-segments="${totalSegments}" data-hatch-primary="${totalPrimarySegments}" data-hatch-fallback="${totalFallbackSegments}" data-hatch-circles="${hatchBuild.debug.circleCount}"><polygon points="${polygonPoints}" fill="${cubeFillColor}" stroke="none" />${hatchSvg}${debugLabelSvg}</g>`,
     debug: {
       cubeIndex: face.cubeIndex,
       faceName: face.faceName,
@@ -1980,6 +2024,7 @@ function buildLabStudioState(parsedScene) {
       hatchMode: studioDefaultHatchMode(defaultBrightness),
       hatchSpacing: studioDefaultSpacingForBrightness(defaultBrightness),
       circleSpacing: studioDefaultSpacingForBrightness(defaultBrightness),
+      hatchColor: null,
     });
   });
 
@@ -1991,6 +2036,7 @@ function buildLabStudioState(parsedScene) {
       hatchMode: "cross",
       hatchSpacing: 0.85,
       circleSpacing: 0.85,
+      hatchColor: null,
     });
   });
 
@@ -2002,6 +2048,7 @@ function buildLabStudioState(parsedScene) {
       hatchMode: "cross",
       hatchSpacing: 0.75,
       circleSpacing: 0.75,
+      hatchColor: null,
     });
   });
   return {
@@ -2041,6 +2088,10 @@ function applyLabStudioFromSearch(studioState, search) {
         if (Number.isFinite(circleSpacing)) {
           side.circleSpacing = circleSpacing;
         }
+      }
+      if (typeof row.c === "string") {
+        const normalized = row.c.trim();
+        side.hatchColor = normalized ? sanitizeSvgColor(normalized, null) : null;
       }
     }
     if (typeof payload.s === "string") {
@@ -2124,6 +2175,7 @@ const LAB_DEFAULT_PAPER_OPTIONS = {
 const LAB_DEFAULT_VISUAL_OPTIONS = {
   frameColor: exportVisualSettings.frameColor,
   backgroundColor: exportVisualSettings.backgroundColor,
+  cubeFillColor: exportVisualSettings.cubeFillColor,
   noiseEnabled: exportVisualSettings.noiseEnabled,
   noiseOpacity: exportVisualSettings.noiseOpacity,
   noiseFrequency: exportVisualSettings.noiseFrequency,
@@ -2209,10 +2261,11 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
       const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization, side);
       const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
       const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+      const cubeFillColor = sanitizeSvgColor(labState?.visualOptions?.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
       const isSelected = Boolean(studioState && studioState.selectedFaceId === faceId);
       const highlightStroke = isSelected ? "#d6a65f" : "none";
       const highlightWidth = isSelected ? "2.2" : "0";
-      html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="none" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
+      html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="${cubeFillColor}" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
     }
 
     html += `${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
@@ -2453,6 +2506,13 @@ function initSvgHatchingLab(initialParsedScene = null) {
 
   const hatchSpacingSlider = createFaceSlider("Hatch Spacing", 0.2, 2.0, 0.05);
   const circleSpacingSlider = createFaceSlider("Circle Spacing", 0.2, 2.0, 0.05);
+  const hatchColorLabel = document.createElement("label");
+  hatchColorLabel.textContent = "Hatch Color (optional, supports rgba)";
+  hatchColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const hatchColorInput = document.createElement("input");
+  hatchColorInput.type = "text";
+  hatchColorInput.placeholder = "auto | rgba(40, 40, 40, 0.7)";
+  hatchColorInput.style.cssText = "width:100%;margin-bottom:10px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
 
   function selectedSide() {
     if (!labState.studioState?.selectedFaceId) {
@@ -2488,6 +2548,8 @@ function initSvgHatchingLab(initialParsedScene = null) {
       faceModeSelect.disabled = true;
       hatchSpacingSlider.inp.disabled = true;
       circleSpacingSlider.inp.disabled = true;
+      hatchColorInput.disabled = true;
+      hatchColorInput.value = "";
       return;
     }
     faceTitle.textContent = `Selected face: ${side.id}`;
@@ -2499,10 +2561,13 @@ function initSvgHatchingLab(initialParsedScene = null) {
     faceModeSelect.value = side.hatchMode;
     hatchSpacingSlider.inp.disabled = false;
     circleSpacingSlider.inp.disabled = false;
+    hatchColorInput.disabled = false;
     hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
     hatchSpacingSlider.valSpan.textContent = side.hatchSpacing.toFixed(2);
     circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
     circleSpacingSlider.valSpan.textContent = side.circleSpacing.toFixed(2);
+    hatchColorInput.value = side.hatchColor || "";
+    hatchColorInput.setCustomValidity("");
   }
 
   faceModeSelect.addEventListener("change", () => {
@@ -2528,12 +2593,35 @@ function initSvgHatchingLab(initialParsedScene = null) {
     if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
   });
 
+  hatchColorInput.addEventListener("input", () => {
+    const side = selectedSide();
+    if (!side) return;
+    const raw = hatchColorInput.value.trim();
+    if (!raw) {
+      side.hatchColor = null;
+      hatchColorInput.setCustomValidity("");
+      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+      return;
+    }
+    const sanitized = sanitizeSvgColor(raw, "");
+    if (!sanitized) {
+      hatchColorInput.setCustomValidity("Use #RRGGBB, #RRGGBBAA, rgb(), or rgba().");
+      hatchColorInput.reportValidity();
+      return;
+    }
+    side.hatchColor = sanitized;
+    hatchColorInput.setCustomValidity("");
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
   faceSection.appendChild(faceTitle);
   faceSection.appendChild(faceBrightnessInfo);
   faceSection.appendChild(faceModeLabel);
   faceSection.appendChild(faceModeSelect);
   faceSection.appendChild(hatchSpacingSlider.wrap);
   faceSection.appendChild(circleSpacingSlider.wrap);
+  faceSection.appendChild(hatchColorLabel);
+  faceSection.appendChild(hatchColorInput);
   const sceneActions = document.createElement("div");
   sceneActions.style.cssText = "display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;";
 
@@ -2543,6 +2631,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
     const visualDefaultsFromSearch = {
       frameColor: sanitizeHexColor(searchParams.get("frameColor"), LAB_DEFAULT_VISUAL_OPTIONS.frameColor),
       backgroundColor: sanitizeHexColor(searchParams.get("bgColor"), LAB_DEFAULT_VISUAL_OPTIONS.backgroundColor),
+      cubeFillColor: sanitizeSvgColor(searchParams.get("cubeFillColor"), LAB_DEFAULT_VISUAL_OPTIONS.cubeFillColor),
     };
 
     try {
@@ -2607,7 +2696,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
       return null;
     }
     return {
-      v: 2,
+      v: 3,
       s: labState.studioState.selectedFaceId,
       d: labState.studioState.sides.map((side) => ({
         id: side.id,
@@ -2616,12 +2705,14 @@ function initSvgHatchingLab(initialParsedScene = null) {
           Number(side.hatchSpacing.toFixed(2)),
           Number(side.circleSpacing.toFixed(2)),
         ],
+        c: side.hatchColor || null,
       })),
     };
   }
 
   let frameColorInput = null;
   let backgroundColorInput = null;
+  let cubeFillColorInput = null;
 
   function applyPresetSnapshot(preset, rerender = true) {
     if (!preset) {
@@ -2654,6 +2745,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
         ...labState.visualOptions,
         frameColor: sanitizeHexColor(preset.visualOptions.frameColor, labState.visualOptions.frameColor),
         backgroundColor: sanitizeHexColor(preset.visualOptions.backgroundColor, labState.visualOptions.backgroundColor),
+        cubeFillColor: sanitizeSvgColor(preset.visualOptions.cubeFillColor, labState.visualOptions.cubeFillColor),
         noiseEnabled: Boolean(preset.visualOptions.noiseEnabled),
         noiseOpacity: Math.min(0.6, Math.max(0, Number(preset.visualOptions.noiseOpacity ?? labState.visualOptions.noiseOpacity))),
         noiseFrequency: Math.min(3, Math.max(0.05, Number(preset.visualOptions.noiseFrequency ?? labState.visualOptions.noiseFrequency))),
@@ -2662,6 +2754,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
       };
       exportVisualSettings.frameColor = labState.visualOptions.frameColor;
       exportVisualSettings.backgroundColor = labState.visualOptions.backgroundColor;
+      exportVisualSettings.cubeFillColor = labState.visualOptions.cubeFillColor;
       exportVisualSettings.noiseEnabled = labState.visualOptions.noiseEnabled;
       exportVisualSettings.noiseOpacity = labState.visualOptions.noiseOpacity;
       exportVisualSettings.noiseFrequency = labState.visualOptions.noiseFrequency;
@@ -2673,6 +2766,9 @@ function initSvgHatchingLab(initialParsedScene = null) {
       }
       if (backgroundColorInput) {
         backgroundColorInput.value = labState.visualOptions.backgroundColor;
+      }
+      if (cubeFillColorInput) {
+        cubeFillColorInput.value = labState.visualOptions.cubeFillColor;
       }
     }
     if (preset.studioPayload && labState.studioState) {
@@ -2841,6 +2937,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
       `circleJitter=${gv.circleJitter.toFixed(2)}`,
       `frameColor=${encodeURIComponent(labState.visualOptions.frameColor)}`,
       `bgColor=${encodeURIComponent(labState.visualOptions.backgroundColor)}`,
+      `cubeFillColor=${encodeURIComponent(labState.visualOptions.cubeFillColor)}`,
       `noiseEnabled=${labState.visualOptions.noiseEnabled ? "1" : "0"}`,
       `noiseOpacity=${Number(labState.visualOptions.noiseOpacity).toFixed(3)}`,
       `noiseFrequency=${Number(labState.visualOptions.noiseFrequency).toFixed(3)}`,
@@ -2849,7 +2946,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
     ];
     if (labState.studioState) {
       const payload = {
-        v: 2,
+        v: 3,
         s: labState.studioState.selectedFaceId,
         d: labState.studioState.sides.map((side) => ({
           id: side.id,
@@ -2858,6 +2955,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
             Number(side.hatchSpacing.toFixed(2)),
             Number(side.circleSpacing.toFixed(2)),
           ],
+          c: side.hatchColor || null,
         })),
       };
       parts.push(`studio=${encodeURIComponent(JSON.stringify(payload))}`);
@@ -3002,8 +3100,34 @@ function initSvgHatchingLab(initialParsedScene = null) {
   backgroundColorWrap.appendChild(backgroundColorLabel);
   backgroundColorWrap.appendChild(backgroundColorInput);
 
+  const cubeFillColorWrap = document.createElement("div");
+  cubeFillColorWrap.style.marginBottom = "10px";
+  const cubeFillColorLabel = document.createElement("label");
+  cubeFillColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  cubeFillColorLabel.textContent = "Cube Fill Color (supports rgba)";
+  cubeFillColorInput = document.createElement("input");
+  cubeFillColorInput.type = "text";
+  cubeFillColorInput.value = sanitizeSvgColor(labState.visualOptions.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
+  cubeFillColorInput.placeholder = "rgba(217, 217, 217, 0.7)";
+  cubeFillColorInput.style.width = "100%";
+  cubeFillColorInput.addEventListener("input", () => {
+    const sanitized = sanitizeSvgColor(cubeFillColorInput.value, "");
+    if (!sanitized) {
+      cubeFillColorInput.setCustomValidity("Use #RRGGBB, #RRGGBBAA, rgb(), or rgba().");
+      cubeFillColorInput.reportValidity();
+      return;
+    }
+    cubeFillColorInput.setCustomValidity("");
+    labState.visualOptions.cubeFillColor = sanitized;
+    exportVisualSettings.cubeFillColor = labState.visualOptions.cubeFillColor;
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+  cubeFillColorWrap.appendChild(cubeFillColorLabel);
+  cubeFillColorWrap.appendChild(cubeFillColorInput);
+
   appearanceSection.appendChild(frameColorWrap);
   appearanceSection.appendChild(backgroundColorWrap);
+  appearanceSection.appendChild(cubeFillColorWrap);
 
   const noiseEnabledWrap = document.createElement("label");
   noiseEnabledWrap.style.cssText = "display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#d2dbe7;margin-bottom:10px;";
@@ -4513,7 +4637,7 @@ function buildGrayscaleSceneSvgExport() {
 
   const facePolygons = faces.flatMap((face) => (
     (face.clippedScreenPolygons || []).map((polygon) => (
-      `<polygon points="${pointsToSvgString(polygon)}" fill="none" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
+      `<polygon points="${pointsToSvgString(polygon)}" fill="${sanitizeSvgColor(exportVisualSettings.cubeFillColor, EXPORT_CUBE_FILL_COLOR)}" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
     ))
   )).join("\n");
 
