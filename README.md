@@ -9,6 +9,9 @@
   - `debugPaperBackground.html` standalone visual lab with sliders and toggles
   - `debugPaperBackground.js` UI bindings + render loop + SVG download
 
+### another paper studio
+http://localhost:3301/noisy_paper_spike/svg_filter_playground.html 
+
 ## todos
 
 * different hatching sttyles
