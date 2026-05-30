@@ -1,14 +1,4 @@
 (function () {
-  function mulberry32(seed) {
-    var t = seed >>> 0;
-    return function () {
-      t += 0x6D2B79F5;
-      var r = Math.imul(t ^ (t >>> 15), 1 | t);
-      r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
-      return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -27,32 +17,38 @@
     return Number(value).toFixed(digits || 3);
   }
 
+  function parseHexColor(value, fallback) {
+    if (typeof value !== "string") {
+      return fallback;
+    }
+    var normalized = value.trim();
+    return /^#([0-9a-fA-F]{6})$/.test(normalized) ? normalized : fallback;
+  }
+
+  function sanitizeMixMode(value, fallback) {
+    var allowed = ["multiply", "darken", "overlay", "soft-light", "hard-light", "screen"];
+    if (allowed.indexOf(value) >= 0) {
+      return value;
+    }
+    return fallback;
+  }
+
   var DEFAULT_OPTIONS = {
     width: 1200,
     height: 900,
-    seed: 12345,
-    paperColor: "#d2cab7",
-    grainColor: "#44413c",
-    grainOpacity: 0.2,
-    grainFrequencyX: 0.85,
-    grainFrequencyY: 0.65,
-    grainOctaves: 4,
-    embossStrength: 1.5,
-    embossAzimuth: 77,
-    embossElevation: 35,
-    dirtCount: 800,
-    dirtMinRadius: 0.4,
-    dirtMaxRadius: 2.5,
-    dirtOpacity: 0.18,
-    dirtBlur: 1.95,
-    dirtColor: "#6c5847",
-    includeFibers: true,
-    fiberCount: 1200,
-    fiberLengthMin: 4,
-    fiberLengthMax: 16,
-    fiberStrokeWidth: 0.68,
-    fiberOpacity: 0.17,
-    fiberColor: "#6a6053"
+    paperColor: "#d8d6ce",
+    seedA: 368,
+    seedB: 253,
+    grainFreq: 2.2,
+    grainOpacity: 0.71,
+    stainFreq: 0.016,
+    stainOpacity: 0.6,
+    stainBlobFreq: 0.005,
+    stainBlobOpacity: 0.22,
+    stainBlobBlur: 6.5,
+    stainMixMode: "overlay",
+    softBlur: 0.4,
+    contrast: 0.92,
   };
 
   function PaperBackgroundTexture(svgNode, options) {
@@ -96,66 +92,250 @@
     this.options.height = height;
   };
 
+  PaperBackgroundTexture.prototype._buildPaperNoiseFilter = function () {
+    var stainMixMode = sanitizeMixMode(this.options.stainMixMode, "overlay");
+
+    var filter = createSvgNode("filter");
+    filter.setAttribute("id", "paperNoiseFilter");
+    filter.setAttribute("x", "-10%");
+    filter.setAttribute("y", "-10%");
+    filter.setAttribute("width", "120%");
+    filter.setAttribute("height", "120%");
+    filter.setAttribute("color-interpolation-filters", "sRGB");
+
+    var stainsFine = createSvgNode("feTurbulence");
+    stainsFine.setAttribute("type", "fractalNoise");
+    stainsFine.setAttribute("baseFrequency", toFixed(clamp(this.options.stainFreq, 0.005, 0.12), 3));
+    stainsFine.setAttribute("numOctaves", "6");
+    stainsFine.setAttribute("seed", String(Math.round(this.options.seedB)));
+    stainsFine.setAttribute("result", "stainsFine");
+    filter.appendChild(stainsFine);
+
+    var stainsBlob = createSvgNode("feTurbulence");
+    stainsBlob.setAttribute("type", "fractalNoise");
+    stainsBlob.setAttribute("baseFrequency", toFixed(clamp(this.options.stainBlobFreq, 0.001, 0.03), 3));
+    stainsBlob.setAttribute("numOctaves", "2");
+    stainsBlob.setAttribute("seed", String(Math.round(this.options.seedB) + 137));
+    stainsBlob.setAttribute("result", "stainsBlob");
+    filter.appendChild(stainsBlob);
+
+    var blobBlur = createSvgNode("feGaussianBlur");
+    blobBlur.setAttribute("in", "stainsBlob");
+    blobBlur.setAttribute("stdDeviation", toFixed(clamp(this.options.stainBlobBlur, 0, 10), 2));
+    blobBlur.setAttribute("result", "stainsBlobSoft");
+    filter.appendChild(blobBlur);
+
+    var blobGray = createSvgNode("feColorMatrix");
+    blobGray.setAttribute("in", "stainsBlobSoft");
+    blobGray.setAttribute("type", "saturate");
+    blobGray.setAttribute("values", "0");
+    blobGray.setAttribute("result", "stainsBlobGray");
+    filter.appendChild(blobGray);
+
+    var blobShape = createSvgNode("feComponentTransfer");
+    blobShape.setAttribute("in", "stainsBlobGray");
+    blobShape.setAttribute("result", "stainsBlobShaped");
+    ["R", "G", "B"].forEach(function (channel) {
+      var func = createSvgNode("feFunc" + channel);
+      func.setAttribute("type", "linear");
+      func.setAttribute("slope", "2.2");
+      func.setAttribute("intercept", "-0.55");
+      blobShape.appendChild(func);
+    });
+    filter.appendChild(blobShape);
+
+    var fineBlobMix = createSvgNode("feBlend");
+    fineBlobMix.setAttribute("in", "stainsFine");
+    fineBlobMix.setAttribute("in2", "stainsBlobShaped");
+    fineBlobMix.setAttribute("mode", "multiply");
+    fineBlobMix.setAttribute("result", "stains");
+    filter.appendChild(fineBlobMix);
+
+    var grayStains = createSvgNode("feColorMatrix");
+    grayStains.setAttribute("in", "stains");
+    grayStains.setAttribute("type", "saturate");
+    grayStains.setAttribute("values", "0");
+    grayStains.setAttribute("result", "grayStains");
+    filter.appendChild(grayStains);
+
+    var fineAlpha = createSvgNode("feComponentTransfer");
+    fineAlpha.setAttribute("in", "grayStains");
+    fineAlpha.setAttribute("result", "stainsFineAlpha");
+    ["R", "G", "B"].forEach(function (channel) {
+      var func = createSvgNode("feFunc" + channel);
+      func.setAttribute("type", "linear");
+      func.setAttribute("slope", "0.45");
+      func.setAttribute("intercept", "0.50");
+      fineAlpha.appendChild(func);
+    });
+    var fineAlphaA = createSvgNode("feFuncA");
+    fineAlphaA.setAttribute("type", "linear");
+    fineAlphaA.setAttribute("slope", toFixed(clamp(this.options.stainOpacity, 0, 0.8), 3));
+    fineAlpha.appendChild(fineAlphaA);
+    filter.appendChild(fineAlpha);
+
+    var blobAlpha = createSvgNode("feComponentTransfer");
+    blobAlpha.setAttribute("in", "stainsBlobShaped");
+    blobAlpha.setAttribute("result", "blobStains");
+    ["R", "G", "B"].forEach(function (channel) {
+      var func = createSvgNode("feFunc" + channel);
+      func.setAttribute("type", "linear");
+      func.setAttribute("slope", "0.4");
+      func.setAttribute("intercept", "0.56");
+      blobAlpha.appendChild(func);
+    });
+    var blobAlphaA = createSvgNode("feFuncA");
+    blobAlphaA.setAttribute("type", "linear");
+    blobAlphaA.setAttribute("slope", toFixed(clamp(this.options.stainBlobOpacity, 0, 0.9), 3));
+    blobAlpha.appendChild(blobAlphaA);
+    filter.appendChild(blobAlpha);
+
+    var finalBlend = createSvgNode("feBlend");
+    finalBlend.setAttribute("in", "stainsFineAlpha");
+    finalBlend.setAttribute("in2", "blobStains");
+    finalBlend.setAttribute("mode", stainMixMode);
+    filter.appendChild(finalBlend);
+
+    return filter;
+  };
+
+  PaperBackgroundTexture.prototype._buildDirtyObjectFilter = function () {
+    var grainAlpha = clamp(this.options.grainOpacity, 0, 0.8);
+    var stainAlpha = clamp(this.options.stainOpacity, 0, 0.8);
+    var blobAlpha = clamp(this.options.stainBlobOpacity, 0, 0.9);
+    var stainMixMode = sanitizeMixMode(this.options.stainMixMode, "overlay");
+
+    var filter = createSvgNode("filter");
+    filter.setAttribute("id", "paperDirtyObjectFilter");
+    filter.setAttribute("filterUnits", "userSpaceOnUse");
+    filter.setAttribute("primitiveUnits", "userSpaceOnUse");
+    filter.setAttribute("x", "0");
+    filter.setAttribute("y", "0");
+    filter.setAttribute("width", String(this.options.width));
+    filter.setAttribute("height", String(this.options.height));
+    filter.setAttribute("color-interpolation-filters", "sRGB");
+
+    var grain = createSvgNode("feTurbulence");
+    grain.setAttribute("type", "fractalNoise");
+    grain.setAttribute("baseFrequency", toFixed(clamp(this.options.grainFreq, 0.2, 2.2), 2));
+    grain.setAttribute("numOctaves", "4");
+    grain.setAttribute("seed", String(Math.round(this.options.seedA)));
+    grain.setAttribute("result", "grain");
+    filter.appendChild(grain);
+
+    var clouds = createSvgNode("feTurbulence");
+    clouds.setAttribute("type", "fractalNoise");
+    clouds.setAttribute("baseFrequency", toFixed(clamp(this.options.stainFreq, 0.005, 0.12), 3));
+    clouds.setAttribute("numOctaves", "5");
+    clouds.setAttribute("seed", String(Math.round(this.options.seedB)));
+    clouds.setAttribute("result", "clouds");
+    filter.appendChild(clouds);
+
+    var cloudsAlpha = createSvgNode("feComponentTransfer");
+    cloudsAlpha.setAttribute("in", "clouds");
+    cloudsAlpha.setAttribute("result", "cloudsAlpha");
+    ["R", "G", "B"].forEach(function (channel) {
+      var func = createSvgNode("feFunc" + channel);
+      func.setAttribute("type", "identity");
+      cloudsAlpha.appendChild(func);
+    });
+    var cloudsA = createSvgNode("feFuncA");
+    cloudsA.setAttribute("type", "linear");
+    cloudsA.setAttribute("slope", toFixed(stainAlpha, 3));
+    cloudsAlpha.appendChild(cloudsA);
+    filter.appendChild(cloudsAlpha);
+
+    var cloudBlobs = createSvgNode("feTurbulence");
+    cloudBlobs.setAttribute("type", "fractalNoise");
+    cloudBlobs.setAttribute("baseFrequency", toFixed(clamp(this.options.stainBlobFreq, 0.001, 0.03), 3));
+    cloudBlobs.setAttribute("numOctaves", "2");
+    cloudBlobs.setAttribute("seed", String(Math.round(this.options.seedB) + 137));
+    cloudBlobs.setAttribute("result", "cloudBlobs");
+    filter.appendChild(cloudBlobs);
+
+    var cloudBlobBlur = createSvgNode("feGaussianBlur");
+    cloudBlobBlur.setAttribute("in", "cloudBlobs");
+    cloudBlobBlur.setAttribute("stdDeviation", toFixed(clamp(this.options.stainBlobBlur, 0, 10), 2));
+    cloudBlobBlur.setAttribute("result", "cloudBlobsSoft");
+    filter.appendChild(cloudBlobBlur);
+
+    var cloudBlobGray = createSvgNode("feColorMatrix");
+    cloudBlobGray.setAttribute("in", "cloudBlobsSoft");
+    cloudBlobGray.setAttribute("type", "saturate");
+    cloudBlobGray.setAttribute("values", "0");
+    cloudBlobGray.setAttribute("result", "cloudBlobsGray");
+    filter.appendChild(cloudBlobGray);
+
+    var cloudBlobShape = createSvgNode("feComponentTransfer");
+    cloudBlobShape.setAttribute("in", "cloudBlobsGray");
+    cloudBlobShape.setAttribute("result", "cloudBlobsShaped");
+    ["R", "G", "B"].forEach(function (channel) {
+      var func = createSvgNode("feFunc" + channel);
+      func.setAttribute("type", "linear");
+      func.setAttribute("slope", "2.2");
+      func.setAttribute("intercept", "-0.55");
+      cloudBlobShape.appendChild(func);
+    });
+    filter.appendChild(cloudBlobShape);
+
+    var softened = createSvgNode("feGaussianBlur");
+    softened.setAttribute("in", "SourceGraphic");
+    softened.setAttribute("stdDeviation", toFixed(clamp(this.options.softBlur, 0, 3), 2));
+    softened.setAttribute("result", "softened");
+    filter.appendChild(softened);
+
+    var blobAlphaNode = createSvgNode("feColorMatrix");
+    blobAlphaNode.setAttribute("in", "cloudBlobsShaped");
+    blobAlphaNode.setAttribute("type", "matrix");
+    blobAlphaNode.setAttribute(
+      "values",
+      "0.25 0.25 0.25 0 0  0.25 0.25 0.25 0 0  0.25 0.25 0.25 0 0  0 0 0 " + toFixed(blobAlpha, 3) + " 0"
+    );
+    blobAlphaNode.setAttribute("result", "blobAlpha");
+    filter.appendChild(blobAlphaNode);
+
+    var stainedSoft = createSvgNode("feBlend");
+    stainedSoft.setAttribute("in", "softened");
+    stainedSoft.setAttribute("in2", "blobAlpha");
+    stainedSoft.setAttribute("mode", stainMixMode);
+    stainedSoft.setAttribute("result", "stainedSoft");
+    filter.appendChild(stainedSoft);
+
+    var grainAlphaNode = createSvgNode("feColorMatrix");
+    grainAlphaNode.setAttribute("in", "grain");
+    grainAlphaNode.setAttribute("type", "matrix");
+    grainAlphaNode.setAttribute(
+      "values",
+      "0.25 0.25 0.25 0 0  0.25 0.25 0.25 0 0  0.25 0.25 0.25 0 0  0 0 0 " + toFixed(grainAlpha, 3) + " 0"
+    );
+    grainAlphaNode.setAttribute("result", "grainAlpha");
+    filter.appendChild(grainAlphaNode);
+
+    var dirty = createSvgNode("feBlend");
+    dirty.setAttribute("in", "stainedSoft");
+    dirty.setAttribute("in2", "grainAlpha");
+    dirty.setAttribute("mode", "multiply");
+    dirty.setAttribute("result", "dirty");
+    filter.appendChild(dirty);
+
+    var contrastTransfer = createSvgNode("feComponentTransfer");
+    contrastTransfer.setAttribute("in", "dirty");
+    ["R", "G", "B"].forEach(function (channel) {
+      var func = createSvgNode("feFunc" + channel);
+      func.setAttribute("type", "linear");
+      func.setAttribute("slope", toFixed(clamp(this.options.contrast, 0.35, 1.4), 3));
+      func.setAttribute("intercept", "0");
+      contrastTransfer.appendChild(func);
+    }, this);
+    filter.appendChild(contrastTransfer);
+
+    return filter;
+  };
+
   PaperBackgroundTexture.prototype._buildDefs = function () {
     clearNode(this.defs);
-
-    var noiseFilter = createSvgNode("filter");
-    noiseFilter.setAttribute("id", "paperNoiseFilter");
-    noiseFilter.setAttribute("x", "0");
-    noiseFilter.setAttribute("y", "0");
-    noiseFilter.setAttribute("width", "100%");
-    noiseFilter.setAttribute("height", "100%");
-
-    var turbulence = createSvgNode("feTurbulence");
-    turbulence.setAttribute("type", "fractalNoise");
-    turbulence.setAttribute(
-      "baseFrequency",
-      toFixed(clamp(this.options.grainFrequencyX, 0.01, 4), 3) +
-        " " +
-        toFixed(clamp(this.options.grainFrequencyY, 0.01, 4), 3)
-    );
-    turbulence.setAttribute(
-      "numOctaves",
-      String(Math.round(clamp(this.options.grainOctaves, 1, 7)))
-    );
-    turbulence.setAttribute("seed", String(Math.round(this.options.seed)));
-    turbulence.setAttribute("stitchTiles", "stitch");
-    turbulence.setAttribute("result", "paperTurbulence");
-    noiseFilter.appendChild(turbulence);
-
-    var diffuse = createSvgNode("feDiffuseLighting");
-    diffuse.setAttribute("in", "paperTurbulence");
-    diffuse.setAttribute("surfaceScale", toFixed(clamp(this.options.embossStrength, 0, 5), 3));
-    diffuse.setAttribute("lighting-color", "#ffffff");
-    diffuse.setAttribute("result", "paperEmboss");
-
-    var distant = createSvgNode("feDistantLight");
-    distant.setAttribute("azimuth", toFixed(this.options.embossAzimuth, 2));
-    distant.setAttribute("elevation", toFixed(this.options.embossElevation, 2));
-    diffuse.appendChild(distant);
-    noiseFilter.appendChild(diffuse);
-
-    var blend = createSvgNode("feBlend");
-    blend.setAttribute("mode", "multiply");
-    blend.setAttribute("in", "paperTurbulence");
-    blend.setAttribute("in2", "paperEmboss");
-    blend.setAttribute("result", "paperTextureOut");
-    noiseFilter.appendChild(blend);
-
-    this.defs.appendChild(noiseFilter);
-
-    var dirtFilter = createSvgNode("filter");
-    dirtFilter.setAttribute("id", "paperDirtBlur");
-    dirtFilter.setAttribute("x", "-10%");
-    dirtFilter.setAttribute("y", "-10%");
-    dirtFilter.setAttribute("width", "120%");
-    dirtFilter.setAttribute("height", "120%");
-
-    var blur = createSvgNode("feGaussianBlur");
-    blur.setAttribute("stdDeviation", toFixed(clamp(this.options.dirtBlur, 0, 8), 2));
-    dirtFilter.appendChild(blur);
-
-    this.defs.appendChild(dirtFilter);
+    this.defs.appendChild(this._buildPaperNoiseFilter());
+    this.defs.appendChild(this._buildDirtyObjectFilter());
   };
 
   PaperBackgroundTexture.prototype._drawBase = function () {
@@ -164,94 +344,20 @@
     base.setAttribute("y", "0");
     base.setAttribute("width", String(this.options.width));
     base.setAttribute("height", String(this.options.height));
-    base.setAttribute("fill", this.options.paperColor);
+    base.setAttribute("fill", parseHexColor(this.options.paperColor, DEFAULT_OPTIONS.paperColor));
     this.rootGroup.appendChild(base);
   };
 
   PaperBackgroundTexture.prototype._drawNoise = function () {
-    var noiseLayer = createSvgNode("rect");
-    noiseLayer.setAttribute("x", "0");
-    noiseLayer.setAttribute("y", "0");
-    noiseLayer.setAttribute("width", String(this.options.width));
-    noiseLayer.setAttribute("height", String(this.options.height));
-    noiseLayer.setAttribute("fill", this.options.grainColor);
-    noiseLayer.setAttribute("opacity", toFixed(clamp(this.options.grainOpacity, 0, 1), 3));
-    noiseLayer.setAttribute("filter", "url(#paperNoiseFilter)");
-    this.rootGroup.appendChild(noiseLayer);
-  };
-
-  PaperBackgroundTexture.prototype._drawFibers = function (rng) {
-    if (!this.options.includeFibers) {
-      return;
-    }
-
-    var group = createSvgNode("g");
-    group.setAttribute("opacity", toFixed(clamp(this.options.fiberOpacity, 0, 1), 3));
-
-    var count = Math.max(0, Math.round(this.options.fiberCount));
-    var w = this.options.width;
-    var h = this.options.height;
-    var minLen = Math.max(0.5, this.options.fiberLengthMin);
-    var maxLen = Math.max(minLen + 0.1, this.options.fiberLengthMax);
-
-    for (var i = 0; i < count; i++) {
-      var x = rng() * w;
-      var y = rng() * h;
-      var angle = rng() * Math.PI * 2;
-      var len = minLen + (maxLen - minLen) * rng();
-      var x2 = x + Math.cos(angle) * len;
-      var y2 = y + Math.sin(angle) * len;
-
-      var line = createSvgNode("line");
-      line.setAttribute("x1", toFixed(x, 2));
-      line.setAttribute("y1", toFixed(y, 2));
-      line.setAttribute("x2", toFixed(x2, 2));
-      line.setAttribute("y2", toFixed(y2, 2));
-      line.setAttribute("stroke", this.options.fiberColor);
-      line.setAttribute("stroke-width", toFixed(clamp(this.options.fiberStrokeWidth, 0.1, 8), 2));
-      line.setAttribute("stroke-linecap", "round");
-      group.appendChild(line);
-    }
-
-    this.rootGroup.appendChild(group);
-  };
-
-  PaperBackgroundTexture.prototype._drawDirt = function (rng) {
-    var dirtGroup = createSvgNode("g");
-    dirtGroup.setAttribute("opacity", toFixed(clamp(this.options.dirtOpacity, 0, 1), 3));
-    dirtGroup.setAttribute("filter", "url(#paperDirtBlur)");
-
-    var count = Math.max(0, Math.round(this.options.dirtCount));
-    var w = this.options.width;
-    var h = this.options.height;
-    var minR = Math.max(0.2, this.options.dirtMinRadius);
-    var maxR = Math.max(minR + 0.1, this.options.dirtMaxRadius);
-
-    for (var i = 0; i < count; i++) {
-      var cx = rng() * w;
-      var cy = rng() * h;
-      var r = minR + (maxR - minR) * rng();
-
-      if (rng() < 0.64) {
-        var c = createSvgNode("circle");
-        c.setAttribute("cx", toFixed(cx, 2));
-        c.setAttribute("cy", toFixed(cy, 2));
-        c.setAttribute("r", toFixed(r, 2));
-        c.setAttribute("fill", this.options.dirtColor);
-        dirtGroup.appendChild(c);
-      } else {
-        var e = createSvgNode("ellipse");
-        e.setAttribute("cx", toFixed(cx, 2));
-        e.setAttribute("cy", toFixed(cy, 2));
-        e.setAttribute("rx", toFixed(r * (0.7 + rng() * 0.8), 2));
-        e.setAttribute("ry", toFixed(r * (0.45 + rng() * 0.5), 2));
-        e.setAttribute("transform", "rotate(" + toFixed(rng() * 360, 2) + " " + toFixed(cx, 2) + " " + toFixed(cy, 2) + ")");
-        e.setAttribute("fill", this.options.dirtColor);
-        dirtGroup.appendChild(e);
-      }
-    }
-
-    this.rootGroup.appendChild(dirtGroup);
+    var layer = createSvgNode("rect");
+    layer.setAttribute("x", "0");
+    layer.setAttribute("y", "0");
+    layer.setAttribute("width", String(this.options.width));
+    layer.setAttribute("height", String(this.options.height));
+    layer.setAttribute("fill", "#000000");
+    layer.setAttribute("opacity", "1");
+    layer.setAttribute("filter", "url(#paperNoiseFilter)");
+    this.rootGroup.appendChild(layer);
   };
 
   PaperBackgroundTexture.prototype.render = function () {
@@ -260,12 +366,8 @@
     this._buildDefs();
     clearNode(this.rootGroup);
 
-    var rng = mulberry32(Math.round(this.options.seed));
-
     this._drawBase();
     this._drawNoise();
-    this._drawFibers(rng);
-    this._drawDirt(rng);
 
     return this.svgNode;
   };

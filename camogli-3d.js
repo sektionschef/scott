@@ -2148,29 +2148,19 @@ const LAB_DEFAULT_GLOBALS = {
 const LAB_DEFAULT_PAPER_OPTIONS = {
   width: 1920,
   height: 1047,
-  seed: 12345,
-  paperColor: "#dedede",
-  grainColor: "#57534c",
-  grainOpacity: 0.2,
-  grainFrequencyX: 0.85,
-  grainFrequencyY: 0.65,
-  grainOctaves: 4,
-  embossStrength: 1.5,
-  embossAzimuth: 77,
-  embossElevation: 35,
-  includeFibers: true,
-  fiberCount: 1200,
-  fiberLengthMin: 4,
-  fiberLengthMax: 16,
-  fiberStrokeWidth: 0.68,
-  fiberOpacity: 0.17,
-  fiberColor: "#6a6053",
-  dirtCount: 1400,
-  dirtMinRadius: 0.4,
-  dirtMaxRadius: 2.5,
-  dirtOpacity: 0.21,
-  dirtBlur: 1.95,
-  dirtColor: "#6c5847",
+  paperColor: "#d8d6ce",
+  seedA: 368,
+  seedB: 253,
+  grainFreq: 2.2,
+  grainOpacity: 0.71,
+  stainFreq: 0.016,
+  stainOpacity: 0.6,
+  stainBlobFreq: 0.005,
+  stainBlobOpacity: 0.22,
+  stainBlobBlur: 6.5,
+  stainMixMode: "overlay",
+  softBlur: 0.4,
+  contrast: 0.92,
 };
 const LAB_DEFAULT_VISUAL_OPTIONS = {
   frameColor: exportVisualSettings.frameColor,
@@ -2207,7 +2197,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
     const frameParts = buildSvgFrameParts(width, height, "labPreviewFrame", labState?.visualOptions || exportVisualSettings);
     const noiseParts = buildSvgNoiseLayer(width, height, "labPreview", labState?.visualOptions || exportVisualSettings);
 
-    let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}`;
+    let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">`;
 
     if (floorShadowPolygons.length === 0 && cubeShadowPolygons.length === 0) {
       for (const shadow of shadowPolygons) {
@@ -2268,7 +2258,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
       html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="${cubeFillColor}" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
     }
 
-    html += `${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
+    html += `</g>${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
 
     svgNode.innerHTML = html;
 
@@ -3031,32 +3021,43 @@ function initSvgHatchingLab(initialParsedScene = null) {
     return wrap;
   }
 
-  const fiberToggleWrap = document.createElement("label");
-  fiberToggleWrap.style.cssText = "display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#d2dbe7;margin-bottom:10px;";
-  fiberToggleWrap.textContent = "Include Fibers";
-  const fiberToggle = document.createElement("input");
-  fiberToggle.type = "checkbox";
-  fiberToggle.checked = Boolean(labState.paperOptions.includeFibers);
-  fiberToggle.addEventListener("change", () => {
-    labState.paperOptions.includeFibers = Boolean(fiberToggle.checked);
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
-  });
-  fiberToggleWrap.appendChild(fiberToggle);
+  function createPaperSelect(labelText, key, options) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "10px";
+    const lbl = document.createElement("label");
+    lbl.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+    lbl.textContent = labelText;
+    const select = document.createElement("select");
+    select.style.cssText = "width:100%;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+    options.forEach((entry) => {
+      const option = document.createElement("option");
+      option.value = entry;
+      option.textContent = entry;
+      select.appendChild(option);
+    });
+    select.value = String(labState.paperOptions[key] || options[0]);
+    select.addEventListener("change", () => {
+      labState.paperOptions[key] = select.value;
+      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    });
+    wrap.appendChild(lbl);
+    wrap.appendChild(select);
+    return wrap;
+  }
 
-  paperSection.appendChild(createPaperSlider("Seed", "seed", 1, 999999999, 1, 0));
+  paperSection.appendChild(createPaperSlider("Seed A", "seedA", 1, 9999, 1, 0));
+  paperSection.appendChild(createPaperSlider("Seed B", "seedB", 1, 9999, 1, 0));
   paperSection.appendChild(createPaperColor("Paper Color", "paperColor"));
-  paperSection.appendChild(createPaperColor("Grain Color", "grainColor"));
-  paperSection.appendChild(createPaperSlider("Grain Opacity", "grainOpacity", 0, 1, 0.01, 2));
-  paperSection.appendChild(createPaperSlider("Grain Frequency X", "grainFrequencyX", 0.05, 2, 0.01, 2));
-  paperSection.appendChild(createPaperSlider("Grain Frequency Y", "grainFrequencyY", 0.05, 2, 0.01, 2));
-  paperSection.appendChild(createPaperSlider("Grain Octaves", "grainOctaves", 1, 7, 1, 0));
-  paperSection.appendChild(createPaperSlider("Emboss Strength", "embossStrength", 0, 3, 0.01, 2));
-  paperSection.appendChild(createPaperSlider("Emboss Azimuth", "embossAzimuth", 0, 360, 1, 0));
-  paperSection.appendChild(createPaperSlider("Emboss Elevation", "embossElevation", 0, 90, 1, 0));
-  paperSection.appendChild(fiberToggleWrap);
-  paperSection.appendChild(createPaperSlider("Fiber Count", "fiberCount", 0, 1600, 1, 0));
-  paperSection.appendChild(createPaperSlider("Dirt Count", "dirtCount", 0, 1400, 1, 0));
-  paperSection.appendChild(createPaperSlider("Dirt Opacity", "dirtOpacity", 0, 1, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Fine Grain Frequency", "grainFreq", 0.2, 2.2, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Fine Grain Opacity", "grainOpacity", 0, 0.8, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Stain Frequency", "stainFreq", 0.005, 0.12, 0.001, 3));
+  paperSection.appendChild(createPaperSlider("Stain Opacity", "stainOpacity", 0, 0.8, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Blob Stain Frequency", "stainBlobFreq", 0.001, 0.03, 0.001, 3));
+  paperSection.appendChild(createPaperSlider("Blob Stain Opacity", "stainBlobOpacity", 0, 0.9, 0.01, 2));
+  paperSection.appendChild(createPaperSlider("Blob Stain Blur", "stainBlobBlur", 0, 10, 0.1, 1));
+  paperSection.appendChild(createPaperSlider("Soft Blur", "softBlur", 0, 3, 0.05, 2));
+  paperSection.appendChild(createPaperSlider("Contrast Slope", "contrast", 0.35, 1.4, 0.01, 2));
+  paperSection.appendChild(createPaperSelect("Stain Mix Mode", "stainMixMode", ["multiply", "darken", "overlay", "soft-light", "hard-light", "screen"]));
 
   const appearanceSection = document.createElement("div");
   appearanceSection.style.cssText = "margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);";
@@ -3129,20 +3130,6 @@ function initSvgHatchingLab(initialParsedScene = null) {
   appearanceSection.appendChild(backgroundColorWrap);
   appearanceSection.appendChild(cubeFillColorWrap);
 
-  const noiseEnabledWrap = document.createElement("label");
-  noiseEnabledWrap.style.cssText = "display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#d2dbe7;margin-bottom:10px;";
-  noiseEnabledWrap.textContent = "Enable SVG Noise";
-  const noiseEnabledInput = document.createElement("input");
-  noiseEnabledInput.type = "checkbox";
-  noiseEnabledInput.checked = Boolean(labState.visualOptions.noiseEnabled);
-  noiseEnabledInput.addEventListener("change", () => {
-    labState.visualOptions.noiseEnabled = Boolean(noiseEnabledInput.checked);
-    exportVisualSettings.noiseEnabled = labState.visualOptions.noiseEnabled;
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
-  });
-  noiseEnabledWrap.appendChild(noiseEnabledInput);
-  appearanceSection.appendChild(noiseEnabledWrap);
-
   function createAppearanceSlider(labelText, key, min, max, step, digits = 2) {
     const wrap = document.createElement("div");
     wrap.style.marginBottom = "10px";
@@ -3171,10 +3158,6 @@ function initSvgHatchingLab(initialParsedScene = null) {
     return wrap;
   }
 
-  appearanceSection.appendChild(createAppearanceSlider("Noise Opacity", "noiseOpacity", 0, 0.6, 0.01, 2));
-  appearanceSection.appendChild(createAppearanceSlider("Noise Frequency", "noiseFrequency", 0.05, 3, 0.01, 2));
-  appearanceSection.appendChild(createAppearanceSlider("Noise Octaves", "noiseOctaves", 1, 5, 1, 0));
-  appearanceSection.appendChild(createAppearanceSlider("Noise Seed", "noiseSeed", 1, 9999, 1, 0));
   function onSelectFace(faceId) {
     if (!labState.studioState) {
       return;
@@ -4357,11 +4340,13 @@ function buildSceneSvgExport() {
 ${frameParts.background}
 ${frameParts.before}
 ${paperBackground.content}
+<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+</g>
 ${noiseParts.content}
 ${frameParts.after}
 ${frameParts.overlay}
@@ -4706,11 +4691,13 @@ function buildGrayscaleSceneSvgExport() {
 ${frameParts.background}
 ${frameParts.before}
 ${paperBackground.content}
+<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+</g>
 ${noiseParts.content}
 ${frameParts.after}
 ${frameParts.overlay}
