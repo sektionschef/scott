@@ -39,8 +39,8 @@ const DEBUG_FILLED_PATH = sp.get("debugFilledPath") === "1" || sp.get("debug") =
 const DEBUG_FILLED_PATH_PARAMS = sp.get("debugFilledPathParams") === "1" || sp.get("debug") === "filledPathParams";
 const DEBUG_SINGLE_CIRCLE = sp.get("debugSingleCircle") === "1";
 const DEBUG_COMPOSITION = false;
-const DEBUG_CUBE_AXES = sp.get("debugCubeAxes") === "1" || sp.get("debug") === "cubeAxes";
-if (DEBUG_GRID || DEBUG_CUBE || DEBUG_HATCHING || DEBUG_STROKE || DEBUG_FILLED_PATH || DEBUG_FILLED_PATH_PARAMS || DEBUG_SINGLE_CIRCLE || DEBUG_COMPOSITION || DEBUG_CUBE_AXES) {
+const DEBUG_HATCHING_STUDIO = sp.get("debugHatchingStudio") === "1" || sp.get("debug") === "hatchingStudio";
+if (DEBUG_GRID || DEBUG_CUBE || DEBUG_HATCHING || DEBUG_STROKE || DEBUG_FILLED_PATH || DEBUG_FILLED_PATH_PARAMS || DEBUG_SINGLE_CIRCLE || DEBUG_COMPOSITION || DEBUG_HATCHING_STUDIO) {
   TEST = true;
 }
 
@@ -548,7 +548,7 @@ function main() {
       testFilledPath();
     } else if (DEBUG_FILLED_PATH_PARAMS) {
       testFilledPathParams();
-    } else if (DEBUG_CUBE_AXES) {
+    } else if (DEBUG_HATCHING_STUDIO) {
       testCubePrincipalAxes();
     }
     // testBlueprintNew();

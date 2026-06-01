@@ -27,8 +27,7 @@ http://localhost:3301/noisy_paper_spike/svg_filter_playground.html
 3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
 
 
-debug cube principal/perpendicular axes: http://localhost:3301/?debugCubeAxes=1
-debug indivdual hatching: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.8&hatchBend=0.04&hatchSpacing=0.4 
+debug hatching studio: http://localhost:3301/?debugHatchingStudio=1
 debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1
 
 #### remove
@@ -38,7 +37,7 @@ debug strokes boundaries: http://localhost:3301/?debugStroke=1
 new
 * http://localhost:3301/camogli-3d.html - result
 * http://localhost:3301/camogli-3d.html?debugSvgHatching=1 - studio
-* http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.25&hatchJitter=1.30&hatchBend=-0.020&hatchSpacing=3.00&hatchTrimRatio=0.60&hatchMinVisible=12.00&studio=%257B%2522v%2522%253A2%252C%2522s%2522%253A%2522C3-A%2522%252C%2522dir%2522%253Afalse%252C%2522lbl%2522%253Afalse%252C%2522g%2522%253A%255B1.25%252C1.3%252C-0.02%252C0.5%252C0.6%252C12%252C0.5%252C0.68%255D%252C%2522d%2522%253A%255B%257B%2522id%2522%253A%2522C1-A%2522%252C%2522mode%2522%253A%2522none%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C1-B%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C1-C%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C2-A%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C2-B%2522%252C%2522mode%2522%253A%2522single%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C2-C%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C3-A%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C3-B%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C3-C%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B0.9%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C4-A%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C4-B%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B3%252C0.5%255D%257D%252C%257B%2522id%2522%253A%2522C4-C%2522%252C%2522mode%2522%253A%2522cross%2522%252C%2522p%2522%253A%255B0.5%252C0.5%255D%257D%255D%257D&seed=251560812&hatchEdgeInset=0.50&circleSpacing=0.50&circleRadius=0.50&circleJitter=0.68 - hatching in detail
+* http://localhost:3301/?debugHatchingStudio=1 - hatching studio (10 brightness rectangles)
 
 ## Hatching Studio
 
@@ -46,14 +45,12 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 
 ### URLs
 
-- Base screen: http://localhost:3301/?debugCubeAxes=1
-- Tuned example: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.8&hatchBend=0.04&hatchSpacing=0.4
-- Less end washout example: http://localhost:3301/?debugCubeAxes=1&hatchWidth=1.4&hatchJitter=0.45&hatchBend=0.03&hatchSpacing=0.4&hatchEdgeInset=1.2&hatchTrimRatio=0.22&hatchMinVisible=2
+- Base screen: http://localhost:3301/?debugHatchingStudio=1
 
 ### Logic Summary
 
-1. Build 3 cubes side-by-side in flat SVG, viewed in 3/4 from above.
-2. Keep the 3 visible faces per cube as polygons (9 sides total).
+1. Build 10 vertical rectangles side-by-side in a single strip.
+2. Each rectangle maps to one brightness bucket from `0.5` to `9.5`.
 3. For each polygon:
   - Compute principal axis from point covariance.
   - Compute perpendicular direction to that principal axis.
@@ -62,7 +59,7 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 4. Create hatch candidates by sweeping parallel lines through the polygon and intersecting with polygon edges.
 5. Convert each valid segment into a real filledPath stroke (`filledPath.js`) with bend/width/jitter.
 6. No clip mask is used for hatch containment. Strokes are drawn from geometrically clipped segment endpoints.
-7. Optional labels (`C?-? b=?`) can be enabled and are placed in the center of each side in gray.
+7. Optional labels (`C?-? b=?`) can be enabled and are placed in the center of each rectangle in gray.
 
 ### Side Brightness Strategy
 
@@ -81,6 +78,14 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 - Use "Apply Seed" to jump to a specific seed.
 - Use "New Seed" (or "New Seed + Re-roll") to intentionally generate a new arrangement.
 - Seed and studio state are encoded in the URL and restored on reload.
+
+### Brightness Profiles (0-10 ... 90-100)
+
+- In `?debugHatchingStudio=1`, use:
+  - `Save 0-100 Profile` to store current hatch mode/spacing/color for all 10 brightness bins.
+  - `Load 0-100 Profile` to re-apply a saved bin profile to the strip editor.
+- Profiles are stored in browser localStorage under `camogli3d.hatchingBrightnessProfiles.v1`.
+- `camogli-3d.html` export reads this profile automatically and applies bin overrides to face hatching in the exported SVG.
 
 ### Debug Direction Toggle
 

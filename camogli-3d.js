@@ -174,6 +174,7 @@ const hatchExportSettings = {
 };
 
 const SCENE_LAYOUT_STORAGE_KEY = "camogli3d.settledLayout.v1";
+const HATCH_BRIGHTNESS_PROFILE_STORAGE_KEY = "camogli3d.hatchingBrightnessProfiles.v1";
 let pendingLayoutRestore = false;
 
 const scene = new THREE.Scene();
@@ -1065,6 +1066,43 @@ function studioDefaultSpacingForBrightness(brightness) {
   return 0.5;
 }
 
+function profileBinIndexFromBrightness(brightness) {
+  const normalized = clamp01(Number(brightness) || 0);
+  return Math.max(0, Math.min(9, Math.floor(Math.min(0.999999, normalized) * 10)));
+}
+
+function readExportBrightnessProfileFromStorage() {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(HATCH_BRIGHTNESS_PROFILE_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const payload = JSON.parse(raw);
+    if (!payload || !Array.isArray(payload.bins)) {
+      return null;
+    }
+    return payload;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function getBrightnessProfileBucket(profile, brightness) {
+  if (!profile || !Array.isArray(profile.bins)) {
+    return null;
+  }
+  const bin = profileBinIndexFromBrightness(brightness);
+  for (const row of profile.bins) {
+    if (Number(row?.bin) === bin) {
+      return row;
+    }
+  }
+  return null;
+}
+
 function faceStudioBrightness(face) {
   // Use perceived face tone + cast shadow to avoid under-hatching bright-but-occluded faces.
   const toneDarkness = 1 - clamp01(faceToneFromLight(face));
@@ -1394,10 +1432,11 @@ function hatchPolygonBounds(points) {
   };
 }
 
-function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNormalization = null, sideOverride = null) {
+function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNormalization = null, sideOverride = null, brightnessProfile = null) {
   const g = globals ?? SVG_EXPORT_STUDIO_GLOBALS;
   const rawBrightness = faceStudioBrightness(face);
   const brightness = normalizeFaceBrightness(rawBrightness, brightnessNormalization);
+  const bucketOverride = getBrightnessProfileBucket(brightnessProfile, brightness);
   const tone = faceToneFromLight(face);
   const bounds = hatchPolygonBounds(polygon);
   const shortSide = Math.max(1, Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY));
@@ -1405,7 +1444,10 @@ function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNorm
   const spacingFactor = 1.35 - brightness * 0.95;
   const defaultSpacing = studioDefaultSpacingForBrightness(brightness);
   const overrideSpacing = Number(sideOverride?.hatchSpacing);
-  const sideSpacing = Math.max(0.2, Math.min(2.0, Number.isFinite(overrideSpacing) ? overrideSpacing : defaultSpacing));
+  const bucketSpacing = Number(bucketOverride?.hatchSpacing);
+  const sideSpacing = Math.max(0.2, Math.min(2.0, Number.isFinite(overrideSpacing)
+    ? overrideSpacing
+    : (Number.isFinite(bucketSpacing) ? bucketSpacing : defaultSpacing)));
   const minSpacing = Math.max(0.9, Math.min(4, shortSide * 0.22));
   const spacing = Math.max(minSpacing, Math.sqrt(area) * 0.1 * sideSpacing * spacingFactor);
   const baseEdgeInset = g.hatchEdgeInset !== null
@@ -1421,11 +1463,17 @@ function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNorm
     Math.max(0.6, shortSide * 0.18),
   );
   const defaultMode = studioDefaultHatchMode(brightness);
+  const bucketMode = (bucketOverride?.hatchMode === "none" || bucketOverride?.hatchMode === "single" || bucketOverride?.hatchMode === "cross")
+    ? bucketOverride.hatchMode
+    : null;
   const hatchMode = (sideOverride?.hatchMode === "none" || sideOverride?.hatchMode === "single" || sideOverride?.hatchMode === "cross")
     ? sideOverride.hatchMode
-    : defaultMode;
+    : (bucketMode || defaultMode);
   const overrideCircleSpacing = Number(sideOverride?.circleSpacing);
-  const circleSpacing = Math.max(0.2, Math.min(2.0, Number.isFinite(overrideCircleSpacing) ? overrideCircleSpacing : defaultSpacing));
+  const bucketCircleSpacing = Number(bucketOverride?.circleSpacing);
+  const circleSpacing = Math.max(0.2, Math.min(2.0, Number.isFinite(overrideCircleSpacing)
+    ? overrideCircleSpacing
+    : (Number.isFinite(bucketCircleSpacing) ? bucketCircleSpacing : defaultSpacing)));
   const directions = hatchPrincipalDirections(polygon);
   const sourceHatchWidth = g.hatchWidth;
   const sourceHatchJitter = g.hatchJitter;
@@ -1439,8 +1487,9 @@ function buildStudioFaceHatchStyle(face, polygon, globals = null, brightnessNorm
   if (hatchMode !== "none") layers.push("single");
   if (hatchMode === "cross") layers.push("cross");
   if (brightness > 0.8) layers.push("circles");
+  const bucketHatchColor = sanitizeSvgColor(bucketOverride?.hatchColor, "");
   const overrideHatchColor = sanitizeSvgColor(sideOverride?.hatchColor, "");
-  const strokeColor = overrideHatchColor || grayHexFromTone(clamp01(0.04 + tone * 0.03));
+  const strokeColor = overrideHatchColor || bucketHatchColor || grayHexFromTone(clamp01(0.04 + tone * 0.03));
 
   return {
     tone,
@@ -1835,9 +1884,9 @@ function buildHatchLayerSvg(layer, rect, style, shortSide) {
   return "";
 }
 
-function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, brightnessNormalization = null) {
+function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, brightnessNormalization = null, brightnessProfile = null) {
   const polygonPoints = pointsToSvgString(polygon);
-  const style = buildStudioFaceHatchStyle(face, polygon, null, brightnessNormalization);
+  const style = buildStudioFaceHatchStyle(face, polygon, null, brightnessNormalization, null, brightnessProfile);
   const hatchBuild = buildStudioHatchSvgForFacePolygon(face, polygon, style);
   const hatchSvg = hatchBuild.svg;
   const cubeFillColor = sanitizeSvgColor(exportVisualSettings.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
@@ -2197,7 +2246,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
     const frameParts = buildSvgFrameParts(width, height, "labPreviewFrame", labState?.visualOptions || exportVisualSettings);
     const noiseParts = buildSvgNoiseLayer(width, height, "labPreview", labState?.visualOptions || exportVisualSettings);
 
-    let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}${paperBackground.content}<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">`;
+    let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">${paperBackground.content}`;
 
     if (floorShadowPolygons.length === 0 && cubeShadowPolygons.length === 0) {
       for (const shadow of shadowPolygons) {
@@ -2258,7 +2307,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
       html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="${cubeFillColor}" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
     }
 
-    html += `</g>${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
+    html += `<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" opacity="0.42" filter="url(#paperDirtyObjectFilter)" style="mix-blend-mode:multiply" pointer-events="none" /></g>${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
 
     svgNode.innerHTML = html;
 
@@ -4211,6 +4260,7 @@ function buildSceneSvgExport() {
   const rawShadows = buildShadowData(width, height);
   const faces = clipFacesByScreenOcclusion(rawFaces);
   const faceBrightnessNormalization = buildFaceBrightnessNormalization(faces);
+  const brightnessProfile = readExportBrightnessProfileFromStorage();
   const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
   syncShadowSettingsFromUi();
   const rasterShadows = shadowExportSettings.useRaster ? buildExperimentalRasterShadowExtraction(width, height, faces) : null;
@@ -4220,7 +4270,7 @@ function buildSceneSvgExport() {
   const hatchDebugFaces = [];
   faces.forEach((face, faceIndex) => {
     (face.clippedScreenPolygons || []).forEach((polygon, polygonIndex) => {
-      const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, faceBrightnessNormalization);
+      const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, faceBrightnessNormalization, brightnessProfile);
       clipDefs.push(hatchedFace.defs);
       hatchedFaces.push(hatchedFace.content);
       if (hatchedFace.debug) {
@@ -4339,13 +4389,14 @@ function buildSceneSvgExport() {
 <defs>${paperBackground.defs}\n${clipDefs.join("\n")}\n${frameParts.defs}\n${noiseParts.defs}</defs>
 ${frameParts.background}
 ${frameParts.before}
-${paperBackground.content}
 <g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">
+${paperBackground.content}
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" opacity="0.42" filter="url(#paperDirtyObjectFilter)" style="mix-blend-mode:multiply" pointer-events="none" />
 </g>
 ${noiseParts.content}
 ${frameParts.after}
@@ -4690,13 +4741,14 @@ function buildGrayscaleSceneSvgExport() {
 <defs>${paperBackground.defs}\n${frameParts.defs}\n${noiseParts.defs}</defs>
 ${frameParts.background}
 ${frameParts.before}
-${paperBackground.content}
 <g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">
+${paperBackground.content}
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
+<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" opacity="0.42" filter="url(#paperDirtyObjectFilter)" style="mix-blend-mode:multiply" pointer-events="none" />
 </g>
 ${noiseParts.content}
 ${frameParts.after}

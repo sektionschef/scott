@@ -200,7 +200,7 @@ function _axisPolygonBounds(points) {
   };
 }
 
-function _axisHatchCirclesForPolygon(groupId, polygon, brightness, circleParams) {
+function _axisHatchCirclesForPolygon(groupId, polygon, brightness, circleParams, strokeColor) {
   const bounds = _axisPolygonBounds(polygon);
   const area = _axisPolygonArea(polygon);
   const base = Math.max(4, Math.sqrt(area) * 0.09);
@@ -226,10 +226,10 @@ function _axisHatchCirclesForPolygon(groupId, polygon, brightness, circleParams)
         center: { x: jitteredX, y: jitteredY },
         radius: adjustedRadius,
         group: groupId,
-        color: "#111111",
+        color: strokeColor,
         width: 0.15,
         fill: "none",
-        stroke: "#111111",
+        stroke: strokeColor,
         strokeWidth: 1,
       });
       if (circle?.path) {
@@ -395,7 +395,8 @@ function _axisReadParams(search) {
 
 function _axisWriteParams(params) {
   const search = new URLSearchParams(window.location.search);
-  search.set("debugCubeAxes", "1");
+  search.set("debugHatchingStudio", "1");
+  search.delete("debugCubeAxes");
   search.set("hatchWidth", params.hatchWidth.toFixed(2));
   search.set("hatchJitter", params.hatchJitter.toFixed(2));
   search.set("hatchBend", params.hatchBend.toFixed(3));
@@ -467,6 +468,114 @@ function _axisSanitizeParamValue(value, fallback) {
   return Number.isFinite(value) ? value : fallback;
 }
 
+const AXIS_BRIGHTNESS_PROFILE_STORAGE_KEY = "camogli3d.hatchingBrightnessProfiles.v1";
+
+function _axisBrightnessBinIndex(brightness) {
+  const normalized = Math.max(0, Math.min(0.999999, Number(brightness) || 0));
+  return Math.max(0, Math.min(9, Math.floor(normalized * 10)));
+}
+
+function _axisBuildBrightnessProfilePayload(studioState) {
+  const bins = Array.from({ length: 10 }, (_, index) => ({
+    bin: index,
+    range: `${index * 10}-${(index + 1) * 10}`,
+    hatchMode: null,
+    hatchSpacing: null,
+    circleSpacing: null,
+    hatchColor: null,
+  }));
+
+  for (const side of studioState.sides || []) {
+    const bin = _axisBrightnessBinIndex(side.brightness);
+    bins[bin] = {
+      bin,
+      range: `${bin * 10}-${(bin + 1) * 10}`,
+      hatchMode: side.hatchMode,
+      hatchSpacing: Number(side.params?.hatchSpacing ?? 1),
+      circleSpacing: Number(side.params?.circleSpacing ?? 1),
+      hatchColor: side.hatchColor || null,
+    };
+  }
+
+  return {
+    v: 1,
+    source: "debugHatchingStudio",
+    updatedAt: new Date().toISOString(),
+    bins,
+  };
+}
+
+function _axisSaveBrightnessProfile(studioState) {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return false;
+  }
+  try {
+    const payload = _axisBuildBrightnessProfilePayload(studioState);
+    window.localStorage.setItem(AXIS_BRIGHTNESS_PROFILE_STORAGE_KEY, JSON.stringify(payload));
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+function _axisLoadBrightnessProfile() {
+  if (typeof window === "undefined" || !window.localStorage) {
+    return null;
+  }
+  try {
+    const raw = window.localStorage.getItem(AXIS_BRIGHTNESS_PROFILE_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const payload = JSON.parse(raw);
+    if (!payload || !Array.isArray(payload.bins)) {
+      return null;
+    }
+    return payload;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function _axisApplyBrightnessProfileToStudioState(studioState, payload) {
+  if (!studioState || !Array.isArray(studioState.sides) || !payload || !Array.isArray(payload.bins)) {
+    return false;
+  }
+  const byBin = new Map();
+  for (const row of payload.bins) {
+    const bin = Math.max(0, Math.min(9, Number(row?.bin)));
+    byBin.set(bin, row);
+  }
+
+  let applied = false;
+  for (const side of studioState.sides) {
+    const row = byBin.get(_axisBrightnessBinIndex(side.brightness));
+    if (!row) {
+      continue;
+    }
+    if (row.hatchMode === "none" || row.hatchMode === "single" || row.hatchMode === "cross") {
+      side.hatchMode = row.hatchMode;
+      applied = true;
+    }
+    const hatchSpacing = Number(row.hatchSpacing);
+    if (Number.isFinite(hatchSpacing)) {
+      side.params.hatchSpacing = Math.max(0.2, Math.min(2.0, hatchSpacing));
+      applied = true;
+    }
+    const circleSpacing = Number(row.circleSpacing);
+    if (Number.isFinite(circleSpacing)) {
+      side.params.circleSpacing = Math.max(0.2, Math.min(6.0, circleSpacing));
+      applied = true;
+    }
+    if (typeof row.hatchColor === "string" && /^#[0-9a-fA-F]{6}$/.test(row.hatchColor.trim())) {
+      side.hatchColor = row.hatchColor.trim();
+      applied = true;
+    }
+  }
+
+  return applied;
+}
+
 function _axisApplyStudioFromUrl(search, studioState) {
   const encoded = search.get("studio");
   if (!encoded) {
@@ -517,12 +626,16 @@ function _axisApplyStudioFromUrl(search, studioState) {
         continue;
       }
       if (row.mode === "none" || row.mode === "single" || row.mode === "cross") {
-        side.hatchMode = row.mode;
+        // Migrate old payloads that stored many `none` modes for cube faces.
+        if ((payload.v || 1) < 3 && row.mode === "none") {
+          side.hatchMode = _axisDefaultHatchMode(side.brightness);
+        } else {
+          side.hatchMode = row.mode;
+        }
       }
       if (!Array.isArray(row.p) || row.p.length < 1) {
-        continue;
-      }
-      if (row.p.length >= 2) {
+        // keep parsing optional color below
+      } else if (row.p.length >= 2) {
         // Backward compatibility with payload where p[0] was width and p[1] was hatchSpacing.
         side.params.hatchSpacing = _axisSanitizeParamValue(Number(row.p[1]), side.params.hatchSpacing);
         if (row.p.length >= 3) {
@@ -533,6 +646,9 @@ function _axisApplyStudioFromUrl(search, studioState) {
         side.params.circleSpacing = legacyCircleSpacing !== null
           ? legacyCircleSpacing
           : side.params.circleSpacing;
+      }
+      if (typeof row.c === "string" && /^#[0-9a-fA-F]{6}$/.test(row.c.trim())) {
+        side.hatchColor = row.c.trim();
       }
 
       // Backward compatibility with older payloads where every side stored full params.
@@ -564,7 +680,8 @@ function _axisApplyStudioFromUrl(search, studioState) {
 
 function _axisWriteStudioState(studioState) {
   const search = new URLSearchParams(window.location.search);
-  search.set("debugCubeAxes", "1");
+  search.set("debugHatchingStudio", "1");
+  search.delete("debugCubeAxes");
   search.set("seed", String(studioState.seed >>> 0));
   if (studioState.showSideLabels) {
     search.set("sideLabels", "1");
@@ -572,26 +689,20 @@ function _axisWriteStudioState(studioState) {
     search.delete("sideLabels");
   }
 
-  const selected = studioState.sides.find((side) => side.id === studioState.selectedSideId) || studioState.sides[0];
-  if (selected) {
-    search.set("hatchWidth", studioState.globalParams.hatchWidth.toFixed(2));
-    search.set("hatchJitter", studioState.globalParams.hatchJitter.toFixed(2));
-    search.set("hatchBend", studioState.globalParams.hatchBend.toFixed(3));
-    search.set("hatchSpacing", selected.params.hatchSpacing.toFixed(2));
-    search.set("circleSpacing", selected.params.circleSpacing.toFixed(2));
-    search.set("hatchTrimRatio", studioState.globalParams.hatchTrimRatio.toFixed(2));
-    search.set("hatchMinVisible", studioState.globalParams.hatchMinVisible.toFixed(2));
-    search.set("circleRadius", studioState.globalParams.circleRadius.toFixed(2));
-    search.set("circleJitter", studioState.globalParams.circleJitter.toFixed(2));
-    if (studioState.globalParams.hatchEdgeInset === null) {
-      search.delete("hatchEdgeInset");
-    } else {
-      search.set("hatchEdgeInset", studioState.globalParams.hatchEdgeInset.toFixed(2));
-    }
-  }
+  // Keep the URL compact: full editor state lives inside `studio` payload.
+  search.delete("hatchWidth");
+  search.delete("hatchJitter");
+  search.delete("hatchBend");
+  search.delete("hatchSpacing");
+  search.delete("circleSpacing");
+  search.delete("hatchTrimRatio");
+  search.delete("hatchMinVisible");
+  search.delete("hatchEdgeInset");
+  search.delete("circleRadius");
+  search.delete("circleJitter");
 
   const payload = {
-    v: 2,
+    v: 3,
     s: studioState.selectedSideId,
     dir: !!studioState.showDebugDirection,
     lbl: !!studioState.showSideLabels,
@@ -612,6 +723,7 @@ function _axisWriteStudioState(studioState) {
         Number(side.params.hatchSpacing.toFixed(2)),
         Number(side.params.circleSpacing.toFixed(2)),
       ],
+      c: side.hatchColor,
     })),
   };
 
@@ -627,22 +739,21 @@ function _axisRemoveExistingRender() {
 }
 
 function _axisDefaultHatchMode(brightness) {
-  if (brightness <= 0.1) return "none";
-  return brightness > 0.5 ? "cross" : "single";
+  // Rectangle studio should always show hatching by default.
+  return brightness >= 0.75 ? "cross" : "single";
 }
 
 function _axisDefaultSpacingForBrightness(brightness) {
-  // brightness bins: 0.00-0.10 none; 0.11-0.20 => 2.0 ... 0.91-1.00 => 0.2
-  if (brightness <= 0.1) return 2.0;
-  if (brightness <= 0.2) return 2.0;
-  if (brightness <= 0.3) return 1.8;
-  if (brightness <= 0.4) return 1.6;
-  if (brightness <= 0.5) return 1.4;
-  if (brightness <= 0.6) return 1.2;
-  if (brightness <= 0.7) return 1.0;
-  if (brightness <= 0.8) return 0.8;
-  if (brightness <= 0.91) return 0.9;
-  return 0.5;
+  // Lower spacing => denser hatch for darker buckets.
+  if (brightness <= 0.2) return 1.35;
+  if (brightness <= 0.3) return 1.2;
+  if (brightness <= 0.4) return 1.05;
+  if (brightness <= 0.5) return 0.95;
+  if (brightness <= 0.6) return 0.85;
+  if (brightness <= 0.7) return 0.75;
+  if (brightness <= 0.8) return 0.68;
+  if (brightness <= 0.9) return 0.6;
+  return 0.52;
 }
 
 function _axisCloneParams(params) {
@@ -666,49 +777,49 @@ function _axisCloneGlobalParams(params) {
 }
 
 function _axisBuildStudioSides(width, height, baseParams) {
-  const brightnessGroups = [
-    [0.05, 0.15, 0.25],
-    [0.35, 0.45, 0.55],
-    [0.65, 0.75, 0.85],
-    [0.95, 1.0, 1.0],
+  const legacyIds = [
+    "C1-A", "C1-B", "C1-C",
+    "C2-A", "C2-B", "C2-C",
+    "C3-A", "C3-B", "C3-C",
+    "C4-A",
   ];
-  const yaw = getRandomFromInterval(0.62, 0.92);
-  const pitch = getRandomFromInterval(-0.86, -0.58);
-  const roll = getRandomFromInterval(-0.08, 0.08);
-  const scale = Math.min(width, height) * 0.15;
-  const centers = [
-    { x: width * 0.30, y: height * 0.36 },
-    { x: width * 0.70, y: height * 0.36 },
-    { x: width * 0.30, y: height * 0.74 },
-    { x: width * 0.70, y: height * 0.74 },
-  ];
+  const count = 10;
+  const outerMarginX = width * 0.06;
+  const gap = width * 0.012;
+  const stripHeight = Math.min(height * 0.56, width * 0.2);
+  const yTop = (height - stripHeight) * 0.5;
+  const usableWidth = width - outerMarginX * 2 - gap * (count - 1);
+  const rectWidth = usableWidth / count;
 
   const sides = [];
-  for (let cubeIndex = 0; cubeIndex < brightnessGroups.length; cubeIndex += 1) {
-    const polygons = _axisBuildCubePolygons(width, height, {
-      yaw,
-      pitch,
-      roll,
-      scale,
-      cx: centers[cubeIndex].x,
-      cy: centers[cubeIndex].y,
+  for (let index = 0; index < count; index += 1) {
+    const brightnessValue = index + 0.5;
+    const brightness = brightnessValue / 10;
+    const x = outerMarginX + index * (rectWidth + gap);
+    const polygon = {
+      name: `rect${index + 1}`,
+      points: [
+        { x, y: yTop },
+        { x: x + rectWidth, y: yTop },
+        { x: x + rectWidth, y: yTop + stripHeight },
+        { x, y: yTop + stripHeight },
+      ],
+    };
+
+    sides.push({
+      id: legacyIds[index] || `B${index + 1}`,
+      cubeIndex: index,
+      sideLabel: String(index + 1),
+      brightness,
+      brightnessValue,
+      hatchMode: _axisDefaultHatchMode(brightness),
+      hatchColor: "#111111",
+      poly: polygon,
+      params: {
+        ..._axisCloneParams(baseParams),
+        hatchSpacing: _axisDefaultSpacingForBrightness(brightness),
+      },
     });
-    for (let sideIndex = 0; sideIndex < polygons.length; sideIndex += 1) {
-      const brightness = brightnessGroups[cubeIndex][sideIndex];
-      const sideLabel = String.fromCharCode(65 + sideIndex);
-      sides.push({
-        id: `C${cubeIndex + 1}-${sideLabel}`,
-        cubeIndex,
-        sideLabel,
-        brightness,
-        hatchMode: _axisDefaultHatchMode(brightness),
-        poly: polygons[sideIndex],
-        params: {
-          ..._axisCloneParams(baseParams),
-          hatchSpacing: _axisDefaultSpacingForBrightness(brightness),
-        },
-      });
-    }
   }
   return sides;
 }
@@ -742,8 +853,8 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
     const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
     polygon.setAttribute("points", side.poly.points.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(" "));
     polygon.setAttribute("fill", "none");
-    polygon.setAttribute("stroke", "none");
-    polygon.setAttribute("stroke-width", "0");
+    polygon.setAttribute("stroke", "#6a6a6a");
+    polygon.setAttribute("stroke-width", "0.8");
     polygon.setAttribute("pointer-events", "none");
     debugGroup.appendChild(polygon);
 
@@ -761,9 +872,14 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
     const spacingFactor = 1.35 - side.brightness * 0.95;
     const sideSpacing = Math.max(0.2, Math.min(2.0, side.params.hatchSpacing));
     const spacing = Math.max(4, Math.sqrt(area) * 0.1 * sideSpacing * spacingFactor);
-    const edgeInset = studioState.globalParams.hatchEdgeInset !== null
+    const baseEdgeInset = studioState.globalParams.hatchEdgeInset !== null
       ? Math.max(0, studioState.globalParams.hatchEdgeInset)
       : Math.max(2.0, studioState.globalParams.hatchWidth * 1.3 + studioState.globalParams.hatchJitter * 0.9);
+    const bounds = _axisPolygonBounds(side.poly.points);
+    const minSpan = Math.max(1, Math.min(bounds.maxX - bounds.minX, bounds.maxY - bounds.minY));
+    const edgeInset = Math.min(baseEdgeInset, Math.max(0.6, minSpan * 0.12));
+    const trimRatio = Math.min(studioState.globalParams.hatchTrimRatio, 0.32);
+    const minVisible = Math.min(studioState.globalParams.hatchMinVisible, Math.max(0.8, minSpan * 0.22));
 
     const sideSeed = _axisHashSeed(`${studioState.seed}|${side.id}|${side.hatchMode}`);
     _axisWithSeededRandom(sideSeed, () => {
@@ -774,8 +890,8 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
           sweepDir,
           spacing,
           edgeInset,
-          studioState.globalParams.hatchTrimRatio,
-          studioState.globalParams.hatchMinVisible,
+          trimRatio,
+          minVisible,
         );
         for (const segment of hatchSegments) {
           const hatch = new filledPath({
@@ -787,7 +903,7 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
             bend: studioState.globalParams.hatchBend,
           });
           if (hatch?.path) {
-            hatch.path.setAttributeNS(null, "fill", "#111111");
+            hatch.path.setAttributeNS(null, "fill", side.hatchColor || "#111111");
             hatch.path.setAttributeNS(null, "pointer-events", "none");
           }
         }
@@ -800,8 +916,8 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
           hatchDir,
           spacing * 1.03,
           edgeInset,
-          studioState.globalParams.hatchTrimRatio,
-          studioState.globalParams.hatchMinVisible,
+          trimRatio,
+          minVisible,
         );
         for (const segment of crossSegments) {
           const hatch = new filledPath({
@@ -813,7 +929,7 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
             bend: studioState.globalParams.hatchBend,
           });
           if (hatch?.path) {
-            hatch.path.setAttributeNS(null, "fill", "#111111");
+            hatch.path.setAttributeNS(null, "fill", side.hatchColor || "#111111");
             hatch.path.setAttributeNS(null, "pointer-events", "none");
           }
         }
@@ -825,7 +941,7 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
           circleSpacing: side.params.circleSpacing,
           circleRadius: studioState.globalParams.circleRadius,
           circleJitter: studioState.globalParams.circleJitter,
-        });
+        }, side.hatchColor || "#111111");
       }
     });
 
@@ -844,7 +960,7 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
       label.setAttribute("text-anchor", "middle");
       label.setAttribute("dominant-baseline", "middle");
       label.setAttribute("pointer-events", "none");
-      label.textContent = `${side.id} b=${side.brightness.toFixed(2)}`;
+      label.textContent = `${side.id} b=${(side.brightnessValue ?? (side.brightness * 10)).toFixed(1)}`;
       debugGroup.appendChild(label);
     }
 
@@ -867,29 +983,29 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
 
   const panel = document.createElement("div");
   panel.id = "debugCubeAxesPanel";
-  panel.style.position = "fixed";
-  panel.style.right = "14px";
-  panel.style.top = "14px";
-  panel.style.zIndex = "9999";
-  panel.style.width = "320px";
-  panel.style.maxHeight = "calc(100vh - 28px)";
+  panel.style.position = "relative";
+  panel.style.zIndex = "1";
+  panel.style.width = "100%";
+  panel.style.maxWidth = "340px";
+  panel.style.maxHeight = "calc(100vh - 24px)";
   panel.style.overflow = "auto";
   panel.style.background = "rgba(250,250,248,0.95)";
   panel.style.border = "1px solid #b9b9b9";
   panel.style.borderRadius = "10px";
   panel.style.padding = "12px";
+  panel.style.boxSizing = "border-box";
   panel.style.fontFamily = "ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif";
   panel.style.color = "#111";
 
   const title = document.createElement("div");
-  title.textContent = "Cube Hatch Studio";
+  title.textContent = "Brightness Hatch Studio";
   title.style.fontWeight = "700";
   title.style.marginBottom = "8px";
   panel.appendChild(title);
 
   const selected = studioState.sides.find((side) => side.id === studioState.selectedSideId) || studioState.sides[0];
   const sideInfo = document.createElement("div");
-  sideInfo.textContent = `Selected: ${selected.id} | brightness ${selected.brightness.toFixed(2)} | cross if > 0.50`;
+  sideInfo.textContent = `Selected: ${selected.id} | brightness ${(selected.brightnessValue ?? (selected.brightness * 10)).toFixed(1)} | cross if > 5.0`;
   sideInfo.style.fontSize = "12px";
   sideInfo.style.marginBottom = "10px";
   panel.appendChild(sideInfo);
@@ -1011,6 +1127,25 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
   modeWrap.appendChild(modeSelect);
   panel.appendChild(modeWrap);
 
+  const hatchColorWrap = document.createElement("div");
+  hatchColorWrap.style.marginBottom = "10px";
+  const hatchColorLabel = document.createElement("label");
+  hatchColorLabel.textContent = "Hatch Color";
+  hatchColorLabel.style.display = "block";
+  hatchColorLabel.style.fontSize = "12px";
+  hatchColorLabel.style.marginBottom = "4px";
+  const hatchColorInput = document.createElement("input");
+  hatchColorInput.type = "color";
+  hatchColorInput.value = /^#[0-9a-fA-F]{6}$/.test(selected.hatchColor || "") ? selected.hatchColor : "#111111";
+  hatchColorInput.style.width = "100%";
+  hatchColorInput.addEventListener("input", () => {
+    selected.hatchColor = hatchColorInput.value;
+    onRender();
+  });
+  hatchColorWrap.appendChild(hatchColorLabel);
+  hatchColorWrap.appendChild(hatchColorInput);
+  panel.appendChild(hatchColorWrap);
+
   const controls = [
     { key: "hatchSpacing", label: "Spacing", min: 0.2, max: 2.0, step: 0.05 },
     { key: "circleSpacing", label: "Circle Spacing", min: 0.2, max: 6.0, step: 0.1 },
@@ -1127,6 +1262,7 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
 
   const actions = document.createElement("div");
   actions.style.display = "flex";
+  actions.style.flexWrap = "wrap";
   actions.style.gap = "8px";
   actions.style.marginTop = "8px";
 
@@ -1137,10 +1273,75 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
   reroll.style.cursor = "pointer";
   reroll.addEventListener("click", onReroll);
 
+  const saveProfile = document.createElement("button");
+  saveProfile.textContent = "Save 0-100 Profile";
+  saveProfile.type = "button";
+  saveProfile.style.padding = "6px 10px";
+  saveProfile.style.cursor = "pointer";
+  saveProfile.addEventListener("click", () => {
+    const ok = _axisSaveBrightnessProfile(studioState);
+    saveProfile.textContent = ok ? "Saved" : "Save failed";
+    setTimeout(() => {
+      saveProfile.textContent = "Save 0-100 Profile";
+    }, 900);
+  });
+
+  const loadProfile = document.createElement("button");
+  loadProfile.textContent = "Load 0-100 Profile";
+  loadProfile.type = "button";
+  loadProfile.style.padding = "6px 10px";
+  loadProfile.style.cursor = "pointer";
+  loadProfile.addEventListener("click", () => {
+    const payload = _axisLoadBrightnessProfile();
+    const ok = _axisApplyBrightnessProfileToStudioState(studioState, payload);
+    loadProfile.textContent = ok ? "Loaded" : "No profile";
+    if (ok) {
+      onRender();
+    }
+    setTimeout(() => {
+      loadProfile.textContent = "Load 0-100 Profile";
+    }, 900);
+  });
+
   actions.appendChild(reroll);
+  actions.appendChild(saveProfile);
+  actions.appendChild(loadProfile);
   panel.appendChild(actions);
 
   document.body.appendChild(panel);
+}
+
+function _axisApplyStudioLayout(svgNode) {
+  const body = document.body;
+  if (body) {
+    body.style.margin = "0";
+    body.style.display = "grid";
+    body.style.gridTemplateColumns = "minmax(0,1fr) 340px";
+    body.style.columnGap = "12px";
+    body.style.padding = "12px";
+    body.style.boxSizing = "border-box";
+    body.style.height = "100vh";
+    body.style.overflow = "hidden";
+    body.style.alignItems = "start";
+  }
+
+  const host = document.getElementById("badAssCanvas");
+  if (host) {
+    host.style.width = "100%";
+    host.style.height = "calc(100vh - 24px)";
+    host.style.overflow = "hidden";
+    host.style.display = "flex";
+    host.style.alignItems = "center";
+    host.style.justifyContent = "center";
+    host.style.gridColumn = "1 / 2";
+  }
+
+  if (svgNode) {
+    svgNode.style.width = "100%";
+    svgNode.style.height = "100%";
+    svgNode.style.maxWidth = "100%";
+    svgNode.style.maxHeight = "100%";
+  }
 }
 
 function testCubePrincipalAxes() {
@@ -1158,6 +1359,7 @@ function testCubePrincipalAxes() {
   const width = CANVASFORMATCHOSEN.canvasWidth;
   const height = CANVASFORMATCHOSEN.canvasHeight;
   svgNode.style.background = "#f8f8f6";
+  _axisApplyStudioLayout(svgNode);
   const search = new URLSearchParams(window.location.search);
   const baseParams = _axisReadParams(search);
   const studioState = {
