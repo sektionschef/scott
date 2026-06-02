@@ -12,7 +12,10 @@ class filledPath {
 
         // controllable shape params (with backwards-compatible defaults)
         var cat           = data.jitter !== undefined ? data.jitter : getRandomFromInterval(0.3, 0.7);
-        var bogal         = data.bend   !== undefined ? data.bend   : getRandomFromInterval(-0.05, 0.05);
+        var rawBend       = data.bend   !== undefined ? Math.abs(data.bend) : null;
+        var bogal         = rawBend === null
+            ? getRandomFromInterval(-0.05, 0.05)
+            : (rawBend === 0 ? 0 : rawBend * (Math.random() < 0.5 ? -1 : 1));
         var distanceWidth = data.width  !== undefined ? data.width  : 1;
 
         this.angleRadians = angleBetweenPoints(this.start, this.end);

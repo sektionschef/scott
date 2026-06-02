@@ -498,9 +498,23 @@ function _axisBuildBrightnessProfilePayload(studioState) {
   }
 
   return {
-    v: 1,
+    v: 2,
     source: "debugHatchingStudio",
     updatedAt: new Date().toISOString(),
+    seed: studioState.seed >>> 0,
+    selectedSideId: studioState.selectedSideId,
+    showDebugDirection: !!studioState.showDebugDirection,
+    showSideLabels: !!studioState.showSideLabels,
+    globalParams: {
+      hatchWidth: studioState.globalParams.hatchWidth,
+      hatchJitter: studioState.globalParams.hatchJitter,
+      hatchBend: studioState.globalParams.hatchBend,
+      hatchEdgeInset: studioState.globalParams.hatchEdgeInset,
+      hatchTrimRatio: studioState.globalParams.hatchTrimRatio,
+      hatchMinVisible: studioState.globalParams.hatchMinVisible,
+      circleRadius: studioState.globalParams.circleRadius,
+      circleJitter: studioState.globalParams.circleJitter,
+    },
     bins,
   };
 }
@@ -537,10 +551,55 @@ function _axisLoadBrightnessProfile() {
   }
 }
 
-function _axisApplyBrightnessProfileToStudioState(studioState, payload) {
+function _axisApplyBrightnessProfileToStudioState(studioState, payload, rebuildFromSeed = null) {
   if (!studioState || !Array.isArray(studioState.sides) || !payload || !Array.isArray(payload.bins)) {
     return false;
   }
+
+  const normalizedSeed = _axisNormalizeSeed(payload.seed);
+  if (normalizedSeed !== null) {
+    studioState.seed = normalizedSeed;
+    if (typeof rebuildFromSeed === "function") {
+      rebuildFromSeed();
+    }
+  }
+
+  if (payload.globalParams && typeof payload.globalParams === "object") {
+    const keys = [
+      "hatchWidth",
+      "hatchJitter",
+      "hatchBend",
+      "hatchEdgeInset",
+      "hatchTrimRatio",
+      "hatchMinVisible",
+      "circleRadius",
+      "circleJitter",
+    ];
+    for (const key of keys) {
+      if (!Object.prototype.hasOwnProperty.call(payload.globalParams, key)) {
+        continue;
+      }
+      const value = payload.globalParams[key];
+      if (value === null && key === "hatchEdgeInset") {
+        studioState.globalParams[key] = null;
+        continue;
+      }
+      if (Number.isFinite(Number(value))) {
+        studioState.globalParams[key] = Number(value);
+      }
+    }
+  }
+
+  if (typeof payload.showDebugDirection === "boolean") {
+    studioState.showDebugDirection = payload.showDebugDirection;
+  }
+  if (typeof payload.showSideLabels === "boolean") {
+    studioState.showSideLabels = payload.showSideLabels;
+  }
+  if (typeof payload.selectedSideId === "string") {
+    studioState.selectedSideId = payload.selectedSideId;
+  }
+
   const byBin = new Map();
   for (const row of payload.bins) {
     const bin = Math.max(0, Math.min(9, Number(row?.bin)));
@@ -952,13 +1011,14 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
 
     if (studioState.showSideLabels) {
       const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      const bounds = _axisPolygonBounds(side.poly.points);
       label.setAttribute("x", axis.center.x.toFixed(2));
-      label.setAttribute("y", axis.center.y.toFixed(2));
+      label.setAttribute("y", (bounds.maxY + 12).toFixed(2));
       label.setAttribute("fill", "#777777");
       label.setAttribute("font-size", "11");
       label.setAttribute("font-family", "ui-monospace, Menlo, monospace");
       label.setAttribute("text-anchor", "middle");
-      label.setAttribute("dominant-baseline", "middle");
+      label.setAttribute("dominant-baseline", "hanging");
       label.setAttribute("pointer-events", "none");
       label.textContent = `${side.id} b=${(side.brightnessValue ?? (side.brightness * 10)).toFixed(1)}`;
       debugGroup.appendChild(label);
@@ -975,7 +1035,7 @@ function _axisRenderCubeAxes(svgNode, studioState, onSelectSide) {
   }
 }
 
-function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
+function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed, onLoadProfile) {
   const existing = document.getElementById("debugCubeAxesPanel");
   if (existing && existing.parentNode) {
     existing.parentNode.removeChild(existing);
@@ -1161,10 +1221,15 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
     label.style.justifyContent = "space-between";
     label.style.fontSize = "12px";
 
-    const valueNode = document.createElement("span");
-    const currentValue = Number(selected.params[control.key]).toFixed(2);
-    valueNode.textContent = currentValue;
-    label.appendChild(valueNode);
+    const valueInput = document.createElement("input");
+    valueInput.type = "number";
+    valueInput.min = String(control.min);
+    valueInput.max = String(control.max);
+    valueInput.step = String(control.step);
+    valueInput.value = Number(selected.params[control.key]).toFixed(2);
+    valueInput.style.width = "74px";
+    valueInput.style.boxSizing = "border-box";
+    label.appendChild(valueInput);
 
     const slider = document.createElement("input");
     slider.type = "range";
@@ -1174,10 +1239,26 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
     slider.value = String(selected.params[control.key]);
     slider.style.width = "100%";
 
-    slider.addEventListener("input", () => {
-      selected.params[control.key] = Number(slider.value);
-      valueNode.textContent = Number(selected.params[control.key]).toFixed(2);
+    const syncValue = (value) => {
+      const clamped = Math.max(control.min, Math.min(control.max, Number(value)));
+      selected.params[control.key] = clamped;
+      slider.value = String(clamped);
+      valueInput.value = clamped.toFixed(2);
       onRender();
+    };
+
+    slider.addEventListener("input", () => {
+      syncValue(slider.value);
+    });
+
+    valueInput.addEventListener("change", () => {
+      syncValue(valueInput.value);
+    });
+
+    valueInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        syncValue(valueInput.value);
+      }
     });
 
     wrap.appendChild(label);
@@ -1188,7 +1269,7 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
   const globalControls = [
     { key: "hatchWidth", label: "Width", min: 0.2, max: 3.5, step: 0.05 },
     { key: "hatchJitter", label: "Jitter", min: 0.0, max: 2.0, step: 0.05 },
-    { key: "hatchBend", label: "Bend", min: -0.2, max: 0.2, step: 0.01 },
+    { key: "hatchBend", label: "Bend Amount", min: 0.0, max: 0.2, step: 0.01 },
     { key: "hatchEdgeInset", label: "Edge Inset", min: 0.0, max: 8.0, step: 0.1, nullable: true },
     { key: "hatchTrimRatio", label: "Trim Ratio", min: 0.05, max: 0.7, step: 0.01 },
     { key: "hatchMinVisible", label: "Min Visible", min: 0.0, max: 12.0, step: 0.2 },
@@ -1199,6 +1280,10 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
   for (const control of globalControls) {
     const wrap = document.createElement("div");
     wrap.style.marginBottom = "10px";
+    const currentRawValue = studioState.globalParams[control.key];
+    const currentUiValue = control.key === "hatchBend"
+      ? Math.abs(Number(currentRawValue) || 0)
+      : currentRawValue;
 
     const label = document.createElement("label");
     label.textContent = `${control.label} (global)`;
@@ -1206,23 +1291,55 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
     label.style.justifyContent = "space-between";
     label.style.fontSize = "12px";
 
-    const valueNode = document.createElement("span");
-    const currentValue = studioState.globalParams[control.key] === null ? "auto" : Number(studioState.globalParams[control.key]).toFixed(2);
-    valueNode.textContent = currentValue;
-    label.appendChild(valueNode);
+    const valueInput = document.createElement("input");
+    valueInput.type = "number";
+    valueInput.min = String(control.min);
+    valueInput.max = String(control.max);
+    valueInput.step = String(control.step);
+    valueInput.value = currentUiValue === null ? "" : Number(currentUiValue).toFixed(2);
+    valueInput.placeholder = control.nullable ? "auto" : "";
+    valueInput.style.width = "74px";
+    valueInput.style.boxSizing = "border-box";
+    label.appendChild(valueInput);
 
     const slider = document.createElement("input");
     slider.type = "range";
     slider.min = String(control.min);
     slider.max = String(control.max);
     slider.step = String(control.step);
-    slider.value = String(studioState.globalParams[control.key] === null ? Math.max(control.min, 2.2) : studioState.globalParams[control.key]);
+    slider.value = String(currentUiValue === null ? Math.max(control.min, 2.2) : currentUiValue);
     slider.style.width = "100%";
 
-    slider.addEventListener("input", () => {
-      studioState.globalParams[control.key] = Number(slider.value);
-      valueNode.textContent = Number(studioState.globalParams[control.key]).toFixed(2);
+    const syncValue = (value) => {
+      const clamped = Math.max(control.min, Math.min(control.max, Number(value)));
+      studioState.globalParams[control.key] = control.key === "hatchBend" ? Math.abs(clamped) : clamped;
+      slider.value = String(clamped);
+      valueInput.value = clamped.toFixed(2);
       onRender();
+    };
+
+    slider.addEventListener("input", () => {
+      syncValue(slider.value);
+    });
+
+    valueInput.addEventListener("change", () => {
+      if (control.nullable && valueInput.value.trim() === "") {
+        studioState.globalParams[control.key] = null;
+        onRender();
+        return;
+      }
+      syncValue(valueInput.value);
+    });
+
+    valueInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        if (control.nullable && valueInput.value.trim() === "") {
+          studioState.globalParams[control.key] = null;
+          onRender();
+          return;
+        }
+        syncValue(valueInput.value);
+      }
     });
 
     wrap.appendChild(label);
@@ -1242,13 +1359,21 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
       autoCheckbox.addEventListener("change", () => {
         if (autoCheckbox.checked) {
           studioState.globalParams[control.key] = null;
-          valueNode.textContent = "auto";
+          valueInput.value = "";
+          valueInput.disabled = true;
         } else {
-          studioState.globalParams[control.key] = Number(slider.value);
-          valueNode.textContent = Number(studioState.globalParams[control.key]).toFixed(2);
+          studioState.globalParams[control.key] = control.key === "hatchBend"
+            ? Math.abs(Number(slider.value))
+            : Number(slider.value);
+          valueInput.disabled = false;
+          valueInput.value = Number(control.key === "hatchBend"
+            ? Math.abs(Number(studioState.globalParams[control.key]))
+            : studioState.globalParams[control.key]).toFixed(2);
         }
         onRender();
       });
+
+      valueInput.disabled = autoCheckbox.checked;
 
       const autoText = document.createElement("span");
       autoText.textContent = "auto";
@@ -1293,11 +1418,10 @@ function _axisBuildSidebar(studioState, onRender, onReroll, onApplySeed) {
   loadProfile.style.cursor = "pointer";
   loadProfile.addEventListener("click", () => {
     const payload = _axisLoadBrightnessProfile();
-    const ok = _axisApplyBrightnessProfileToStudioState(studioState, payload);
+    const ok = typeof onLoadProfile === "function"
+      ? onLoadProfile(payload)
+      : _axisApplyBrightnessProfileToStudioState(studioState, payload);
     loadProfile.textContent = ok ? "Loaded" : "No profile";
-    if (ok) {
-      onRender();
-    }
     setTimeout(() => {
       loadProfile.textContent = "Load 0-100 Profile";
     }, 900);
@@ -1395,18 +1519,34 @@ function testCubePrincipalAxes() {
     render();
   };
 
-  const render = () => {
+  const renderPreview = () => {
     _axisWithSeededRandom(studioState.seed, () => {
       _axisRenderCubeAxes(svgNode, studioState, (sideId) => {
         studioState.selectedSideId = sideId;
         render();
       });
     });
-    _axisBuildSidebar(studioState, render, () => {
+    _axisWriteStudioState(studioState);
+  };
+
+  const applyProfile = (payload) => {
+    const ok = _axisApplyBrightnessProfileToStudioState(studioState, payload, rebuildFromSeed);
+    if (!ok) {
+      return false;
+    }
+    if (!studioState.sides.some((side) => side.id === studioState.selectedSideId)) {
+      studioState.selectedSideId = studioState.sides[0]?.id || null;
+    }
+    render();
+    return true;
+  };
+
+  const render = () => {
+    renderPreview();
+    _axisBuildSidebar(studioState, renderPreview, () => {
       reroll();
       render();
-    }, applySeed);
-    _axisWriteStudioState(studioState);
+    }, applySeed, applyProfile);
   };
 
   render();

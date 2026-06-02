@@ -27,17 +27,11 @@ http://localhost:3301/noisy_paper_spike/svg_filter_playground.html
 3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
 
 
-debug hatching studio: http://localhost:3301/?debugHatchingStudio=1
-debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1
+debug hatching studio: http://localhost:3301/?debugHatchingStudio=1 - hatching studio (10 brightness rectangles)
+debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1 ???
 
 #### remove
 debug strokes boundaries: http://localhost:3301/?debugStroke=1 
-
-
-new
-* http://localhost:3301/camogli-3d.html - result
-* http://localhost:3301/camogli-3d.html?debugSvgHatching=1 - studio
-* http://localhost:3301/?debugHatchingStudio=1 - hatching studio (10 brightness rectangles)
 
 ## Hatching Studio
 
@@ -59,7 +53,7 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 4. Create hatch candidates by sweeping parallel lines through the polygon and intersecting with polygon edges.
 5. Convert each valid segment into a real filledPath stroke (`filledPath.js`) with bend/width/jitter.
 6. No clip mask is used for hatch containment. Strokes are drawn from geometrically clipped segment endpoints.
-7. Optional labels (`C?-? b=?`) can be enabled and are placed in the center of each rectangle in gray.
+7. Optional labels (`C?-? b=?`) can be enabled and are placed below each rectangle in gray.
 
 ### Side Brightness Strategy
 
@@ -82,8 +76,8 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 ### Brightness Profiles (0-10 ... 90-100)
 
 - In `?debugHatchingStudio=1`, use:
-  - `Save 0-100 Profile` to store current hatch mode/spacing/color for all 10 brightness bins.
-  - `Load 0-100 Profile` to re-apply a saved bin profile to the strip editor.
+  - `Save 0-100 Profile` to store the full studio setup plus the 10 brightness-bin overrides.
+  - `Load 0-100 Profile` to restore the saved seed, global sliders, toggles, selected bin, and per-bin hatch settings after refresh.
 - Profiles are stored in browser localStorage under `camogli3d.hatchingBrightnessProfiles.v1`.
 - `camogli-3d.html` export reads this profile automatically and applies bin overrides to face hatching in the exported SVG.
 
@@ -97,7 +91,7 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 ### Side Labels Toggle
 
 - "Side labels" is OFF by default.
-- When enabled, each side shows a gray label in its center, e.g. `C1-B b=0.15`.
+- When enabled, each side shows a gray label below the rectangle, e.g. `C1-B b=0.15`.
 - Label visibility is stored in URL/studio state and restored on reload.
 
 ### Parameters (query string)
@@ -107,8 +101,8 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 - `hatchBend`: long-edge bend factor in swingspitz profile.
 - `hatchSpacing`: global spacing multiplier for hatch sweep distance.
 - `hatchEdgeInset`: absolute trim from polygon boundaries.
-- `hatchTrimRatio`: relative trim ratio per segment length.
-- `hatchMinVisible`: minimum visible segment length threshold after trim.
+- `hatchTrimRatio`: how much of each hatch stroke is cut off at both ends as a fraction of its length. Higher values shorten the visible part of each stroke and create more breathing room at the edges.
+- `hatchMinVisible`: the minimum remaining stroke length allowed after trimming. If a stroke becomes shorter than this threshold, it is dropped completely.
 
 ### Tuning Notes
 

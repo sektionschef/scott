@@ -4,7 +4,10 @@ function buildFilledPathSvg(start, end, options = {}) {
   // Options: {jitter, bend, width, color, strokeWidth, fill, opacity}
   // Defaults are chosen to match filledPath.js
   const jitter = options.jitter !== undefined ? options.jitter : getRandomFromInterval(0.3, 0.7);
-  const bend = options.bend !== undefined ? options.bend : getRandomFromInterval(-0.05, 0.05);
+  const bendMagnitude = options.bend !== undefined ? Math.abs(options.bend) : null;
+  const bend = bendMagnitude === null
+    ? getRandomFromInterval(-0.05, 0.05)
+    : (bendMagnitude === 0 ? 0 : bendMagnitude * (Math.random() < 0.5 ? -1 : 1));
   const distanceWidth = options.width !== undefined ? options.width : 1.3; // match filledPath.js default
   const color = options.color || "#333";
   const fill = options.fill || color;
@@ -2424,6 +2427,14 @@ function initSvgHatchingLab(initialParsedScene = null) {
   }
 
   const sceneSlidersRoot = document.createElement("div");
+  const sceneSliderRefs = new Map();
+
+  function formatSliderValue(step, value) {
+    const stepNum = Number(step);
+    if (stepNum >= 1) return Number(value).toFixed(0);
+    if (stepNum >= 0.1) return Number(value).toFixed(1);
+    return Number(value).toFixed(2);
+  }
 
   function createSceneSlider(labelText, key, min, max, step) {
     const initial = labGlobals[key] ?? min;
@@ -2432,9 +2443,14 @@ function initSvgHatchingLab(initialParsedScene = null) {
     const lbl = document.createElement("label");
     lbl.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;";
     lbl.textContent = labelText;
-    const valSpan = document.createElement("span");
-    valSpan.textContent = Number(initial).toFixed(2);
-    lbl.appendChild(valSpan);
+    const valInput = document.createElement("input");
+    valInput.type = "number";
+    valInput.min = String(min);
+    valInput.max = String(max);
+    valInput.step = String(step);
+    valInput.value = formatSliderValue(step, initial);
+    valInput.style.cssText = "width:74px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:2px 4px;";
+    lbl.appendChild(valInput);
     const inp = document.createElement("input");
     inp.type = "range";
     inp.min = String(min);
@@ -2442,14 +2458,29 @@ function initSvgHatchingLab(initialParsedScene = null) {
     inp.step = String(step);
     inp.value = String(initial);
     inp.style.width = "100%";
-    inp.addEventListener("input", () => {
-      const v = Number(inp.value);
+    const syncValue = (raw) => {
+      const parsed = Number(raw);
+      const base = Number.isFinite(parsed) ? parsed : Number(labGlobals[key] ?? initial);
+      const v = Math.max(min, Math.min(max, base));
       labGlobals[key] = v;
-      valSpan.textContent = v.toFixed(2);
+      inp.value = String(v);
+      valInput.value = formatSliderValue(step, v);
       if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    };
+    inp.addEventListener("input", () => {
+      syncValue(inp.value);
+    });
+    valInput.addEventListener("change", () => {
+      syncValue(valInput.value);
+    });
+    valInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        syncValue(valInput.value);
+      }
     });
     wrap.appendChild(lbl);
     wrap.appendChild(inp);
+    sceneSliderRefs.set(key, { inp, valInput, step });
     return wrap;
   }
 
@@ -2464,6 +2495,14 @@ function initSvgHatchingLab(initialParsedScene = null) {
   edgeInsetValSpan.title = "Click to toggle auto / manual";
   edgeInsetValSpan.textContent = labGlobals.hatchEdgeInset === null ? "auto" : String(Number(labGlobals.hatchEdgeInset).toFixed(1));
   edgeInsetLbl.appendChild(edgeInsetValSpan);
+  const edgeInsetValueInput = document.createElement("input");
+  edgeInsetValueInput.type = "number";
+  edgeInsetValueInput.min = "0";
+  edgeInsetValueInput.max = "20";
+  edgeInsetValueInput.step = "0.5";
+  edgeInsetValueInput.value = String(Number(labGlobals.hatchEdgeInset ?? 3).toFixed(1));
+  edgeInsetValueInput.disabled = labGlobals.hatchEdgeInset === null;
+  edgeInsetValueInput.style.cssText = "width:74px;margin-bottom:6px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:2px 4px;";
   const edgeInsetSlider = document.createElement("input");
   edgeInsetSlider.type = "range";
   edgeInsetSlider.min = "0";
@@ -2476,21 +2515,42 @@ function initSvgHatchingLab(initialParsedScene = null) {
     if (labGlobals.hatchEdgeInset === null) {
       labGlobals.hatchEdgeInset = Number(edgeInsetSlider.value);
       edgeInsetSlider.disabled = false;
+      edgeInsetValueInput.disabled = false;
+      edgeInsetValueInput.value = Number(labGlobals.hatchEdgeInset).toFixed(1);
       edgeInsetValSpan.textContent = labGlobals.hatchEdgeInset.toFixed(1);
     } else {
       labGlobals.hatchEdgeInset = null;
       edgeInsetSlider.disabled = true;
+      edgeInsetValueInput.disabled = true;
       edgeInsetValSpan.textContent = "auto";
     }
     if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
   });
-  edgeInsetSlider.addEventListener("input", () => {
-    const v = Number(edgeInsetSlider.value);
+
+  const syncEdgeInset = (raw) => {
+    const parsed = Number(raw);
+    const base = Number.isFinite(parsed) ? parsed : Number(labGlobals.hatchEdgeInset ?? 3);
+    const v = Math.max(0, Math.min(20, base));
     labGlobals.hatchEdgeInset = v;
+    edgeInsetSlider.value = String(v);
+    edgeInsetValueInput.value = v.toFixed(1);
     edgeInsetValSpan.textContent = v.toFixed(1);
     if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  };
+
+  edgeInsetSlider.addEventListener("input", () => {
+    syncEdgeInset(edgeInsetSlider.value);
+  });
+  edgeInsetValueInput.addEventListener("change", () => {
+    syncEdgeInset(edgeInsetValueInput.value);
+  });
+  edgeInsetValueInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      syncEdgeInset(edgeInsetValueInput.value);
+    }
   });
   edgeInsetRow.appendChild(edgeInsetLbl);
+  edgeInsetRow.appendChild(edgeInsetValueInput);
   edgeInsetRow.appendChild(edgeInsetSlider);
 
   sceneSlidersRoot.appendChild(createSceneSlider("Hatch Width",    "hatchWidth",    0.2,  3,    0.05));
@@ -2529,9 +2589,14 @@ function initSvgHatchingLab(initialParsedScene = null) {
     const lbl = document.createElement("label");
     lbl.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;";
     lbl.textContent = labelText;
-    const valSpan = document.createElement("span");
-    valSpan.textContent = "0.50";
-    lbl.appendChild(valSpan);
+    const valInput = document.createElement("input");
+    valInput.type = "number";
+    valInput.min = String(min);
+    valInput.max = String(max);
+    valInput.step = String(step);
+    valInput.value = formatSliderValue(step, 0.5);
+    valInput.style.cssText = "width:74px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:2px 4px;";
+    lbl.appendChild(valInput);
     const inp = document.createElement("input");
     inp.type = "range";
     inp.min = String(min);
@@ -2540,7 +2605,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
     inp.style.width = "100%";
     wrap.appendChild(lbl);
     wrap.appendChild(inp);
-    return { wrap, inp, valSpan };
+    return { wrap, inp, valInput, min, max };
   }
 
   const hatchSpacingSlider = createFaceSlider("Hatch Spacing", 0.2, 2.0, 0.05);
@@ -2586,7 +2651,9 @@ function initSvgHatchingLab(initialParsedScene = null) {
       faceBrightnessInfo.textContent = "Brightness: n/a";
       faceModeSelect.disabled = true;
       hatchSpacingSlider.inp.disabled = true;
+      hatchSpacingSlider.valInput.disabled = true;
       circleSpacingSlider.inp.disabled = true;
+      circleSpacingSlider.valInput.disabled = true;
       hatchColorInput.disabled = true;
       hatchColorInput.value = "";
       return;
@@ -2599,12 +2666,14 @@ function initSvgHatchingLab(initialParsedScene = null) {
     faceModeSelect.disabled = false;
     faceModeSelect.value = side.hatchMode;
     hatchSpacingSlider.inp.disabled = false;
+    hatchSpacingSlider.valInput.disabled = false;
     circleSpacingSlider.inp.disabled = false;
+    circleSpacingSlider.valInput.disabled = false;
     hatchColorInput.disabled = false;
     hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
-    hatchSpacingSlider.valSpan.textContent = side.hatchSpacing.toFixed(2);
+    hatchSpacingSlider.valInput.value = side.hatchSpacing.toFixed(2);
     circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
-    circleSpacingSlider.valSpan.textContent = side.circleSpacing.toFixed(2);
+    circleSpacingSlider.valInput.value = side.circleSpacing.toFixed(2);
     hatchColorInput.value = side.hatchColor || "";
     hatchColorInput.setCustomValidity("");
   }
@@ -2619,17 +2688,53 @@ function initSvgHatchingLab(initialParsedScene = null) {
   hatchSpacingSlider.inp.addEventListener("input", () => {
     const side = selectedSide();
     if (!side) return;
-    side.hatchSpacing = Number(hatchSpacingSlider.inp.value);
-    hatchSpacingSlider.valSpan.textContent = side.hatchSpacing.toFixed(2);
+    side.hatchSpacing = Math.max(hatchSpacingSlider.min, Math.min(hatchSpacingSlider.max, Number(hatchSpacingSlider.inp.value)));
+    hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
+    hatchSpacingSlider.valInput.value = side.hatchSpacing.toFixed(2);
     if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
+  hatchSpacingSlider.valInput.addEventListener("change", () => {
+    const side = selectedSide();
+    if (!side) return;
+    const parsed = Number(hatchSpacingSlider.valInput.value);
+    const base = Number.isFinite(parsed) ? parsed : side.hatchSpacing;
+    side.hatchSpacing = Math.max(hatchSpacingSlider.min, Math.min(hatchSpacingSlider.max, base));
+    hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
+    hatchSpacingSlider.valInput.value = side.hatchSpacing.toFixed(2);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
+  hatchSpacingSlider.valInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      hatchSpacingSlider.valInput.dispatchEvent(new Event("change"));
+    }
   });
 
   circleSpacingSlider.inp.addEventListener("input", () => {
     const side = selectedSide();
     if (!side) return;
-    side.circleSpacing = Number(circleSpacingSlider.inp.value);
-    circleSpacingSlider.valSpan.textContent = side.circleSpacing.toFixed(2);
+    side.circleSpacing = Math.max(circleSpacingSlider.min, Math.min(circleSpacingSlider.max, Number(circleSpacingSlider.inp.value)));
+    circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
+    circleSpacingSlider.valInput.value = side.circleSpacing.toFixed(2);
     if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
+  circleSpacingSlider.valInput.addEventListener("change", () => {
+    const side = selectedSide();
+    if (!side) return;
+    const parsed = Number(circleSpacingSlider.valInput.value);
+    const base = Number.isFinite(parsed) ? parsed : side.circleSpacing;
+    side.circleSpacing = Math.max(circleSpacingSlider.min, Math.min(circleSpacingSlider.max, base));
+    circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
+    circleSpacingSlider.valInput.value = side.circleSpacing.toFixed(2);
+    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+  });
+
+  circleSpacingSlider.valInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      circleSpacingSlider.valInput.dispatchEvent(new Event("change"));
+    }
   });
 
   hatchColorInput.addEventListener("input", () => {
@@ -2725,8 +2830,9 @@ function initSvgHatchingLab(initialParsedScene = null) {
   function writePresetStore(store) {
     try {
       window.localStorage.setItem(LAB_PRESETS_STORAGE_KEY, JSON.stringify(store));
+      return true;
     } catch (_error) {
-      // ignore storage failures
+      return false;
     }
   }
 
@@ -2815,6 +2921,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
       temp.set("studio", encodeURIComponent(JSON.stringify(preset.studioPayload)));
       applyLabStudioFromSearch(labState.studioState, temp);
     }
+    refreshSceneSliderUi();
     if (rerender && labParsedScene) {
       refreshFaceControls();
       renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
@@ -2853,7 +2960,30 @@ function initSvgHatchingLab(initialParsedScene = null) {
   deletePresetBtn.style.cssText = "padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(180,60,60,0.22);color:#ffe5e5;font-size:12px;cursor:pointer;";
 
   let presetStore = readPresetStore();
-  writePresetStore(presetStore);
+  if (!writePresetStore(presetStore)) {
+    updateStatus("Hatch lab", "Preset storage unavailable (localStorage write failed).");
+  }
+
+  function refreshSceneSliderUi() {
+    for (const [key, ref] of sceneSliderRefs.entries()) {
+      const value = Number(labGlobals[key]);
+      if (!Number.isFinite(value)) continue;
+      ref.inp.value = String(value);
+      ref.valInput.value = formatSliderValue(ref.step, value);
+    }
+    if (labGlobals.hatchEdgeInset === null) {
+      edgeInsetSlider.disabled = true;
+      edgeInsetValueInput.disabled = true;
+      edgeInsetValSpan.textContent = "auto";
+      return;
+    }
+    const edge = Number(labGlobals.hatchEdgeInset);
+    edgeInsetSlider.disabled = false;
+    edgeInsetValueInput.disabled = false;
+    edgeInsetSlider.value = String(edge);
+    edgeInsetValueInput.value = edge.toFixed(1);
+    edgeInsetValSpan.textContent = edge.toFixed(1);
+  }
 
   function refreshPresetSelect() {
     const current = presetSelect.value;
@@ -2874,7 +3004,8 @@ function initSvgHatchingLab(initialParsedScene = null) {
   }
 
   savePresetBtn.addEventListener("click", () => {
-    const name = (presetNameInput.value || "").trim();
+    const typedName = (presetNameInput.value || "").trim();
+    const name = typedName || (presetSelect.value || "").trim();
     if (!name) {
       updateStatus("Hatch lab", "Enter a preset name first.");
       return;
@@ -2892,9 +3023,13 @@ function initSvgHatchingLab(initialParsedScene = null) {
     } else {
       presetStore.presets.push(nextPreset);
     }
-    writePresetStore(presetStore);
+    if (!writePresetStore(presetStore)) {
+      updateStatus("Hatch lab", "Could not save preset to localStorage.");
+      return;
+    }
     refreshPresetSelect();
     presetSelect.value = name;
+    presetNameInput.value = name;
     updateStatus("Hatch lab", `Preset '${name}' saved.`);
   });
 
@@ -2915,7 +3050,10 @@ function initSvgHatchingLab(initialParsedScene = null) {
       return;
     }
     presetStore.defaultPresetName = name;
-    writePresetStore(presetStore);
+    if (!writePresetStore(presetStore)) {
+      updateStatus("Hatch lab", "Could not persist default preset.");
+      return;
+    }
     refreshPresetSelect();
     presetSelect.value = name;
     updateStatus("Hatch lab", `Preset '${name}' set as default.`);
@@ -2934,7 +3072,10 @@ function initSvgHatchingLab(initialParsedScene = null) {
     if (presetStore.defaultPresetName === name) {
       presetStore.defaultPresetName = "Scott Default";
     }
-    writePresetStore(presetStore);
+    if (!writePresetStore(presetStore)) {
+      updateStatus("Hatch lab", "Could not persist preset deletion.");
+      return;
+    }
     refreshPresetSelect();
     updateStatus("Hatch lab", `Preset '${name}' deleted.`);
   });
