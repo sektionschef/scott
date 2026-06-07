@@ -1495,6 +1495,27 @@ function testCubePrincipalAxes() {
     showSideLabels: search.get("sideLabels") === "1",
   };
 
+  const emitSelectionChange = () => {
+    const payload = {
+      type: "camogli-hatching-selection",
+      selectedSideId: studioState.selectedSideId,
+    };
+    try {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage(payload, "*");
+      }
+    } catch (_error) {
+      // no-op
+    }
+    try {
+      if (window.__axisStudioBridge && typeof window.__axisStudioBridge.onSelectionChange === "function") {
+        window.__axisStudioBridge.onSelectionChange(payload);
+      }
+    } catch (_error) {
+      // no-op
+    }
+  };
+
   const rebuildFromSeed = () => {
     studioState.sides = _axisWithSeededRandom(studioState.seed, () => _axisBuildStudioSides(width, height, baseParams));
   };
@@ -1523,6 +1544,7 @@ function testCubePrincipalAxes() {
     _axisWithSeededRandom(studioState.seed, () => {
       _axisRenderCubeAxes(svgNode, studioState, (sideId) => {
         studioState.selectedSideId = sideId;
+        emitSelectionChange();
         render();
       });
     });
@@ -1547,6 +1569,125 @@ function testCubePrincipalAxes() {
       reroll();
       render();
     }, applySeed, applyProfile);
+  };
+
+  const getSnapshot = () => {
+    const selected = studioState.sides.find((side) => side.id === studioState.selectedSideId) || null;
+    return {
+      seed: studioState.seed,
+      selectedSideId: studioState.selectedSideId,
+      showDebugDirection: !!studioState.showDebugDirection,
+      showSideLabels: !!studioState.showSideLabels,
+      globalParams: {
+        ...studioState.globalParams,
+      },
+      selectedSide: selected ? {
+        id: selected.id,
+        brightness: selected.brightness,
+        brightnessValue: selected.brightnessValue,
+        hatchMode: selected.hatchMode,
+        hatchColor: selected.hatchColor,
+        params: {
+          ...selected.params,
+        },
+      } : null,
+      sides: studioState.sides.map((side) => ({
+        id: side.id,
+        brightness: side.brightness,
+        brightnessValue: side.brightnessValue,
+        hatchMode: side.hatchMode,
+        hatchColor: side.hatchColor,
+        params: {
+          ...side.params,
+        },
+      })),
+    };
+  };
+
+  window.__axisStudioBridge = {
+    onSelectionChange: null,
+    getState() {
+      return getSnapshot();
+    },
+    setSelectedSide(sideId) {
+      if (!studioState.sides.some((side) => side.id === sideId)) {
+        return false;
+      }
+      studioState.selectedSideId = sideId;
+      emitSelectionChange();
+      render();
+      return true;
+    },
+    applyBrightnessProfile(payload = {}) {
+      const applied = _axisApplyBrightnessProfileToStudioState(studioState, payload);
+      if (!applied) {
+        return false;
+      }
+      render();
+      emitSelectionChange();
+      return true;
+    },
+    updateSelectedSide(patch = {}) {
+      const selected = studioState.sides.find((side) => side.id === studioState.selectedSideId);
+      if (!selected) {
+        return false;
+      }
+      if (patch.hatchMode === "none" || patch.hatchMode === "single" || patch.hatchMode === "cross") {
+        selected.hatchMode = patch.hatchMode;
+      }
+      if (typeof patch.hatchColor === "string") {
+        selected.hatchColor = patch.hatchColor;
+      }
+      if (patch.params && typeof patch.params === "object") {
+        if (Number.isFinite(Number(patch.params.hatchSpacing))) {
+          selected.params.hatchSpacing = Number(patch.params.hatchSpacing);
+        }
+        if (Number.isFinite(Number(patch.params.circleSpacing))) {
+          selected.params.circleSpacing = Number(patch.params.circleSpacing);
+        }
+      }
+      render();
+      return true;
+    },
+    updateGlobalParams(patch = {}) {
+      if (patch && typeof patch === "object") {
+        Object.keys(patch).forEach((key) => {
+          if (Object.prototype.hasOwnProperty.call(studioState.globalParams, key)) {
+            const value = patch[key];
+            if (value === null) {
+              studioState.globalParams[key] = null;
+            } else if (Number.isFinite(Number(value))) {
+              studioState.globalParams[key] = Number(value);
+            }
+          }
+        });
+      }
+      render();
+      return true;
+    },
+    setFlags(flags = {}) {
+      if (typeof flags.showDebugDirection === "boolean") {
+        studioState.showDebugDirection = flags.showDebugDirection;
+      }
+      if (typeof flags.showSideLabels === "boolean") {
+        studioState.showSideLabels = flags.showSideLabels;
+      }
+      render();
+      return true;
+    },
+    applySeed(seed) {
+      const normalized = _axisNormalizeSeed(seed);
+      if (normalized === null) {
+        return false;
+      }
+      applySeed(normalized);
+      return true;
+    },
+    reroll() {
+      reroll();
+      render();
+      return true;
+    },
   };
 
   render();

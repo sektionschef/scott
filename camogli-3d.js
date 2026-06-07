@@ -60,8 +60,10 @@ const saveViewButton = document.getElementById("saveViewButton");
 const toggleWallsButton = document.getElementById("toggleWallsButton");
 const exportSvgButton = document.getElementById("exportSvgButton");
 const exportGrayscaleSvgButton = document.getElementById("exportGrayscaleSvgButton");
+const exportNoShadowSvgButton = document.getElementById("exportNoShadowSvgButton");
 const saveLayoutButton = document.getElementById("saveLayoutButton");
 const restoreLayoutButton = document.getElementById("restoreLayoutButton");
+const resetStateButton = document.getElementById("resetStateButton");
 const shadowDeltaInput = document.getElementById("shadowDeltaInput");
 const shadowMinCompInput = document.getElementById("shadowMinCompInput");
 const shadowSimplifyFloorInput = document.getElementById("shadowSimplifyFloorInput");
@@ -178,6 +180,13 @@ const hatchExportSettings = {
 
 const SCENE_LAYOUT_STORAGE_KEY = "camogli3d.settledLayout.v1";
 const HATCH_BRIGHTNESS_PROFILE_STORAGE_KEY = "camogli3d.hatchingBrightnessProfiles.v1";
+const RESET_STATE_STORAGE_KEYS = [
+  "camogli3d.settledLayout.v1",
+  "camogli3d.hatchingBrightnessProfiles.v1",
+  "camogli3d.exportStudio.namedPresets.v1",
+  "camogli3d.defaultView",
+  "paperBackgroundDebugPreset.v1",
+];
 let pendingLayoutRestore = false;
 
 const scene = new THREE.Scene();
@@ -268,12 +277,14 @@ function buildSvgNoiseLayer(width, height, idPrefix, visualOptions = {}) {
 }
 
 function computeCanvasFrame() {
-  const viewportWidth = Math.max(320, window.innerWidth - CANVAS_MARGIN_PX * 2);
-  const viewportHeight = Math.max(180, window.innerHeight - CANVAS_MARGIN_PX * 2);
-  let width = viewportWidth;
+  // Size to the #app pane (left column), not the full viewport
+  const appEl = container; // container === document.getElementById("app")
+  const paneWidth = Math.max(1, appEl.clientWidth || window.innerWidth - 340);
+  const paneHeight = Math.max(1, appEl.clientHeight || window.innerHeight);
+  let width = paneWidth;
   let height = Math.round(width / CANVAS_ASPECT);
-  if (height > viewportHeight) {
-    height = viewportHeight;
+  if (height > paneHeight) {
+    height = paneHeight;
     width = Math.round(height * CANVAS_ASPECT);
   }
   return {
@@ -321,7 +332,11 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 container.appendChild(renderer.domElement);
 
+let studioActive = false;
+let studioGeneration = 0;
+
 function applyCanvasFrame() {
+  if (studioActive) return;
   const frame = computeCanvasFrame();
   camera.aspect = CANVAS_ASPECT;
   camera.updateProjectionMatrix();
@@ -2238,6 +2253,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
       viewBox,
     } = parsedScene;
     const brightnessNormalization = buildFaceBrightnessNormalization(faces);
+    const brightnessProfile = labState?.brightnessProfile || null;
     const studioState = labState?.studioState;
     const sideById = new Map((studioState?.sides || []).map((side) => [side.id, side]));
     const paperBackground = buildPaperBackgroundForLab(width, height, labState?.paperOptions || {});
@@ -2268,7 +2284,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
         cubeIndex: "floorShadow",
         faceName: "floor",
       };
-      const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
+      const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side, brightnessProfile);
       const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
       const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
       const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
@@ -2287,7 +2303,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
         cubeIndex: "cubeShadow",
         faceName: "cube",
       };
-      const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side);
+      const style = buildStudioFaceHatchStyle(pseudoFace, polygon, labGlobals, null, side, brightnessProfile);
       const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(pseudoFace, polygon, style);
       const pts = polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
       const isSelected = Boolean(studioState && studioState.selectedFaceId === sideId);
@@ -2299,8 +2315,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
     for (let index = 0; index < faces.length; index += 1) {
       const face = faces[index];
       const faceId = `face:${face.cubeIndex}:${face.faceName}:${index}`;
-      const side = sideById.get(faceId) || null;
-      const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization, side);
+      const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization, null, brightnessProfile);
       const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
       const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
       const cubeFillColor = sanitizeSvgColor(labState?.visualOptions?.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
@@ -2327,38 +2342,289 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
   });
 }
 
-function initSvgHatchingLab(initialParsedScene = null) {
+function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   const hud = document.querySelector(".hud");
   if (hud) {
     hud.style.display = "none";
   }
 
   container.innerHTML = "";
+  studioActive = true;
+  studioGeneration += 1;
+  const myGeneration = studioGeneration;
+  // Hide the 3D sidebar while the studio is full-screen
+  const mainHud = document.querySelector("aside.hud");
+  if (mainHud) mainHud.style.display = "none";
   container.style.position = "fixed";
   container.style.inset = "0";
   container.style.height = "100vh";
   container.style.display = "grid";
   container.style.gridTemplateColumns = "minmax(0, 1fr) 340px";
+  container.style.alignItems = "stretch";
+  container.style.justifyItems = "stretch";
+  container.style.alignContent = "stretch";
+  container.style.justifyContent = "stretch";
   container.style.background = exportVisualSettings.backgroundColor;
   container.style.overflow = "hidden";
 
+  // --- Preview pane (left column) ---
   const previewPane = document.createElement("div");
-  previewPane.style.padding = "18px";
-  previewPane.style.overflowY = "auto";
-  previewPane.style.overflowX = "hidden";
-  previewPane.style.minHeight = "0";
-  previewPane.style.boxSizing = "border-box";
+  previewPane.style.cssText = "display:flex;flex-direction:column;min-height:0;overflow:hidden;box-sizing:border-box;";
 
+  // Toggle bar above the preview
+  const toggleBar = document.createElement("div");
+  toggleBar.style.cssText = "display:flex;align-items:center;gap:0;flex-shrink:0;border-bottom:1px solid rgba(25,30,36,0.13);background:#1a1f28;";
+
+  function makeTabBtn(label, active) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = label;
+    btn.style.cssText = `flex:1;padding:9px 0;border:none;background:${active ? "rgba(214,166,95,0.18)" : "transparent"};color:${active ? "#d6a65f" : "#9aa7b7"};font-size:12px;font-weight:${active ? "700" : "400"};letter-spacing:0.04em;cursor:pointer;transition:background 0.15s,color 0.15s;`;
+    return btn;
+  }
+
+  let currentView = "sketch"; // "sketch" | "3d"
+  const tab3d = makeTabBtn("3D Scene", false);
+  const tabSketch = makeTabBtn("Sketch", true);
+  const tabHatchingDebug = makeTabBtn("Hatching Debug", false);
+  toggleBar.appendChild(tab3d);
+  toggleBar.appendChild(tabSketch);
+  toggleBar.appendChild(tabHatchingDebug);
+  previewPane.appendChild(toggleBar);
+
+  // Shared view container — both views live here, one hidden at a time
+  const viewContainer = document.createElement("div");
+  viewContainer.style.cssText = "flex:1;min-height:0;position:relative;overflow:hidden;background:#000;";
+  previewPane.appendChild(viewContainer);
+
+  // SVG sketch node
   const svgNode = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svgNode.style.display = "block";
-  svgNode.style.width = "100%";
-  svgNode.style.maxWidth = "100%";
-  svgNode.style.height = "auto";
-  svgNode.style.border = "1px solid rgba(25,30,36,0.12)";
-  svgNode.style.background = "#f8f5ed";
-  svgNode.style.boxSizing = "border-box";
-  previewPane.appendChild(svgNode);
+  svgNode.style.cssText = "display:block;position:absolute;inset:0;width:100%;height:100%;background:#f8f5ed;box-sizing:border-box;";
+  viewContainer.appendChild(svgNode);
 
+  const debugStudioFrame = document.createElement("iframe");
+  debugStudioFrame.style.cssText = "display:none;position:absolute;inset:0;width:100%;height:100%;border:none;background:#fff;";
+  debugStudioFrame.referrerPolicy = "no-referrer";
+  viewContainer.appendChild(debugStudioFrame);
+
+  // 3D canvas — move it from container into viewContainer
+  const canvas3d = renderer.domElement;
+  canvas3d.style.cssText = "display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);";
+  viewContainer.appendChild(canvas3d);
+
+  // Size helpers: keep canvas matching the view container
+  function resizeCanvasToPane() {
+    const w = viewContainer.clientWidth || 1;
+    const h = viewContainer.clientHeight || 1;
+    // Maintain CANVAS_ASPECT ratio, letterbox inside the pane
+    let cw = w;
+    let ch = Math.round(cw / CANVAS_ASPECT);
+    if (ch > h) {
+      ch = h;
+      cw = Math.round(ch * CANVAS_ASPECT);
+    }
+    renderer.setSize(cw, ch);
+    camera.aspect = CANVAS_ASPECT;
+    camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+  }
+
+  const DEBUG_STUDIO_DEFAULTS = {
+    seed: 1,
+    studioPayload: "{\"v\":3,\"s\":\"C1-A\",\"dir\":false,\"lbl\":false,\"g\":[1.75,0.6,-0.02,7.6,0,0,0,0.18],\"d\":[{\"id\":\"C1-A\",\"mode\":\"single\",\"p\":[1.35,0.2],\"c\":\"#111111\"},{\"id\":\"C1-B\",\"mode\":\"single\",\"p\":[1.35,0.2],\"c\":\"#111111\"},{\"id\":\"C1-C\",\"mode\":\"single\",\"p\":[1.2,0.2],\"c\":\"#111111\"},{\"id\":\"C2-A\",\"mode\":\"single\",\"p\":[1.05,0.2],\"c\":\"#111111\"},{\"id\":\"C2-B\",\"mode\":\"single\",\"p\":[0.95,0.2],\"c\":\"#111111\"},{\"id\":\"C2-C\",\"mode\":\"single\",\"p\":[0.85,0.2],\"c\":\"#111111\"},{\"id\":\"C3-A\",\"mode\":\"single\",\"p\":[0.75,0.2],\"c\":\"#111111\"},{\"id\":\"C3-B\",\"mode\":\"cross\",\"p\":[0.68,0.2],\"c\":\"#111111\"},{\"id\":\"C3-C\",\"mode\":\"cross\",\"p\":[0.6,0.2],\"c\":\"#111111\"},{\"id\":\"C4-A\",\"mode\":\"cross\",\"p\":[0.52,0.2],\"c\":\"#111111\"}]}"
+  };
+
+  const debugStudioState = {
+    seed: DEBUG_STUDIO_DEFAULTS.seed,
+    studioPayload: DEBUG_STUDIO_DEFAULTS.studioPayload,
+  };
+  const DEBUG_STUDIO_BUILD = "20260607-2";
+  let debugStudioNonce = 0;
+
+  function getDebugStudioBridge() {
+    try {
+      return debugStudioFrame.contentWindow?.__axisStudioBridge || null;
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function withDebugStudioBridge(action) {
+    const bridge = getDebugStudioBridge();
+    if (!bridge) {
+      return false;
+    }
+    try {
+      action(bridge);
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  let refreshDebugSelectionControls = () => {};
+  let syncDebugStudioFromBrightnessProfile = () => {};
+
+  function onEmbeddedDebugMessage(event) {
+    if (event?.source !== debugStudioFrame.contentWindow) {
+      return;
+    }
+    const payload = event?.data;
+    if (!payload || payload.type !== "camogli-hatching-selection") {
+      return;
+    }
+    refreshDebugSelectionControls();
+  }
+
+  window.addEventListener("message", onEmbeddedDebugMessage);
+
+  function normalizeEmbeddedDebugLayout() {
+    try {
+      const doc = debugStudioFrame.contentDocument;
+      if (!doc) return;
+
+      let styleNode = doc.getElementById("camogliEmbedOverrides");
+      if (!styleNode) {
+        styleNode = doc.createElement("style");
+        styleNode.id = "camogliEmbedOverrides";
+        styleNode.textContent = `
+          html, body {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            overflow: hidden !important;
+          }
+          body {
+            display: grid !important;
+            grid-template-columns: minmax(0, 1fr) !important;
+            padding: 0 !important;
+            column-gap: 0 !important;
+            background: #f8f8f6 !important;
+          }
+          #debugCubeAxesPanel {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+          }
+          #layout {
+            grid-template-columns: minmax(0, 1fr) !important;
+          }
+          aside.hud {
+            display: none !important;
+          }
+          #badAssCanvas,
+          #app {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            overflow: hidden !important;
+          }
+          #svgNode,
+          #badAssCanvas svg,
+          svg#svgNode {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+          }
+        `;
+        doc.head?.appendChild(styleNode);
+      }
+
+      // If the embedded page uses the same split layout, collapse it to a single preview column.
+      const embeddedLayout = doc.getElementById("layout");
+      if (embeddedLayout) {
+        embeddedLayout.style.gridTemplateColumns = "minmax(0, 1fr)";
+      }
+
+      // Hide the embedded sidebar so the debug preview is not cramped.
+      const embeddedHud = doc.querySelector("aside.hud");
+      if (embeddedHud) {
+        embeddedHud.style.display = "none";
+      }
+
+      const embeddedApp = doc.getElementById("app");
+      if (embeddedApp) {
+        embeddedApp.style.width = "100%";
+        embeddedApp.style.height = "100%";
+      }
+
+      const embeddedHost = doc.getElementById("badAssCanvas");
+      if (embeddedHost) {
+        embeddedHost.style.width = "100%";
+        embeddedHost.style.height = "100%";
+        embeddedHost.style.maxHeight = "100%";
+      }
+
+      const embeddedPanel = doc.getElementById("debugCubeAxesPanel");
+      if (embeddedPanel) {
+        embeddedPanel.style.display = "none";
+      }
+    } catch (_error) {
+      // Cross-origin / timing errors are non-fatal for the embedded debug tab.
+    }
+  }
+
+  debugStudioFrame.addEventListener("load", () => {
+    normalizeEmbeddedDebugLayout();
+    syncDebugStudioFromBrightnessProfile();
+    refreshDebugSelectionControls();
+  });
+
+  function buildDebugStudioUrl() {
+    const params = new URLSearchParams();
+    params.set("debugHatchingStudio", "1");
+    params.set("seed", String(Math.max(1, Math.round(Number(debugStudioState.seed) || 1))));
+    params.set("studio", encodeURIComponent(debugStudioState.studioPayload || "{}"));
+    params.set("v", DEBUG_STUDIO_BUILD);
+    params.set("nonce", String(debugStudioNonce));
+    return `${window.location.origin}/?${params.toString()}`;
+  }
+
+  function reloadDebugStudioFrame() {
+    debugStudioNonce += 1;
+    debugStudioFrame.src = buildDebugStudioUrl();
+  }
+
+  function switchToView(view) {
+    currentView = view;
+    const is3d = view === "3d";
+    const isSketch = view === "sketch";
+    const isDebug = view === "hatching-debug";
+    canvas3d.style.display = is3d ? "block" : "none";
+    svgNode.style.display = isSketch ? "block" : "none";
+    debugStudioFrame.style.display = isDebug ? "block" : "none";
+
+    tab3d.style.background = is3d ? "rgba(214,166,95,0.18)" : "transparent";
+    tab3d.style.color = is3d ? "#d6a65f" : "#9aa7b7";
+    tab3d.style.fontWeight = is3d ? "700" : "400";
+    tabSketch.style.background = isSketch ? "rgba(214,166,95,0.18)" : "transparent";
+    tabSketch.style.color = isSketch ? "#d6a65f" : "#9aa7b7";
+    tabSketch.style.fontWeight = isSketch ? "700" : "400";
+    tabHatchingDebug.style.background = isDebug ? "rgba(214,166,95,0.18)" : "transparent";
+    tabHatchingDebug.style.color = isDebug ? "#d6a65f" : "#9aa7b7";
+    tabHatchingDebug.style.fontWeight = isDebug ? "700" : "400";
+
+    if (is3d) {
+      resizeCanvasToPane();
+    }
+    if (isDebug && !debugStudioFrame.src) {
+      reloadDebugStudioFrame();
+    }
+    if (isDebug) {
+      refreshDebugSelectionControls();
+    }
+  }
+
+  tab3d.addEventListener("click", () => switchToView("3d"));
+  tabSketch.addEventListener("click", () => switchToView("sketch"));
+  tabHatchingDebug.addEventListener("click", () => switchToView("hatching-debug"));
+
+  // Sidebar (right column)
   const pane = document.createElement("aside");
   pane.style.padding = "16px";
   pane.style.borderLeft = "1px solid rgba(255,255,255,0.14)";
@@ -2379,7 +2645,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
   title.style.letterSpacing = "0.04em";
 
   const hint = document.createElement("p");
-  hint.textContent = "Tune paper, global hatch, and per-face settings. Click any face in the preview to edit that side.";
+  hint.textContent = "Tune paper, global hatch, and brightness categories. Click any face to edit the hatching category for that brightness range.";
   hint.style.margin = "0 0 14px";
   hint.style.color = "#9aa7b7";
   hint.style.fontSize = "12px";
@@ -2392,6 +2658,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
   let labParsedScene = null;
   const labState = {
     studioState: null,
+    brightnessProfile: null,
     paperOptions: {
       ...LAB_DEFAULT_PAPER_OPTIONS,
     },
@@ -2406,6 +2673,81 @@ function initSvgHatchingLab(initialParsedScene = null) {
       ...presetFromSearch,
     };
   }
+
+  function createDefaultBrightnessProfile() {
+    const bins = [];
+    for (let bin = 0; bin < 10; bin += 1) {
+      const mid = (bin + 0.5) / 10;
+      bins.push({
+        bin,
+        hatchMode: studioDefaultHatchMode(mid),
+        hatchSpacing: studioDefaultSpacingForBrightness(mid),
+        circleSpacing: studioDefaultSpacingForBrightness(mid),
+        hatchColor: null,
+      });
+    }
+    return {
+      version: 1,
+      bins,
+    };
+  }
+
+  function normalizeBrightnessProfile(profile) {
+    const fallback = createDefaultBrightnessProfile();
+    if (!profile || !Array.isArray(profile.bins)) {
+      return fallback;
+    }
+    const byBin = new Map();
+    for (const row of profile.bins) {
+      const bin = Number(row?.bin);
+      if (!Number.isFinite(bin) || bin < 0 || bin > 9) continue;
+      byBin.set(bin, row);
+    }
+    const bins = [];
+    for (let bin = 0; bin < 10; bin += 1) {
+      const base = fallback.bins[bin];
+      const row = byBin.get(bin) || {};
+      bins.push({
+        bin,
+        hatchMode: row.hatchMode === "none" || row.hatchMode === "single" || row.hatchMode === "cross"
+          ? row.hatchMode
+          : base.hatchMode,
+        hatchSpacing: Number.isFinite(Number(row.hatchSpacing))
+          ? Math.max(0.2, Math.min(2, Number(row.hatchSpacing)))
+          : base.hatchSpacing,
+        circleSpacing: Number.isFinite(Number(row.circleSpacing))
+          ? Math.max(0.2, Math.min(2, Number(row.circleSpacing)))
+          : base.circleSpacing,
+        hatchColor: typeof row.hatchColor === "string"
+          ? (sanitizeSvgColor(row.hatchColor, null) || null)
+          : null,
+      });
+    }
+    return {
+      version: 1,
+      bins,
+    };
+  }
+
+  function cloneBrightnessProfile(profile) {
+    return normalizeBrightnessProfile(JSON.parse(JSON.stringify(profile || createDefaultBrightnessProfile())));
+  }
+
+  function saveBrightnessProfileToStorage(profile) {
+    try {
+      const payload = {
+        version: 1,
+        savedAt: new Date().toISOString(),
+        bins: cloneBrightnessProfile(profile).bins,
+      };
+      window.localStorage.setItem(HATCH_BRIGHTNESS_PROFILE_STORAGE_KEY, JSON.stringify(payload));
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  labState.brightnessProfile = normalizeBrightnessProfile(readExportBrightnessProfileFromStorage());
   const sceneSection = document.createElement("div");
 
   function applyLabBackgroundColor() {
@@ -2618,6 +2960,12 @@ function initSvgHatchingLab(initialParsedScene = null) {
   hatchColorInput.placeholder = "auto | rgba(40, 40, 40, 0.7)";
   hatchColorInput.style.cssText = "width:100%;margin-bottom:10px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
 
+  const applyToBinBtn = document.createElement("button");
+  applyToBinBtn.type = "button";
+  applyToBinBtn.textContent = "Category-linked";
+  applyToBinBtn.style.cssText = "padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(214,166,95,0.2);color:#f7ead6;font-size:12px;cursor:pointer;";
+  applyToBinBtn.disabled = true;
+
   function selectedSide() {
     if (!labState.studioState?.selectedFaceId) {
       return null;
@@ -2644,6 +2992,54 @@ function initSvgHatchingLab(initialParsedScene = null) {
     return null;
   }
 
+  function selectedFaceBin(side) {
+    if (!side || side.target !== "face" || !labParsedScene?.faces) {
+      return null;
+    }
+    const face = labParsedScene.faces[side.targetIndex];
+    if (!face) {
+      return null;
+    }
+    const normalization = buildFaceBrightnessNormalization(labParsedScene.faces);
+    const normalizedBrightness = normalizeFaceBrightness(faceStudioBrightness(face), normalization);
+    return profileBinIndexFromBrightness(normalizedBrightness);
+  }
+
+  function selectedFaceBinEntry(side) {
+    const bin = selectedFaceBin(side);
+    if (!Number.isInteger(bin)) {
+      return { bin: null, row: null };
+    }
+    const row = labState?.brightnessProfile?.bins?.[bin] || null;
+    return { bin, row };
+  }
+
+  function applyBrightnessBinsToFaceSides() {
+    if (!labParsedScene?.faces || !labState?.studioState?.sides || !labState?.brightnessProfile?.bins) {
+      return;
+    }
+    const normalization = buildFaceBrightnessNormalization(labParsedScene.faces);
+    for (const side of labState.studioState.sides) {
+      if (side.target !== "face") {
+        continue;
+      }
+      const face = labParsedScene.faces[side.targetIndex];
+      if (!face) {
+        continue;
+      }
+      const normalizedBrightness = normalizeFaceBrightness(faceStudioBrightness(face), normalization);
+      const bin = profileBinIndexFromBrightness(normalizedBrightness);
+      const bucket = labState.brightnessProfile.bins.find((row) => Number(row?.bin) === bin);
+      if (!bucket) {
+        continue;
+      }
+      side.hatchMode = bucket.hatchMode;
+      side.hatchSpacing = bucket.hatchSpacing;
+      side.circleSpacing = bucket.circleSpacing;
+      side.hatchColor = bucket.hatchColor || null;
+    }
+  }
+
   function refreshFaceControls() {
     const side = selectedSide();
     if (!side) {
@@ -2656,6 +3052,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
       circleSpacingSlider.valInput.disabled = true;
       hatchColorInput.disabled = true;
       hatchColorInput.value = "";
+      applyToBinBtn.disabled = true;
       return;
     }
     faceTitle.textContent = `Selected face: ${side.id}`;
@@ -2663,46 +3060,66 @@ function initSvgHatchingLab(initialParsedScene = null) {
     faceBrightnessInfo.textContent = Number.isFinite(brightness)
       ? `Brightness: ${brightness.toFixed(3)} (0=bright, 1=dark)`
       : "Brightness: n/a";
-    faceModeSelect.disabled = false;
-    faceModeSelect.value = side.hatchMode;
-    hatchSpacingSlider.inp.disabled = false;
-    hatchSpacingSlider.valInput.disabled = false;
-    circleSpacingSlider.inp.disabled = false;
-    circleSpacingSlider.valInput.disabled = false;
-    hatchColorInput.disabled = false;
-    hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
-    hatchSpacingSlider.valInput.value = side.hatchSpacing.toFixed(2);
-    circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
-    circleSpacingSlider.valInput.value = side.circleSpacing.toFixed(2);
-    hatchColorInput.value = side.hatchColor || "";
+    const { bin, row } = selectedFaceBinEntry(side);
+    const binLinked = side.target === "face" && Number.isInteger(bin) && !!row;
+    faceModeSelect.disabled = !binLinked;
+    hatchSpacingSlider.inp.disabled = !binLinked;
+    hatchSpacingSlider.valInput.disabled = !binLinked;
+    circleSpacingSlider.inp.disabled = !binLinked;
+    circleSpacingSlider.valInput.disabled = !binLinked;
+    hatchColorInput.disabled = !binLinked;
     hatchColorInput.setCustomValidity("");
+    if (!binLinked) {
+      faceModeSelect.value = "single";
+      hatchSpacingSlider.inp.value = "1.00";
+      hatchSpacingSlider.valInput.value = "1.00";
+      circleSpacingSlider.inp.value = "1.00";
+      circleSpacingSlider.valInput.value = "1.00";
+      hatchColorInput.value = "";
+      applyToBinBtn.disabled = true;
+      return;
+    }
+    selectedBrightnessBin = bin;
+    refreshBrightnessBinControls();
+    faceModeSelect.value = row.hatchMode;
+    hatchSpacingSlider.inp.value = Number(row.hatchSpacing).toFixed(2);
+    hatchSpacingSlider.valInput.value = Number(row.hatchSpacing).toFixed(2);
+    circleSpacingSlider.inp.value = Number(row.circleSpacing).toFixed(2);
+    circleSpacingSlider.valInput.value = Number(row.circleSpacing).toFixed(2);
+    hatchColorInput.value = row.hatchColor || "";
+    applyToBinBtn.disabled = true;
   }
 
   faceModeSelect.addEventListener("change", () => {
     const side = selectedSide();
-    if (!side) return;
-    side.hatchMode = faceModeSelect.value;
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    const { bin } = selectedFaceBinEntry(side);
+    if (!Number.isInteger(bin)) return;
+    selectedBrightnessBin = bin;
+    updateBrightnessBinPatch({ hatchMode: faceModeSelect.value });
   });
 
   hatchSpacingSlider.inp.addEventListener("input", () => {
     const side = selectedSide();
-    if (!side) return;
-    side.hatchSpacing = Math.max(hatchSpacingSlider.min, Math.min(hatchSpacingSlider.max, Number(hatchSpacingSlider.inp.value)));
-    hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
-    hatchSpacingSlider.valInput.value = side.hatchSpacing.toFixed(2);
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    const { bin } = selectedFaceBinEntry(side);
+    if (!Number.isInteger(bin)) return;
+    selectedBrightnessBin = bin;
+    const value = Math.max(hatchSpacingSlider.min, Math.min(hatchSpacingSlider.max, Number(hatchSpacingSlider.inp.value)));
+    hatchSpacingSlider.inp.value = value.toFixed(2);
+    hatchSpacingSlider.valInput.value = value.toFixed(2);
+    updateBrightnessBinPatch({ hatchSpacing: value });
   });
 
   hatchSpacingSlider.valInput.addEventListener("change", () => {
     const side = selectedSide();
-    if (!side) return;
+    const { bin, row } = selectedFaceBinEntry(side);
+    if (!Number.isInteger(bin) || !row) return;
+    selectedBrightnessBin = bin;
     const parsed = Number(hatchSpacingSlider.valInput.value);
-    const base = Number.isFinite(parsed) ? parsed : side.hatchSpacing;
-    side.hatchSpacing = Math.max(hatchSpacingSlider.min, Math.min(hatchSpacingSlider.max, base));
-    hatchSpacingSlider.inp.value = side.hatchSpacing.toFixed(2);
-    hatchSpacingSlider.valInput.value = side.hatchSpacing.toFixed(2);
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    const base = Number.isFinite(parsed) ? parsed : Number(row.hatchSpacing);
+    const value = Math.max(hatchSpacingSlider.min, Math.min(hatchSpacingSlider.max, base));
+    hatchSpacingSlider.inp.value = value.toFixed(2);
+    hatchSpacingSlider.valInput.value = value.toFixed(2);
+    updateBrightnessBinPatch({ hatchSpacing: value });
   });
 
   hatchSpacingSlider.valInput.addEventListener("keydown", (event) => {
@@ -2713,22 +3130,26 @@ function initSvgHatchingLab(initialParsedScene = null) {
 
   circleSpacingSlider.inp.addEventListener("input", () => {
     const side = selectedSide();
-    if (!side) return;
-    side.circleSpacing = Math.max(circleSpacingSlider.min, Math.min(circleSpacingSlider.max, Number(circleSpacingSlider.inp.value)));
-    circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
-    circleSpacingSlider.valInput.value = side.circleSpacing.toFixed(2);
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    const { bin } = selectedFaceBinEntry(side);
+    if (!Number.isInteger(bin)) return;
+    selectedBrightnessBin = bin;
+    const value = Math.max(circleSpacingSlider.min, Math.min(circleSpacingSlider.max, Number(circleSpacingSlider.inp.value)));
+    circleSpacingSlider.inp.value = value.toFixed(2);
+    circleSpacingSlider.valInput.value = value.toFixed(2);
+    updateBrightnessBinPatch({ circleSpacing: value });
   });
 
   circleSpacingSlider.valInput.addEventListener("change", () => {
     const side = selectedSide();
-    if (!side) return;
+    const { bin, row } = selectedFaceBinEntry(side);
+    if (!Number.isInteger(bin) || !row) return;
+    selectedBrightnessBin = bin;
     const parsed = Number(circleSpacingSlider.valInput.value);
-    const base = Number.isFinite(parsed) ? parsed : side.circleSpacing;
-    side.circleSpacing = Math.max(circleSpacingSlider.min, Math.min(circleSpacingSlider.max, base));
-    circleSpacingSlider.inp.value = side.circleSpacing.toFixed(2);
-    circleSpacingSlider.valInput.value = side.circleSpacing.toFixed(2);
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    const base = Number.isFinite(parsed) ? parsed : Number(row.circleSpacing);
+    const value = Math.max(circleSpacingSlider.min, Math.min(circleSpacingSlider.max, base));
+    circleSpacingSlider.inp.value = value.toFixed(2);
+    circleSpacingSlider.valInput.value = value.toFixed(2);
+    updateBrightnessBinPatch({ circleSpacing: value });
   });
 
   circleSpacingSlider.valInput.addEventListener("keydown", (event) => {
@@ -2739,12 +3160,13 @@ function initSvgHatchingLab(initialParsedScene = null) {
 
   hatchColorInput.addEventListener("input", () => {
     const side = selectedSide();
-    if (!side) return;
+    const { bin } = selectedFaceBinEntry(side);
+    if (!Number.isInteger(bin)) return;
+    selectedBrightnessBin = bin;
     const raw = hatchColorInput.value.trim();
     if (!raw) {
-      side.hatchColor = null;
+      updateBrightnessBinPatch({ hatchColor: null });
       hatchColorInput.setCustomValidity("");
-      if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
       return;
     }
     const sanitized = sanitizeSvgColor(raw, "");
@@ -2753,9 +3175,12 @@ function initSvgHatchingLab(initialParsedScene = null) {
       hatchColorInput.reportValidity();
       return;
     }
-    side.hatchColor = sanitized;
     hatchColorInput.setCustomValidity("");
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    updateBrightnessBinPatch({ hatchColor: sanitized });
+  });
+
+  applyToBinBtn.addEventListener("click", () => {
+    updateStatus("Hatch lab", "Selected sides are always category-linked. Edit the category controls directly.");
   });
 
   faceSection.appendChild(faceTitle);
@@ -2766,6 +3191,165 @@ function initSvgHatchingLab(initialParsedScene = null) {
   faceSection.appendChild(circleSpacingSlider.wrap);
   faceSection.appendChild(hatchColorLabel);
   faceSection.appendChild(hatchColorInput);
+  faceSection.appendChild(applyToBinBtn);
+
+  const brightnessBinsSection = document.createElement("div");
+  const brightnessBinsInfo = document.createElement("div");
+  brightnessBinsInfo.style.cssText = "font-size:11px;color:#9aa7b7;margin-bottom:8px;";
+  brightnessBinsInfo.textContent = "Edit hatching per brightness category (0-10 ... 90-100).";
+
+  const brightnessBinChips = document.createElement("div");
+  brightnessBinChips.style.cssText = "display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:10px;";
+
+  const brightnessBinModeLabel = document.createElement("label");
+  brightnessBinModeLabel.textContent = "Bin Hatch Mode";
+  brightnessBinModeLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const brightnessBinModeSelect = document.createElement("select");
+  brightnessBinModeSelect.style.cssText = "width:100%;margin-bottom:8px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+  ["none", "single", "cross"].forEach((mode) => {
+    const option = document.createElement("option");
+    option.value = mode;
+    option.textContent = mode;
+    brightnessBinModeSelect.appendChild(option);
+  });
+
+  const brightnessBinSpacing = createFaceSlider("Bin Hatch Spacing", 0.2, 2.0, 0.05);
+  const brightnessBinCircleSpacing = createFaceSlider("Bin Circle Spacing", 0.2, 2.0, 0.05);
+
+  const brightnessBinColorLabel = document.createElement("label");
+  brightnessBinColorLabel.textContent = "Bin Hatch Color (optional)";
+  brightnessBinColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const brightnessBinColorInput = document.createElement("input");
+  brightnessBinColorInput.type = "text";
+  brightnessBinColorInput.placeholder = "auto | #111111 | rgba(...)";
+  brightnessBinColorInput.style.cssText = "width:100%;margin-bottom:10px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+
+  const brightnessBinActions = document.createElement("div");
+  brightnessBinActions.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;";
+  const saveBinsBtn = document.createElement("button");
+  saveBinsBtn.type = "button";
+  saveBinsBtn.textContent = "Save Brightness Bins";
+  saveBinsBtn.style.cssText = "padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#e6eef8;font-size:12px;cursor:pointer;";
+  const loadBinsBtn = document.createElement("button");
+  loadBinsBtn.type = "button";
+  loadBinsBtn.textContent = "Load Brightness Bins";
+  loadBinsBtn.style.cssText = "padding:7px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#e6eef8;font-size:12px;cursor:pointer;";
+  brightnessBinActions.appendChild(saveBinsBtn);
+  brightnessBinActions.appendChild(loadBinsBtn);
+
+  let selectedBrightnessBin = 0;
+  const brightnessBinChipButtons = [];
+
+  function currentBinEntry() {
+    return labState.brightnessProfile.bins[selectedBrightnessBin];
+  }
+
+  function refreshBrightnessBinControls() {
+    const row = currentBinEntry();
+    if (!row) return;
+    brightnessBinModeSelect.value = row.hatchMode;
+    brightnessBinSpacing.inp.value = Number(row.hatchSpacing).toFixed(2);
+    brightnessBinSpacing.valInput.value = Number(row.hatchSpacing).toFixed(2);
+    brightnessBinCircleSpacing.inp.value = Number(row.circleSpacing).toFixed(2);
+    brightnessBinCircleSpacing.valInput.value = Number(row.circleSpacing).toFixed(2);
+    brightnessBinColorInput.value = row.hatchColor || "";
+    brightnessBinChipButtons.forEach((btn, idx) => {
+      const active = idx === selectedBrightnessBin;
+      btn.style.background = active ? "rgba(214,166,95,0.18)" : "rgba(255,255,255,0.06)";
+      btn.style.color = active ? "#f7ead6" : "#d2dbe7";
+      btn.style.borderColor = active ? "rgba(214,166,95,0.55)" : "rgba(255,255,255,0.22)";
+    });
+  }
+
+  function updateBrightnessBinPatch(patch) {
+    const row = currentBinEntry();
+    if (!row) return;
+    Object.assign(row, patch);
+    applyBrightnessBinsToFaceSides();
+    syncDebugStudioFromBrightnessProfile();
+    refreshBrightnessBinControls();
+    refreshFaceControls();
+    if (labParsedScene) {
+      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    }
+  }
+
+  for (let bin = 0; bin < 10; bin += 1) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = `${bin * 10}-${(bin + 1) * 10}`;
+    btn.style.cssText = "padding:6px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.06);color:#d2dbe7;font-size:11px;cursor:pointer;";
+    btn.addEventListener("click", () => {
+      selectedBrightnessBin = bin;
+      refreshBrightnessBinControls();
+    });
+    brightnessBinChips.appendChild(btn);
+    brightnessBinChipButtons.push(btn);
+  }
+
+  brightnessBinModeSelect.addEventListener("change", () => {
+    updateBrightnessBinPatch({ hatchMode: brightnessBinModeSelect.value });
+  });
+
+  const bindBinSlider = (ui, key) => {
+    const sync = (raw) => {
+      const value = Math.max(ui.min, Math.min(ui.max, Number(raw)));
+      ui.inp.value = value.toFixed(2);
+      ui.valInput.value = value.toFixed(2);
+      updateBrightnessBinPatch({ [key]: value });
+    };
+    ui.inp.addEventListener("input", () => sync(ui.inp.value));
+    ui.valInput.addEventListener("change", () => sync(ui.valInput.value));
+    ui.valInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") sync(ui.valInput.value);
+    });
+  };
+  bindBinSlider(brightnessBinSpacing, "hatchSpacing");
+  bindBinSlider(brightnessBinCircleSpacing, "circleSpacing");
+
+  brightnessBinColorInput.addEventListener("input", () => {
+    const raw = brightnessBinColorInput.value.trim();
+    if (!raw) {
+      updateBrightnessBinPatch({ hatchColor: null });
+      return;
+    }
+    const sanitized = sanitizeSvgColor(raw, "");
+    if (!sanitized) {
+      brightnessBinColorInput.setCustomValidity("Use #RRGGBB, #RRGGBBAA, rgb(), or rgba().");
+      brightnessBinColorInput.reportValidity();
+      return;
+    }
+    brightnessBinColorInput.setCustomValidity("");
+    updateBrightnessBinPatch({ hatchColor: sanitized });
+  });
+
+  saveBinsBtn.addEventListener("click", () => {
+    const ok = saveBrightnessProfileToStorage(labState.brightnessProfile);
+    updateStatus("Hatch lab", ok ? "Brightness bins saved." : "Could not save brightness bins.");
+  });
+
+  loadBinsBtn.addEventListener("click", () => {
+    labState.brightnessProfile = normalizeBrightnessProfile(readExportBrightnessProfileFromStorage());
+    applyBrightnessBinsToFaceSides();
+    syncDebugStudioFromBrightnessProfile();
+    refreshBrightnessBinControls();
+    refreshFaceControls();
+    if (labParsedScene) {
+      renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
+    }
+    updateStatus("Hatch lab", "Brightness bins loaded.");
+  });
+
+  brightnessBinsSection.appendChild(brightnessBinsInfo);
+  brightnessBinsSection.appendChild(brightnessBinChips);
+  brightnessBinsSection.appendChild(brightnessBinModeLabel);
+  brightnessBinsSection.appendChild(brightnessBinModeSelect);
+  brightnessBinsSection.appendChild(brightnessBinSpacing.wrap);
+  brightnessBinsSection.appendChild(brightnessBinCircleSpacing.wrap);
+  brightnessBinsSection.appendChild(brightnessBinColorLabel);
+  brightnessBinsSection.appendChild(brightnessBinColorInput);
+  brightnessBinsSection.appendChild(brightnessBinActions);
+  refreshBrightnessBinControls();
   const sceneActions = document.createElement("div");
   sceneActions.style.cssText = "display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;";
 
@@ -2795,6 +3379,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
                 ...LAB_DEFAULT_VISUAL_OPTIONS,
                 ...visualDefaultsFromSearch,
               },
+              brightnessProfile: cloneBrightnessProfile(labState.brightnessProfile),
               studioPayload: studioPayloadFromSearch,
             },
           ],
@@ -2820,6 +3405,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
               ...LAB_DEFAULT_VISUAL_OPTIONS,
               ...visualDefaultsFromSearch,
             },
+            brightnessProfile: cloneBrightnessProfile(labState.brightnessProfile),
             studioPayload: studioPayloadFromSearch,
           },
         ],
@@ -2884,6 +3470,11 @@ function initSvgHatchingLab(initialParsedScene = null) {
         ...labState.paperOptions,
         ...preset.paperOptions,
       };
+    }
+    if (preset.brightnessProfile) {
+      labState.brightnessProfile = normalizeBrightnessProfile(preset.brightnessProfile);
+      applyBrightnessBinsToFaceSides();
+      syncDebugStudioFromBrightnessProfile();
     }
     if (preset.visualOptions) {
       labState.visualOptions = {
@@ -3015,6 +3606,7 @@ function initSvgHatchingLab(initialParsedScene = null) {
       globals: { ...labGlobals },
       paperOptions: { ...labState.paperOptions },
       visualOptions: { ...labState.visualOptions },
+      brightnessProfile: cloneBrightnessProfile(labState.brightnessProfile),
       studioPayload: buildCurrentStudioPayload(),
     };
     const existingIndex = presetStore.presets.findIndex((preset) => preset.name === name);
@@ -3157,6 +3749,61 @@ function initSvgHatchingLab(initialParsedScene = null) {
 
   sceneActions.appendChild(rerollSceneBtn);
   sceneActions.appendChild(copyParamsBtn);
+
+  const BTN_STYLE_DOWNLOAD = "padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.08);color:#e6eef8;font-size:12px;cursor:pointer;";
+
+  function serializeLabSvg() {
+    return new XMLSerializer().serializeToString(svgNode);
+  }
+
+  function stripShadowLayersFromSvg(serializedSvg) {
+    const SHADOW_GROUP_IDS = ["dropShadows", "dropShadowsDarkest", "faceShadows", "shadowDebugFill"];
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(serializedSvg, "image/svg+xml");
+      for (const id of SHADOW_GROUP_IDS) {
+        const el = doc.getElementById(id);
+        if (el) el.remove();
+      }
+      // Also strip any [data-layer="shadow"] or [data-layer="shadowDarkest"] etc.
+      doc.querySelectorAll('[data-layer="shadow"],[data-layer="shadowDarkest"],[data-layer="faceShadow"],[data-layer="floorShadowDebugFill"],[data-layer="cubeShadowDebugFill"]').forEach((el) => el.remove());
+      return new XMLSerializer().serializeToString(doc.documentElement);
+    } catch (_error) {
+      return serializedSvg;
+    }
+  }
+
+  const downloadLabSvgBtn = document.createElement("button");
+  downloadLabSvgBtn.type = "button";
+  downloadLabSvgBtn.textContent = "Download SVG";
+  downloadLabSvgBtn.style.cssText = BTN_STYLE_DOWNLOAD;
+  downloadLabSvgBtn.addEventListener("click", () => {
+    const svg = serializeLabSvg();
+    const timestamp = new Date().toISOString().replaceAll(":", "-");
+    downloadTextAsFile(svg, `camogli-studio-${timestamp}.svg`, "image/svg+xml;charset=utf-8");
+    updateStatus("Studio SVG downloaded", "Full export including shadows.");
+  });
+
+  const downloadLabSvgNoShadowBtn = document.createElement("button");
+  downloadLabSvgNoShadowBtn.type = "button";
+  downloadLabSvgNoShadowBtn.textContent = "Download SVG (no shadows)";
+  downloadLabSvgNoShadowBtn.style.cssText = BTN_STYLE_DOWNLOAD;
+  downloadLabSvgNoShadowBtn.addEventListener("click", () => {
+    const svg = stripShadowLayersFromSvg(serializeLabSvg());
+    const timestamp = new Date().toISOString().replaceAll(":", "-");
+    downloadTextAsFile(svg, `camogli-studio-noshadows-${timestamp}.svg`, "image/svg+xml;charset=utf-8");
+    updateStatus("Studio SVG downloaded", "Export with drop shadows omitted.");
+  });
+
+  sceneActions.appendChild(downloadLabSvgBtn);
+  sceneActions.appendChild(downloadLabSvgNoShadowBtn);
+
+  const resetStudioStateBtn = document.createElement("button");
+  resetStudioStateBtn.type = "button";
+  resetStudioStateBtn.textContent = "Reset Saved State";
+  resetStudioStateBtn.style.cssText = BTN_STYLE_DOWNLOAD;
+  resetStudioStateBtn.addEventListener("click", resetSavedState);
+  sceneActions.appendChild(resetStudioStateBtn);
 
   const paperSection = document.createElement("div");
   paperSection.style.cssText = "margin-top:16px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);";
@@ -3377,6 +4024,8 @@ function initSvgHatchingLab(initialParsedScene = null) {
       applyPresetSnapshot(defaultPreset, false);
     }
     applyLabStudioFromSearch(labState.studioState, searchParams);
+    applyBrightnessBinsToFaceSides();
+    syncDebugStudioFromBrightnessProfile();
     refreshPresetSelect();
     refreshFaceControls();
     renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
@@ -3387,6 +4036,9 @@ function initSvgHatchingLab(initialParsedScene = null) {
 
   const sideAccordion = createAccordion("Selected Side", true);
   sideAccordion.content.appendChild(faceSection);
+
+  const brightnessBinsAccordion = createAccordion("Brightness Bins", true);
+  brightnessBinsAccordion.content.appendChild(brightnessBinsSection);
 
   const paperAccordion = createAccordion("Paper", false);
   paperAccordion.content.appendChild(paperSection);
@@ -3400,12 +4052,311 @@ function initSvgHatchingLab(initialParsedScene = null) {
   const actionsAccordion = createAccordion("Actions", true);
   actionsAccordion.content.appendChild(sceneActions);
 
+  const debugStudioAccordion = createAccordion("Hatching Debug", false);
+  const debugStudioControls = document.createElement("div");
+
+  const debugStudioSeedLabel = document.createElement("label");
+  debugStudioSeedLabel.textContent = "Seed";
+  debugStudioSeedLabel.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const debugStudioSeedInput = document.createElement("input");
+  debugStudioSeedInput.type = "number";
+  debugStudioSeedInput.min = "1";
+  debugStudioSeedInput.step = "1";
+  debugStudioSeedInput.value = String(debugStudioState.seed);
+  debugStudioSeedInput.style.cssText = "width:92px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:4px 6px;";
+  debugStudioSeedLabel.appendChild(debugStudioSeedInput);
+
+  const debugStudioPayloadLabel = document.createElement("label");
+  debugStudioPayloadLabel.textContent = "Studio Payload (JSON)";
+  debugStudioPayloadLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin:8px 0 4px;";
+  const debugStudioPayloadInput = document.createElement("textarea");
+  debugStudioPayloadInput.value = debugStudioState.studioPayload;
+  debugStudioPayloadInput.style.cssText = "width:100%;min-height:140px;resize:vertical;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;box-sizing:border-box;font:11px/1.35 ui-monospace, Menlo, monospace;";
+
+  const debugStudioActions = document.createElement("div");
+  debugStudioActions.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;";
+
+  const reloadDebugStudioBtn = document.createElement("button");
+  reloadDebugStudioBtn.type = "button";
+  reloadDebugStudioBtn.textContent = "Reload Debug Tab";
+  reloadDebugStudioBtn.style.cssText = BTN_STYLE_DOWNLOAD;
+  reloadDebugStudioBtn.addEventListener("click", () => {
+    debugStudioState.seed = Math.max(1, Math.round(Number(debugStudioSeedInput.value) || 1));
+    debugStudioState.studioPayload = (debugStudioPayloadInput.value || "{}").trim() || "{}";
+    reloadDebugStudioFrame();
+    updateStatus("Hatch lab", "Hatching debug tab reloaded.");
+  });
+
+  const openDebugStudioBtn = document.createElement("button");
+  openDebugStudioBtn.type = "button";
+  openDebugStudioBtn.textContent = "Open in New Tab";
+  openDebugStudioBtn.style.cssText = BTN_STYLE_DOWNLOAD;
+  openDebugStudioBtn.addEventListener("click", () => {
+    debugStudioState.seed = Math.max(1, Math.round(Number(debugStudioSeedInput.value) || 1));
+    debugStudioState.studioPayload = (debugStudioPayloadInput.value || "{}").trim() || "{}";
+    const url = buildDebugStudioUrl();
+    window.open(url, "_blank", "noopener,noreferrer");
+  });
+
+  const copyDebugStudioUrlBtn = document.createElement("button");
+  copyDebugStudioUrlBtn.type = "button";
+  copyDebugStudioUrlBtn.textContent = "Copy Debug URL";
+  copyDebugStudioUrlBtn.style.cssText = BTN_STYLE_DOWNLOAD;
+  copyDebugStudioUrlBtn.addEventListener("click", async () => {
+    debugStudioState.seed = Math.max(1, Math.round(Number(debugStudioSeedInput.value) || 1));
+    debugStudioState.studioPayload = (debugStudioPayloadInput.value || "{}").trim() || "{}";
+    const url = buildDebugStudioUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      updateStatus("Hatch lab", "Debug studio URL copied.");
+    } catch (_error) {
+      updateStatus("Hatch lab", "Could not copy URL (clipboard blocked).");
+    }
+  });
+
+  debugStudioActions.appendChild(reloadDebugStudioBtn);
+  debugStudioActions.appendChild(copyDebugStudioUrlBtn);
+  debugStudioActions.appendChild(openDebugStudioBtn);
+
+  const debugSelectedDivider = document.createElement("div");
+  debugSelectedDivider.style.cssText = "margin:12px 0 8px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);font-size:12px;color:#9aa7b7;";
+  debugSelectedDivider.textContent = "Selected Rectangle / Side";
+
+  const debugSelectedInfo = document.createElement("div");
+  debugSelectedInfo.style.cssText = "font-size:12px;color:#d2dbe7;margin-bottom:8px;";
+  debugSelectedInfo.textContent = "Selected: n/a";
+
+  const debugModeWrap = document.createElement("div");
+  debugModeWrap.style.cssText = "margin-bottom:8px;";
+  const debugModeLabel = document.createElement("label");
+  debugModeLabel.textContent = "Hatch Mode";
+  debugModeLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const debugModeSelect = document.createElement("select");
+  debugModeSelect.style.cssText = "width:100%;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+  ["none", "single", "cross"].forEach((mode) => {
+    const option = document.createElement("option");
+    option.value = mode;
+    option.textContent = mode;
+    debugModeSelect.appendChild(option);
+  });
+  debugModeWrap.appendChild(debugModeLabel);
+  debugModeWrap.appendChild(debugModeSelect);
+
+  const debugColorWrap = document.createElement("div");
+  debugColorWrap.style.cssText = "margin-bottom:8px;";
+  const debugColorLabel = document.createElement("label");
+  debugColorLabel.textContent = "Hatch Color";
+  debugColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const debugColorInput = document.createElement("input");
+  debugColorInput.type = "text";
+  debugColorInput.placeholder = "#111111 or rgba(...)";
+  debugColorInput.style.cssText = "width:100%;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;box-sizing:border-box;";
+  debugColorWrap.appendChild(debugColorLabel);
+  debugColorWrap.appendChild(debugColorInput);
+
+  function createDebugSideSlider(labelText, min, max, step) {
+    const wrap = document.createElement("div");
+    wrap.style.marginBottom = "8px";
+    const label = document.createElement("label");
+    label.textContent = labelText;
+    label.style.cssText = "display:flex;justify-content:space-between;font-size:12px;color:#d2dbe7;";
+    const number = document.createElement("input");
+    number.type = "number";
+    number.min = String(min);
+    number.max = String(max);
+    number.step = String(step);
+    number.style.cssText = "width:74px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:2px 4px;";
+    label.appendChild(number);
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = String(min);
+    slider.max = String(max);
+    slider.step = String(step);
+    slider.style.width = "100%";
+    wrap.appendChild(label);
+    wrap.appendChild(slider);
+    return { wrap, slider, number, min, max };
+  }
+
+  const debugSpacing = createDebugSideSlider("Spacing", 0.2, 2.0, 0.05);
+  const debugCircleSpacing = createDebugSideSlider("Circle Spacing", 0.2, 6.0, 0.1);
+
+  function debugSelectedBinFromState(state) {
+    const selected = state?.selectedSide || null;
+    if (!selected) {
+      return null;
+    }
+    const brightness = Number(selected.brightness);
+    const brightnessValue = Number(selected.brightnessValue);
+    const normalized = Number.isFinite(brightness)
+      ? clamp01(brightness)
+      : (Number.isFinite(brightnessValue) ? clamp01(brightnessValue > 1 ? brightnessValue / 10 : brightnessValue) : null);
+    if (normalized === null) {
+      return null;
+    }
+    return profileBinIndexFromBrightness(normalized);
+  }
+
+  syncDebugStudioFromBrightnessProfile = () => {
+    withDebugStudioBridge((bridge) => {
+      const binsPayload = {
+        version: 1,
+        bins: (labState?.brightnessProfile?.bins || []).map((row) => ({
+          bin: Number(row?.bin),
+          hatchMode: row?.hatchMode,
+          hatchSpacing: Number(row?.hatchSpacing),
+          circleSpacing: Number(row?.circleSpacing),
+          hatchColor: row?.hatchColor || null,
+        })),
+      };
+      if (typeof bridge.applyBrightnessProfile === "function") {
+        bridge.applyBrightnessProfile(binsPayload);
+        return;
+      }
+      const snapshot = bridge.getState();
+      if (!snapshot || !Array.isArray(snapshot.sides) || snapshot.sides.length === 0) {
+        return;
+      }
+      const previousSelected = snapshot.selectedSideId;
+      for (const side of snapshot.sides) {
+        const brightness = Number(side.brightness);
+        const brightnessValue = Number(side.brightnessValue);
+        const normalized = Number.isFinite(brightness)
+          ? clamp01(brightness)
+          : (Number.isFinite(brightnessValue) ? clamp01(brightnessValue > 1 ? brightnessValue / 10 : brightnessValue) : null);
+        if (normalized === null) {
+          continue;
+        }
+        const bin = profileBinIndexFromBrightness(normalized);
+        const row = labState?.brightnessProfile?.bins?.[bin];
+        if (!row) {
+          continue;
+        }
+        bridge.setSelectedSide(side.id);
+        const debugColor = row.hatchColor || "#111111";
+        bridge.updateSelectedSide({
+          hatchMode: row.hatchMode,
+          hatchColor: debugColor,
+          params: {
+            hatchSpacing: row.hatchSpacing,
+            circleSpacing: row.circleSpacing,
+          },
+        });
+      }
+      if (typeof previousSelected === "string" && previousSelected) {
+        bridge.setSelectedSide(previousSelected);
+      }
+    });
+  };
+
+  function pushDebugSelectedPatch(patch) {
+    withDebugStudioBridge((bridge) => {
+      const state = bridge.getState();
+      const bin = debugSelectedBinFromState(state);
+      if (!Number.isInteger(bin)) {
+        return;
+      }
+      const next = {};
+      if (patch.hatchMode === "none" || patch.hatchMode === "single" || patch.hatchMode === "cross") {
+        next.hatchMode = patch.hatchMode;
+      }
+      if (typeof patch.hatchColor === "string") {
+        const sanitized = sanitizeSvgColor(patch.hatchColor.trim(), "");
+        if (sanitized) {
+          next.hatchColor = sanitized;
+        }
+      }
+      if (patch.params && typeof patch.params === "object") {
+        if (Number.isFinite(Number(patch.params.hatchSpacing))) {
+          next.hatchSpacing = Math.max(0.2, Math.min(2, Number(patch.params.hatchSpacing)));
+        }
+        if (Number.isFinite(Number(patch.params.circleSpacing))) {
+          next.circleSpacing = Math.max(0.2, Math.min(2, Number(patch.params.circleSpacing)));
+        }
+      }
+      if (Object.keys(next).length === 0) {
+        return;
+      }
+      selectedBrightnessBin = bin;
+      updateBrightnessBinPatch(next);
+    });
+    refreshDebugSelectionControls();
+  }
+
+  debugModeSelect.addEventListener("change", () => {
+    pushDebugSelectedPatch({ hatchMode: debugModeSelect.value });
+  });
+
+  debugColorInput.addEventListener("change", () => {
+    pushDebugSelectedPatch({ hatchColor: (debugColorInput.value || "").trim() || "#111111" });
+  });
+
+  const bindDebugSlider = (controlKey, ui, digits = 2) => {
+    const sync = (raw) => {
+      const value = Math.max(ui.min, Math.min(ui.max, Number(raw)));
+      ui.slider.value = String(value);
+      ui.number.value = Number(value).toFixed(digits);
+      pushDebugSelectedPatch({ params: { [controlKey]: value } });
+    };
+    ui.slider.addEventListener("input", () => sync(ui.slider.value));
+    ui.number.addEventListener("change", () => sync(ui.number.value));
+    ui.number.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") sync(ui.number.value);
+    });
+  };
+
+  bindDebugSlider("hatchSpacing", debugSpacing, 2);
+  bindDebugSlider("circleSpacing", debugCircleSpacing, 2);
+
+  refreshDebugSelectionControls = () => {
+    withDebugStudioBridge((bridge) => {
+      const state = bridge.getState();
+      const selected = state?.selectedSide || null;
+      if (!selected) {
+        debugSelectedInfo.textContent = "Selected: n/a";
+        return;
+      }
+      const brightness = Number.isFinite(Number(selected.brightnessValue))
+        ? Number(selected.brightnessValue)
+        : Number(selected.brightness) * 10;
+      debugSelectedInfo.textContent = `Selected: ${selected.id} | brightness ${brightness.toFixed(1)}`;
+      const bin = debugSelectedBinFromState(state);
+      if (Number.isInteger(bin)) {
+        selectedBrightnessBin = bin;
+        refreshBrightnessBinControls();
+      }
+      const row = Number.isInteger(bin) ? (labState?.brightnessProfile?.bins?.[bin] || null) : null;
+      debugModeSelect.value = row?.hatchMode || selected.hatchMode || "single";
+      debugColorInput.value = row?.hatchColor || selected.hatchColor || "#111111";
+      const hatchSpacing = Number(row?.hatchSpacing ?? selected?.params?.hatchSpacing ?? 1);
+      const circleSpacing = Number(row?.circleSpacing ?? selected?.params?.circleSpacing ?? 1);
+      debugSpacing.slider.value = String(hatchSpacing);
+      debugSpacing.number.value = hatchSpacing.toFixed(2);
+      debugCircleSpacing.slider.value = String(circleSpacing);
+      debugCircleSpacing.number.value = circleSpacing.toFixed(2);
+    });
+  };
+
+  debugStudioControls.appendChild(debugStudioSeedLabel);
+  debugStudioControls.appendChild(debugStudioPayloadLabel);
+  debugStudioControls.appendChild(debugStudioPayloadInput);
+  debugStudioControls.appendChild(debugStudioActions);
+  debugStudioControls.appendChild(debugSelectedDivider);
+  debugStudioControls.appendChild(debugSelectedInfo);
+  debugStudioControls.appendChild(debugModeWrap);
+  debugStudioControls.appendChild(debugColorWrap);
+  debugStudioControls.appendChild(debugSpacing.wrap);
+  debugStudioControls.appendChild(debugCircleSpacing.wrap);
+  debugStudioAccordion.content.appendChild(debugStudioControls);
+
   sceneSection.appendChild(globalAccordion.details);
   sceneSection.appendChild(sideAccordion.details);
+  sceneSection.appendChild(brightnessBinsAccordion.details);
   sceneSection.appendChild(paperAccordion.details);
   sceneSection.appendChild(appearanceAccordion.details);
   sceneSection.appendChild(presetAccordion.details);
   sceneSection.appendChild(actionsAccordion.details);
+  sceneSection.appendChild(debugStudioAccordion.details);
 
   pane.appendChild(title);
   pane.appendChild(hint);
@@ -3414,27 +4365,66 @@ function initSvgHatchingLab(initialParsedScene = null) {
   container.appendChild(previewPane);
   container.appendChild(pane);
 
-  const rerender = () => {
+  // Restore canvas to container and fire global resize handler when studio closes
+  function teardown() {
+    window.removeEventListener("resize", onResize);
+    window.removeEventListener("message", onEmbeddedDebugMessage);
+    studioActive = false;
+    // Restore #app to its grid position
+    container.style.position = "";
+    container.style.inset = "";
+    container.style.height = "";
+    container.style.display = "";
+    container.style.gridTemplateColumns = "";
+    container.style.alignItems = "";
+    container.style.justifyItems = "";
+    container.style.alignContent = "";
+    container.style.justifyContent = "";
+    container.style.background = "";
+    container.style.overflow = "";
+    // Return canvas to #app
+    container.appendChild(canvas3d);
+    canvas3d.style.cssText = "";
+    // Restore 3D sidebar
+    const mainHud = document.querySelector("aside.hud");
+    if (mainHud) mainHud.style.display = "";
+    applyCanvasFrame();
+  }
+
+  function onResize() {
+    if (studioGeneration !== myGeneration) return;
+    if (currentView === "3d") {
+      resizeCanvasToPane();
+    }
     if (labParsedScene) {
       renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
     }
-  };
+  }
+
   applyLabBackgroundColor();
-  window.addEventListener("resize", rerender);
+  window.addEventListener("resize", onResize);
+
   if (initialParsedScene && initialParsedScene.faces?.length) {
-    loadParsedScene(initialParsedScene);
-    updateStatus("Hatch lab", `Loaded ${initialParsedScene.faces.length} faces from latest export.`);
+    const sceneToLoad = noShadows ? stripShadowsFromParsedScene(initialParsedScene) : initialParsedScene;
+    loadParsedScene(sceneToLoad);
+    const shadowNote = noShadows ? " — shadows hidden" : "";
+    updateStatus("Hatch lab", `Loaded ${initialParsedScene.faces.length} faces from latest export${shadowNote}.`);
   } else {
     const fallbackScene = window.lastCamogliSvgExport
       ? buildLabSceneFromExportData(window.lastCamogliSvgExport)
       : null;
     if (fallbackScene?.faces?.length) {
-      loadParsedScene(fallbackScene);
-      updateStatus("Hatch lab", `Loaded ${fallbackScene.faces.length} faces from last export.`);
+      const sceneToLoad = noShadows ? stripShadowsFromParsedScene(fallbackScene) : fallbackScene;
+      loadParsedScene(sceneToLoad);
+      const shadowNote = noShadows ? " — shadows hidden" : "";
+      updateStatus("Hatch lab", `Loaded ${fallbackScene.faces.length} faces from last export${shadowNote}.`);
     } else {
       updateStatus("Hatch lab", "Export from 3D first, then studio opens with that scene.");
     }
   }
+
+  // Start in sketch view; 3D renders on first switch
+  switchToView("sketch");
 }
 
 function quadPoint(worldFace, u, v) {
@@ -4622,6 +5612,39 @@ function finalizeFxhashArtwork(reason = "settled") {
   }
 }
 
+function stripShadowsFromParsedScene(parsedScene) {
+  if (!parsedScene) return parsedScene;
+  return {
+    ...parsedScene,
+    shadowPolygons: [],
+    floorShadowPolygons: [],
+    cubeShadowPolygons: [],
+  };
+}
+
+function exportSceneToSvgNoShadows() {
+  try {
+    if (cubeObjects.length < CUBE_COUNT) {
+      updateStatus("Export blocked", `Wait for full spawn (${cubeObjects.length}/${CUBE_COUNT}).`);
+      return;
+    }
+    const { svg, data } = buildSceneSvgExport();
+    window.lastCamogliSvgMarkup = svg;
+    window.lastCamogliSvgExport = data;
+    if (!FXHASH_MODE) {
+      const parsedScene = buildLabSceneFromExportData(data) || parseFacesFromExportedSvg(svg);
+      if (parsedScene?.faces?.length) {
+        initSvgHatchingLab(stripShadowsFromParsedScene(parsedScene), true);
+      }
+    }
+    updateStatus("Studio opened (no shadows)", `${data.faces.length} visible faces, shadows hidden.`);
+  } catch (error) {
+    console.error("SVG export (no shadows) failed", error);
+    const detail = error instanceof Error ? error.message : String(error);
+    updateStatus("Export failed", `Could not build SVG from current camera view. ${detail}`);
+  }
+}
+
 function exportSceneToSvg() {
   try {
     if (cubeObjects.length < CUBE_COUNT) {
@@ -4772,9 +5795,29 @@ function resetScene() {
   window.location.reload();
 }
 
+function clearPersistedAppState() {
+  if (!window.localStorage) {
+    return;
+  }
+  for (const key of RESET_STATE_STORAGE_KEYS) {
+    try {
+      window.localStorage.removeItem(key);
+    } catch (_error) {
+      // continue clearing remaining keys
+    }
+  }
+}
+
+function resetSavedState() {
+  clearPersistedAppState();
+  const cleanPath = `${window.location.origin}${window.location.pathname}`;
+  window.location.href = cleanPath;
+}
+
 window.addEventListener("resize", applyCanvasFrame);
 
 resetButton?.addEventListener("click", resetScene);
+resetStateButton?.addEventListener("click", resetSavedState);
 focusButton?.addEventListener("click", focusCamera);
 saveViewButton?.addEventListener("click", saveCurrentViewAsDefault);
 saveLayoutButton?.addEventListener("click", saveSettledLayout);
@@ -4784,12 +5827,14 @@ toggleWallsButton?.addEventListener("click", () => {
 });
 exportSvgButton?.addEventListener("click", exportSceneToSvg);
 exportGrayscaleSvgButton?.addEventListener("click", exportGrayscaleSceneToSvg);
+exportNoShadowSvgButton?.addEventListener("click", exportSceneToSvgNoShadows);
 
 bindShadowSettingInputs();
 
 // Expose camera state for debugging/persistence
 window.getCameraState = () => getCurrentView();
 window.exportCamogliSvg = exportSceneToSvg;
+window.exportCamogliSvgNoShadows = exportSceneToSvgNoShadows;
 
 if (DEBUG_SVG_HATCHING_LAB) {
   initSvgHatchingLab();

@@ -1,5 +1,7 @@
 # Scott
 
+ start with: `python3 -m http.server 3301`
+
 ## Paper Texture Debug View
 
 - URL: http://localhost:3301/debugPaperBackground.html
