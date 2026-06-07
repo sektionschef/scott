@@ -2578,6 +2578,7 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   function buildDebugStudioUrl() {
     const params = new URLSearchParams();
     params.set("debugHatchingStudio", "1");
+    params.set("embeddedDebugStudio", "1");
     params.set("seed", String(Math.max(1, Math.round(Number(debugStudioState.seed) || 1))));
     params.set("studio", encodeURIComponent(debugStudioState.studioPayload || "{}"));
     params.set("v", DEBUG_STUDIO_BUILD);
@@ -2912,6 +2913,9 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   const faceBrightnessInfo = document.createElement("div");
   faceBrightnessInfo.style.cssText = "font-size:11px;color:#aeb9c7;margin-bottom:8px;";
   faceBrightnessInfo.textContent = "Brightness: n/a";
+  const faceBinInfo = document.createElement("div");
+  faceBinInfo.style.cssText = "font-size:11px;color:#d6a65f;margin-bottom:2px;";
+  faceBinInfo.textContent = "Brightness category: n/a";
 
   const faceModeLabel = document.createElement("label");
   faceModeLabel.textContent = "Hatch Mode";
@@ -3045,14 +3049,7 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
     if (!side) {
       faceTitle.textContent = "Selected face: none";
       faceBrightnessInfo.textContent = "Brightness: n/a";
-      faceModeSelect.disabled = true;
-      hatchSpacingSlider.inp.disabled = true;
-      hatchSpacingSlider.valInput.disabled = true;
-      circleSpacingSlider.inp.disabled = true;
-      circleSpacingSlider.valInput.disabled = true;
-      hatchColorInput.disabled = true;
-      hatchColorInput.value = "";
-      applyToBinBtn.disabled = true;
+      faceBinInfo.textContent = "Brightness category: n/a";
       return;
     }
     faceTitle.textContent = `Selected face: ${side.id}`;
@@ -3062,32 +3059,11 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
       : "Brightness: n/a";
     const { bin, row } = selectedFaceBinEntry(side);
     const binLinked = side.target === "face" && Number.isInteger(bin) && !!row;
-    faceModeSelect.disabled = !binLinked;
-    hatchSpacingSlider.inp.disabled = !binLinked;
-    hatchSpacingSlider.valInput.disabled = !binLinked;
-    circleSpacingSlider.inp.disabled = !binLinked;
-    circleSpacingSlider.valInput.disabled = !binLinked;
-    hatchColorInput.disabled = !binLinked;
-    hatchColorInput.setCustomValidity("");
     if (!binLinked) {
-      faceModeSelect.value = "single";
-      hatchSpacingSlider.inp.value = "1.00";
-      hatchSpacingSlider.valInput.value = "1.00";
-      circleSpacingSlider.inp.value = "1.00";
-      circleSpacingSlider.valInput.value = "1.00";
-      hatchColorInput.value = "";
-      applyToBinBtn.disabled = true;
+      faceBinInfo.textContent = "Brightness category: n/a";
       return;
     }
-    selectedBrightnessBin = bin;
-    refreshBrightnessBinControls();
-    faceModeSelect.value = row.hatchMode;
-    hatchSpacingSlider.inp.value = Number(row.hatchSpacing).toFixed(2);
-    hatchSpacingSlider.valInput.value = Number(row.hatchSpacing).toFixed(2);
-    circleSpacingSlider.inp.value = Number(row.circleSpacing).toFixed(2);
-    circleSpacingSlider.valInput.value = Number(row.circleSpacing).toFixed(2);
-    hatchColorInput.value = row.hatchColor || "";
-    applyToBinBtn.disabled = true;
+    faceBinInfo.textContent = `Brightness category: ${bin * 10}-${(bin + 1) * 10}`;
   }
 
   faceModeSelect.addEventListener("change", () => {
@@ -3185,13 +3161,7 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
 
   faceSection.appendChild(faceTitle);
   faceSection.appendChild(faceBrightnessInfo);
-  faceSection.appendChild(faceModeLabel);
-  faceSection.appendChild(faceModeSelect);
-  faceSection.appendChild(hatchSpacingSlider.wrap);
-  faceSection.appendChild(circleSpacingSlider.wrap);
-  faceSection.appendChild(hatchColorLabel);
-  faceSection.appendChild(hatchColorInput);
-  faceSection.appendChild(applyToBinBtn);
+  faceSection.appendChild(faceBinInfo);
 
   const brightnessBinsSection = document.createElement("div");
   const brightnessBinsInfo = document.createElement("div");
@@ -3217,12 +3187,23 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   const brightnessBinCircleSpacing = createFaceSlider("Bin Circle Spacing", 0.2, 2.0, 0.05);
 
   const brightnessBinColorLabel = document.createElement("label");
-  brightnessBinColorLabel.textContent = "Bin Hatch Color (optional)";
+  brightnessBinColorLabel.textContent = "Bin Hatch Color";
   brightnessBinColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
+  const brightnessBinColorControls = document.createElement("div");
+  brightnessBinColorControls.style.cssText = "display:flex;align-items:center;gap:10px;margin-bottom:10px;";
   const brightnessBinColorInput = document.createElement("input");
-  brightnessBinColorInput.type = "text";
-  brightnessBinColorInput.placeholder = "auto | #111111 | rgba(...)";
-  brightnessBinColorInput.style.cssText = "width:100%;margin-bottom:10px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;";
+  brightnessBinColorInput.type = "color";
+  brightnessBinColorInput.value = "#111111";
+  brightnessBinColorInput.style.cssText = "width:40px;height:28px;padding:0;border:none;background:transparent;cursor:pointer;";
+  const brightnessBinAutoLabel = document.createElement("label");
+  brightnessBinAutoLabel.style.cssText = "display:flex;align-items:center;gap:6px;font-size:12px;color:#d2dbe7;";
+  const brightnessBinAutoToggle = document.createElement("input");
+  brightnessBinAutoToggle.type = "checkbox";
+  brightnessBinAutoToggle.checked = true;
+  brightnessBinAutoLabel.appendChild(brightnessBinAutoToggle);
+  brightnessBinAutoLabel.appendChild(document.createTextNode("Auto color"));
+  brightnessBinColorControls.appendChild(brightnessBinColorInput);
+  brightnessBinColorControls.appendChild(brightnessBinAutoLabel);
 
   const brightnessBinActions = document.createElement("div");
   brightnessBinActions.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;";
@@ -3252,7 +3233,12 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
     brightnessBinSpacing.valInput.value = Number(row.hatchSpacing).toFixed(2);
     brightnessBinCircleSpacing.inp.value = Number(row.circleSpacing).toFixed(2);
     brightnessBinCircleSpacing.valInput.value = Number(row.circleSpacing).toFixed(2);
-    brightnessBinColorInput.value = row.hatchColor || "";
+    const hasCustomColor = typeof row.hatchColor === "string" && row.hatchColor.trim().length > 0;
+    brightnessBinAutoToggle.checked = !hasCustomColor;
+    brightnessBinColorInput.disabled = !hasCustomColor;
+    brightnessBinColorInput.value = hasCustomColor
+      ? sanitizeHexColor(row.hatchColor, "#111111")
+      : "#111111";
     brightnessBinChipButtons.forEach((btn, idx) => {
       const active = idx === selectedBrightnessBin;
       btn.style.background = active ? "rgba(214,166,95,0.18)" : "rgba(255,255,255,0.06)";
@@ -3307,20 +3293,22 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   bindBinSlider(brightnessBinSpacing, "hatchSpacing");
   bindBinSlider(brightnessBinCircleSpacing, "circleSpacing");
 
-  brightnessBinColorInput.addEventListener("input", () => {
-    const raw = brightnessBinColorInput.value.trim();
-    if (!raw) {
+  brightnessBinAutoToggle.addEventListener("change", () => {
+    if (brightnessBinAutoToggle.checked) {
+      brightnessBinColorInput.disabled = true;
       updateBrightnessBinPatch({ hatchColor: null });
       return;
     }
-    const sanitized = sanitizeSvgColor(raw, "");
-    if (!sanitized) {
-      brightnessBinColorInput.setCustomValidity("Use #RRGGBB, #RRGGBBAA, rgb(), or rgba().");
-      brightnessBinColorInput.reportValidity();
-      return;
+    brightnessBinColorInput.disabled = false;
+    updateBrightnessBinPatch({ hatchColor: brightnessBinColorInput.value });
+  });
+
+  brightnessBinColorInput.addEventListener("input", () => {
+    if (brightnessBinAutoToggle.checked) {
+      brightnessBinAutoToggle.checked = false;
+      brightnessBinColorInput.disabled = false;
     }
-    brightnessBinColorInput.setCustomValidity("");
-    updateBrightnessBinPatch({ hatchColor: sanitized });
+    updateBrightnessBinPatch({ hatchColor: brightnessBinColorInput.value });
   });
 
   saveBinsBtn.addEventListener("click", () => {
@@ -3347,7 +3335,7 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   brightnessBinsSection.appendChild(brightnessBinSpacing.wrap);
   brightnessBinsSection.appendChild(brightnessBinCircleSpacing.wrap);
   brightnessBinsSection.appendChild(brightnessBinColorLabel);
-  brightnessBinsSection.appendChild(brightnessBinColorInput);
+  brightnessBinsSection.appendChild(brightnessBinColorControls);
   brightnessBinsSection.appendChild(brightnessBinActions);
   refreshBrightnessBinControls();
   const sceneActions = document.createElement("div");
@@ -4066,13 +4054,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   debugStudioSeedInput.style.cssText = "width:92px;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:4px 6px;";
   debugStudioSeedLabel.appendChild(debugStudioSeedInput);
 
-  const debugStudioPayloadLabel = document.createElement("label");
-  debugStudioPayloadLabel.textContent = "Studio Payload (JSON)";
-  debugStudioPayloadLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin:8px 0 4px;";
-  const debugStudioPayloadInput = document.createElement("textarea");
-  debugStudioPayloadInput.value = debugStudioState.studioPayload;
-  debugStudioPayloadInput.style.cssText = "width:100%;min-height:140px;resize:vertical;background:#111822;color:#edf2f7;border:1px solid rgba(255,255,255,0.22);border-radius:6px;padding:6px;box-sizing:border-box;font:11px/1.35 ui-monospace, Menlo, monospace;";
-
   const debugStudioActions = document.createElement("div");
   debugStudioActions.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;";
 
@@ -4082,41 +4063,11 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   reloadDebugStudioBtn.style.cssText = BTN_STYLE_DOWNLOAD;
   reloadDebugStudioBtn.addEventListener("click", () => {
     debugStudioState.seed = Math.max(1, Math.round(Number(debugStudioSeedInput.value) || 1));
-    debugStudioState.studioPayload = (debugStudioPayloadInput.value || "{}").trim() || "{}";
     reloadDebugStudioFrame();
     updateStatus("Hatch lab", "Hatching debug tab reloaded.");
   });
 
-  const openDebugStudioBtn = document.createElement("button");
-  openDebugStudioBtn.type = "button";
-  openDebugStudioBtn.textContent = "Open in New Tab";
-  openDebugStudioBtn.style.cssText = BTN_STYLE_DOWNLOAD;
-  openDebugStudioBtn.addEventListener("click", () => {
-    debugStudioState.seed = Math.max(1, Math.round(Number(debugStudioSeedInput.value) || 1));
-    debugStudioState.studioPayload = (debugStudioPayloadInput.value || "{}").trim() || "{}";
-    const url = buildDebugStudioUrl();
-    window.open(url, "_blank", "noopener,noreferrer");
-  });
-
-  const copyDebugStudioUrlBtn = document.createElement("button");
-  copyDebugStudioUrlBtn.type = "button";
-  copyDebugStudioUrlBtn.textContent = "Copy Debug URL";
-  copyDebugStudioUrlBtn.style.cssText = BTN_STYLE_DOWNLOAD;
-  copyDebugStudioUrlBtn.addEventListener("click", async () => {
-    debugStudioState.seed = Math.max(1, Math.round(Number(debugStudioSeedInput.value) || 1));
-    debugStudioState.studioPayload = (debugStudioPayloadInput.value || "{}").trim() || "{}";
-    const url = buildDebugStudioUrl();
-    try {
-      await navigator.clipboard.writeText(url);
-      updateStatus("Hatch lab", "Debug studio URL copied.");
-    } catch (_error) {
-      updateStatus("Hatch lab", "Could not copy URL (clipboard blocked).");
-    }
-  });
-
   debugStudioActions.appendChild(reloadDebugStudioBtn);
-  debugStudioActions.appendChild(copyDebugStudioUrlBtn);
-  debugStudioActions.appendChild(openDebugStudioBtn);
 
   const debugSelectedDivider = document.createElement("div");
   debugSelectedDivider.style.cssText = "margin:12px 0 8px;padding-top:10px;border-top:1px dashed rgba(255,255,255,0.2);font-size:12px;color:#9aa7b7;";
@@ -4321,10 +4272,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
         : Number(selected.brightness) * 10;
       debugSelectedInfo.textContent = `Selected: ${selected.id} | brightness ${brightness.toFixed(1)}`;
       const bin = debugSelectedBinFromState(state);
-      if (Number.isInteger(bin)) {
-        selectedBrightnessBin = bin;
-        refreshBrightnessBinControls();
-      }
       const row = Number.isInteger(bin) ? (labState?.brightnessProfile?.bins?.[bin] || null) : null;
       debugModeSelect.value = row?.hatchMode || selected.hatchMode || "single";
       debugColorInput.value = row?.hatchColor || selected.hatchColor || "#111111";
@@ -4338,8 +4285,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   };
 
   debugStudioControls.appendChild(debugStudioSeedLabel);
-  debugStudioControls.appendChild(debugStudioPayloadLabel);
-  debugStudioControls.appendChild(debugStudioPayloadInput);
   debugStudioControls.appendChild(debugStudioActions);
   debugStudioControls.appendChild(debugSelectedDivider);
   debugStudioControls.appendChild(debugSelectedInfo);

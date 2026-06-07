@@ -26,6 +26,13 @@ noise.seed($fx.rand());
 const sp = new URLSearchParams(window.location.search)
 //  console.log(sp);
 
+const LEGACY_DEBUG_HATCHING_STUDIO = sp.get("debugHatchingStudio") === "1" || sp.get("debug") === "hatchingStudio";
+const EMBEDDED_DEBUG_HATCHING_STUDIO = sp.get("embeddedDebugStudio") === "1";
+if (LEGACY_DEBUG_HATCHING_STUDIO && !EMBEDDED_DEBUG_HATCHING_STUDIO) {
+  const target = `${window.location.origin}/camogli-3d.html`;
+  window.location.replace(target);
+}
+
 if (sp.get("zoom") === "1") {
   const link = document.querySelector('link[rel="stylesheet"]');
   if (link) link.href = "stylesZoomIn.css";
@@ -39,7 +46,7 @@ const DEBUG_FILLED_PATH = sp.get("debugFilledPath") === "1" || sp.get("debug") =
 const DEBUG_FILLED_PATH_PARAMS = sp.get("debugFilledPathParams") === "1" || sp.get("debug") === "filledPathParams";
 const DEBUG_SINGLE_CIRCLE = sp.get("debugSingleCircle") === "1";
 const DEBUG_COMPOSITION = false;
-const DEBUG_HATCHING_STUDIO = sp.get("debugHatchingStudio") === "1" || sp.get("debug") === "hatchingStudio";
+const DEBUG_HATCHING_STUDIO = LEGACY_DEBUG_HATCHING_STUDIO && EMBEDDED_DEBUG_HATCHING_STUDIO;
 if (DEBUG_GRID || DEBUG_CUBE || DEBUG_HATCHING || DEBUG_STROKE || DEBUG_FILLED_PATH || DEBUG_FILLED_PATH_PARAMS || DEBUG_SINGLE_CIRCLE || DEBUG_COMPOSITION || DEBUG_HATCHING_STUDIO) {
   TEST = true;
 }

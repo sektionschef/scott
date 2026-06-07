@@ -29,7 +29,7 @@ http://localhost:3301/noisy_paper_spike/svg_filter_playground.html
 3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
 
 
-debug hatching studio: http://localhost:3301/?debugHatchingStudio=1 - hatching studio (10 brightness rectangles)
+debug hatching studio: embedded inside camogli 3d studio (tab "Hatching Debug")
 debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1 ???
 
 #### remove
@@ -41,7 +41,7 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 
 ### URLs
 
-- Base screen: http://localhost:3301/?debugHatchingStudio=1
+- Base screen: use http://localhost:3301/camogli-3d.html and open Export Studio -> tab "Hatching Debug"
 
 ### Logic Summary
 
@@ -73,11 +73,11 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 - Clicking sides or changing slider values keeps the same visual family for that seed.
 - Use "Apply Seed" to jump to a specific seed.
 - Use "New Seed" (or "New Seed + Re-roll") to intentionally generate a new arrangement.
-- Seed and studio state are encoded in the URL and restored on reload.
+- Seed is controlled from the embedded debug panel and restored from studio state.
 
 ### Brightness Profiles (0-10 ... 90-100)
 
-- In `?debugHatchingStudio=1`, use:
+- In Export Studio -> tab "Hatching Debug", use:
   - `Save 0-100 Profile` to store the full studio setup plus the 10 brightness-bin overrides.
   - `Load 0-100 Profile` to restore the saved seed, global sliders, toggles, selected bin, and per-bin hatch settings after refresh.
 - Profiles are stored in browser localStorage under `camogli3d.hatchingBrightnessProfiles.v1`.
