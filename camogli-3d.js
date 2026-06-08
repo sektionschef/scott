@@ -4301,7 +4301,8 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   sceneSection.appendChild(appearanceAccordion.details);
   sceneSection.appendChild(presetAccordion.details);
   sceneSection.appendChild(actionsAccordion.details);
-  sceneSection.appendChild(debugStudioAccordion.details);
+  // Brightness Bins is the primary hatch-authoring surface.
+  // Keep the embedded Hatching Debug tab available for preview only.
 
   pane.appendChild(title);
   pane.appendChild(hint);

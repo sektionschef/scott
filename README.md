@@ -41,7 +41,9 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 
 ### URLs
 
-- Base screen: use http://localhost:3301/camogli-3d.html and open Export Studio -> tab "Hatching Debug"
+- Base screen: use http://localhost:3301/camogli-3d.html and open Export Studio
+- Primary controls: use "Brightness Bins" in the right sidebar (source of truth)
+- Optional: the "Hatching Debug" tab is for visual inspection only
 
 ### Logic Summary
 
@@ -77,9 +79,9 @@ Purpose: tune hatching behavior on a simplified cube projection before using sim
 
 ### Brightness Profiles (0-10 ... 90-100)
 
-- In Export Studio -> tab "Hatching Debug", use:
-  - `Save 0-100 Profile` to store the full studio setup plus the 10 brightness-bin overrides.
-  - `Load 0-100 Profile` to restore the saved seed, global sliders, toggles, selected bin, and per-bin hatch settings after refresh.
+- In Export Studio -> "Brightness Bins", use:
+  - `Save Brightness Bins` to store the 10 brightness-bin overrides.
+  - `Load Brightness Bins` to restore the saved per-bin hatch settings after refresh.
 - Profiles are stored in browser localStorage under `camogli3d.hatchingBrightnessProfiles.v1`.
 - `camogli-3d.html` export reads this profile automatically and applies bin overrides to face hatching in the exported SVG.
 
