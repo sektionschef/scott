@@ -330,10 +330,46 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+container.style.position = "relative";
+renderer.domElement.style.position = "relative";
+renderer.domElement.style.zIndex = "1";
 container.appendChild(renderer.domElement);
+
+const livePaperOverlaySvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+livePaperOverlaySvg.setAttribute("aria-hidden", "true");
+livePaperOverlaySvg.style.position = "absolute";
+livePaperOverlaySvg.style.left = "50%";
+livePaperOverlaySvg.style.top = "50%";
+livePaperOverlaySvg.style.transform = "translate(-50%, -50%)";
+livePaperOverlaySvg.style.pointerEvents = "none";
+livePaperOverlaySvg.style.zIndex = "2";
+livePaperOverlaySvg.style.opacity = "1";
+container.appendChild(livePaperOverlaySvg);
 
 let studioActive = false;
 let studioGeneration = 0;
+
+function ensureLivePaperOverlayAttached() {
+  if (!container.contains(livePaperOverlaySvg)) {
+    container.appendChild(livePaperOverlaySvg);
+  }
+}
+
+function renderLivePaperOverlay(frame = null) {
+  if (studioActive) {
+    livePaperOverlaySvg.style.display = "none";
+    return;
+  }
+  ensureLivePaperOverlayAttached();
+  const nextFrame = frame || computeCanvasFrame();
+  const paperBackground = buildPaperBackgroundForExport(nextFrame.width, nextFrame.height);
+  const paperTopOverlay = buildPaperTextureOverlay(paperBackground.content, paperBackground.defs);
+  livePaperOverlaySvg.style.display = paperTopOverlay ? "block" : "none";
+  livePaperOverlaySvg.setAttribute("viewBox", `0 0 ${nextFrame.width} ${nextFrame.height}`);
+  livePaperOverlaySvg.setAttribute("width", String(nextFrame.width));
+  livePaperOverlaySvg.setAttribute("height", String(nextFrame.height));
+  livePaperOverlaySvg.innerHTML = `<defs>${paperBackground.defs}</defs>${paperTopOverlay}`;
+}
 
 function applyCanvasFrame() {
   if (studioActive) return;
@@ -341,6 +377,7 @@ function applyCanvasFrame() {
   camera.aspect = CANVAS_ASPECT;
   camera.updateProjectionMatrix();
   renderer.setSize(frame.width, frame.height);
+  renderLivePaperOverlay(frame);
   renderer.render(scene, camera);
 }
 
@@ -394,6 +431,18 @@ const materials = {
   cubeLight: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0.0 }),
   wall: new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.98, metalness: 0.01 }),
 };
+
+function applyLivePaperMaterialColors() {
+  const paperPreset = readPaperBackgroundPresetFromStorage() || {};
+  const base = new THREE.Color(resolvePaperColor(paperPreset, "#d8d6ce"));
+  const darker = base.clone().offsetHSL(0, 0, -0.08);
+  const lighter = base.clone().offsetHSL(0, 0, 0.04);
+  materials.ground.color.copy(base);
+  materials.cube.color.copy(base);
+  materials.cubeDark.color.copy(darker);
+  materials.cubeLight.color.copy(lighter);
+  materials.wall.color.copy(base);
+}
 
 const sceneObjects = [];
 const cubeObjects = [];
@@ -596,6 +645,7 @@ function makeCube(index) {
 }
 
 function buildScene() {
+  applyLivePaperMaterialColors();
   window.clearTimeout(freezeTimeoutId);
   while (spawnTimeoutIds.length > 0) {
     window.clearTimeout(spawnTimeoutIds.pop());
@@ -638,6 +688,7 @@ function buildScene() {
   freezeFrame = false;
   physicsStartedAt = performance.now();
   simulationStartedAt = performance.now();
+  renderLivePaperOverlay();
   freezeTimeoutId = window.setTimeout(() => {
     if (!freezeFrame) {
       freezeFrame = true;
@@ -1902,12 +1953,12 @@ function buildHatchLayerSvg(layer, rect, style, shortSide) {
   return "";
 }
 
-function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, brightnessNormalization = null, brightnessProfile = null) {
+function buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, brightnessNormalization = null, brightnessProfile = null, cubeFillColorOverride = null) {
   const polygonPoints = pointsToSvgString(polygon);
   const style = buildStudioFaceHatchStyle(face, polygon, null, brightnessNormalization, null, brightnessProfile);
   const hatchBuild = buildStudioHatchSvgForFacePolygon(face, polygon, style);
   const hatchSvg = hatchBuild.svg;
-  const cubeFillColor = sanitizeSvgColor(exportVisualSettings.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
+  const cubeFillColor = sanitizeSvgColor(cubeFillColorOverride, "") || sanitizeSvgColor(exportVisualSettings.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
   const totalPrimarySegments = hatchBuild.debug.singleSegments + hatchBuild.debug.crossSegments;
   const totalFallbackSegments = hatchBuild.debug.singleFallback + hatchBuild.debug.crossFallback;
   const totalSegments = totalPrimarySegments + totalFallbackSegments;
@@ -2240,6 +2291,41 @@ const LAB_DEFAULT_VISUAL_OPTIONS = {
   noiseSeed: exportVisualSettings.noiseSeed,
 };
 
+function resolvePaperColor(paperOptions, fallback = "#d8d6ce") {
+  return sanitizeHexColor(paperOptions?.paperColor, fallback);
+}
+
+function resolveCubeFillColorFromPaper(paperOptions, fallback = EXPORT_CUBE_FILL_COLOR) {
+  const paperColor = resolvePaperColor(paperOptions, "");
+  if (paperColor) {
+    return paperColor;
+  }
+  return sanitizeSvgColor(fallback, "#d8d6ce");
+}
+
+function stripPaperBaseLayer(paperContent = "") {
+  if (typeof paperContent !== "string" || !paperContent.trim()) {
+    return "";
+  }
+  return paperContent
+    .replace(/<rect\b(?:(?!filter=)[^>])*\/?>/i, "")
+    .replace(/<rect\b(?:(?!filter=)[^>])*><\/rect>/i, "");
+}
+
+function buildPaperTextureOverlay(paperContent = "", defs = "") {
+  const textureOnlyContent = stripPaperBaseLayer(paperContent);
+  if (!textureOnlyContent.trim()) {
+    return "";
+  }
+  const hasDirtyFilter = typeof defs === "string" && defs.includes("id=\"paperDirtyObjectFilter\"");
+  const overlayContent = textureOnlyContent.replace("id=\"paperTextureRoot\"", "id=\"paperTextureOverlayContent\"");
+  const directPass = `<g opacity="0.82">${overlayContent}</g>`;
+  const filteredPass = hasDirtyFilter
+    ? `<g opacity="0.9" filter="url(#paperDirtyObjectFilter)">${overlayContent}</g>`
+    : "";
+  return `<g id="paperTextureOverlay" pointer-events="none">${directPass}${filteredPass}</g>`;
+}
+
 function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onSelectFace = null) {
   const hatchSeed = sanitizeIntegerSeed(labGlobals?.hatchSeed, hatchExportSettings.seed);
   withSeededMathRandom(hatchSeed, () => {
@@ -2256,7 +2342,10 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
     const brightnessProfile = labState?.brightnessProfile || null;
     const studioState = labState?.studioState;
     const sideById = new Map((studioState?.sides || []).map((side) => [side.id, side]));
-    const paperBackground = buildPaperBackgroundForLab(width, height, labState?.paperOptions || {});
+    const paperOptions = labState?.paperOptions || {};
+    const paperBackground = buildPaperBackgroundForLab(width, height, paperOptions);
+    const cubeFillColor = resolveCubeFillColorFromPaper(paperOptions, EXPORT_CUBE_FILL_COLOR);
+    const paperTopOverlay = buildPaperTextureOverlay(paperBackground.content, paperBackground.defs);
 
     svgNode.setAttribute("viewBox", viewBox || `0 0 ${width} ${height}`);
     svgNode.setAttribute("width", String(width));
@@ -2265,7 +2354,7 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
     const frameParts = buildSvgFrameParts(width, height, "labPreviewFrame", labState?.visualOptions || exportVisualSettings);
     const noiseParts = buildSvgNoiseLayer(width, height, "labPreview", labState?.visualOptions || exportVisualSettings);
 
-    let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">${paperBackground.content}`;
+    let html = `<defs>${paperBackground.defs}${frameParts.defs}${noiseParts.defs}</defs>${frameParts.background}${frameParts.before}<g id="paperAgedArtwork">${paperBackground.content}`;
 
     if (floorShadowPolygons.length === 0 && cubeShadowPolygons.length === 0) {
       for (const shadow of shadowPolygons) {
@@ -2318,14 +2407,13 @@ function renderSvgHatch3DPreview(svgNode, parsedScene, labGlobals, labState, onS
       const style = buildStudioFaceHatchStyle(face, face.polygon, labGlobals, brightnessNormalization, null, brightnessProfile);
       const { svg: hatchSvg } = buildStudioHatchSvgForFacePolygon(face, face.polygon, style);
       const pts = face.polygon.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-      const cubeFillColor = sanitizeSvgColor(labState?.visualOptions?.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
       const isSelected = Boolean(studioState && studioState.selectedFaceId === faceId);
       const highlightStroke = isSelected ? "#d6a65f" : "none";
       const highlightWidth = isSelected ? "2.2" : "0";
       html += `<g data-face-id="${faceId}"><polygon points="${pts}" fill="${cubeFillColor}" stroke="none" />${hatchSvg}<polygon points="${pts}" fill="none" stroke="${highlightStroke}" stroke-width="${highlightWidth}" pointer-events="none" /><polygon points="${pts}" fill="rgba(0,0,0,0.001)" stroke="none" data-face-hit="1" data-face-id="${faceId}" style="cursor:pointer;" /></g>`;
     }
 
-    html += `<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" opacity="0.42" filter="url(#paperDirtyObjectFilter)" style="mix-blend-mode:multiply" pointer-events="none" /></g>${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
+    html += `${paperTopOverlay}</g>${noiseParts.content}${frameParts.after}${frameParts.overlay}`;
 
     svgNode.innerHTML = html;
 
@@ -3347,7 +3435,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
     const visualDefaultsFromSearch = {
       frameColor: sanitizeHexColor(searchParams.get("frameColor"), LAB_DEFAULT_VISUAL_OPTIONS.frameColor),
       backgroundColor: sanitizeHexColor(searchParams.get("bgColor"), LAB_DEFAULT_VISUAL_OPTIONS.backgroundColor),
-      cubeFillColor: sanitizeSvgColor(searchParams.get("cubeFillColor"), LAB_DEFAULT_VISUAL_OPTIONS.cubeFillColor),
     };
 
     try {
@@ -3431,7 +3518,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
 
   let frameColorInput = null;
   let backgroundColorInput = null;
-  let cubeFillColorInput = null;
 
   function applyPresetSnapshot(preset, rerender = true) {
     if (!preset) {
@@ -3469,7 +3555,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
         ...labState.visualOptions,
         frameColor: sanitizeHexColor(preset.visualOptions.frameColor, labState.visualOptions.frameColor),
         backgroundColor: sanitizeHexColor(preset.visualOptions.backgroundColor, labState.visualOptions.backgroundColor),
-        cubeFillColor: sanitizeSvgColor(preset.visualOptions.cubeFillColor, labState.visualOptions.cubeFillColor),
         noiseEnabled: Boolean(preset.visualOptions.noiseEnabled),
         noiseOpacity: Math.min(0.6, Math.max(0, Number(preset.visualOptions.noiseOpacity ?? labState.visualOptions.noiseOpacity))),
         noiseFrequency: Math.min(3, Math.max(0.05, Number(preset.visualOptions.noiseFrequency ?? labState.visualOptions.noiseFrequency))),
@@ -3478,7 +3563,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
       };
       exportVisualSettings.frameColor = labState.visualOptions.frameColor;
       exportVisualSettings.backgroundColor = labState.visualOptions.backgroundColor;
-      exportVisualSettings.cubeFillColor = labState.visualOptions.cubeFillColor;
       exportVisualSettings.noiseEnabled = labState.visualOptions.noiseEnabled;
       exportVisualSettings.noiseOpacity = labState.visualOptions.noiseOpacity;
       exportVisualSettings.noiseFrequency = labState.visualOptions.noiseFrequency;
@@ -3490,9 +3574,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
       }
       if (backgroundColorInput) {
         backgroundColorInput.value = labState.visualOptions.backgroundColor;
-      }
-      if (cubeFillColorInput) {
-        cubeFillColorInput.value = labState.visualOptions.cubeFillColor;
       }
     }
     if (preset.studioPayload && labState.studioState) {
@@ -3697,7 +3778,6 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
       `circleJitter=${gv.circleJitter.toFixed(2)}`,
       `frameColor=${encodeURIComponent(labState.visualOptions.frameColor)}`,
       `bgColor=${encodeURIComponent(labState.visualOptions.backgroundColor)}`,
-      `cubeFillColor=${encodeURIComponent(labState.visualOptions.cubeFillColor)}`,
       `noiseEnabled=${labState.visualOptions.noiseEnabled ? "1" : "0"}`,
       `noiseOpacity=${Number(labState.visualOptions.noiseOpacity).toFixed(3)}`,
       `noiseFrequency=${Number(labState.visualOptions.noiseFrequency).toFixed(3)}`,
@@ -3926,34 +4006,8 @@ function initSvgHatchingLab(initialParsedScene = null, noShadows = false) {
   backgroundColorWrap.appendChild(backgroundColorLabel);
   backgroundColorWrap.appendChild(backgroundColorInput);
 
-  const cubeFillColorWrap = document.createElement("div");
-  cubeFillColorWrap.style.marginBottom = "10px";
-  const cubeFillColorLabel = document.createElement("label");
-  cubeFillColorLabel.style.cssText = "display:block;font-size:12px;color:#d2dbe7;margin-bottom:4px;";
-  cubeFillColorLabel.textContent = "Cube Fill Color (supports rgba)";
-  cubeFillColorInput = document.createElement("input");
-  cubeFillColorInput.type = "text";
-  cubeFillColorInput.value = sanitizeSvgColor(labState.visualOptions.cubeFillColor, EXPORT_CUBE_FILL_COLOR);
-  cubeFillColorInput.placeholder = "rgba(217, 217, 217, 0.7)";
-  cubeFillColorInput.style.width = "100%";
-  cubeFillColorInput.addEventListener("input", () => {
-    const sanitized = sanitizeSvgColor(cubeFillColorInput.value, "");
-    if (!sanitized) {
-      cubeFillColorInput.setCustomValidity("Use #RRGGBB, #RRGGBBAA, rgb(), or rgba().");
-      cubeFillColorInput.reportValidity();
-      return;
-    }
-    cubeFillColorInput.setCustomValidity("");
-    labState.visualOptions.cubeFillColor = sanitized;
-    exportVisualSettings.cubeFillColor = labState.visualOptions.cubeFillColor;
-    if (labParsedScene) renderSvgHatch3DPreview(svgNode, labParsedScene, labGlobals, labState, onSelectFace);
-  });
-  cubeFillColorWrap.appendChild(cubeFillColorLabel);
-  cubeFillColorWrap.appendChild(cubeFillColorInput);
-
   appearanceSection.appendChild(frameColorWrap);
   appearanceSection.appendChild(backgroundColorWrap);
-  appearanceSection.appendChild(cubeFillColorWrap);
 
   function createAppearanceSlider(labelText, key, min, max, step, digits = 2) {
     const wrap = document.createElement("div");
@@ -5338,6 +5392,8 @@ function buildSceneSvgExport() {
   const faces = clipFacesByScreenOcclusion(rawFaces);
   const faceBrightnessNormalization = buildFaceBrightnessNormalization(faces);
   const brightnessProfile = readExportBrightnessProfileFromStorage();
+  const paperPreset = readPaperBackgroundPresetFromStorage() || {};
+  const cubeFillColor = resolveCubeFillColorFromPaper(paperPreset, EXPORT_CUBE_FILL_COLOR);
   const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
   syncShadowSettingsFromUi();
   const rasterShadows = shadowExportSettings.useRaster ? buildExperimentalRasterShadowExtraction(width, height, faces) : null;
@@ -5347,7 +5403,7 @@ function buildSceneSvgExport() {
   const hatchDebugFaces = [];
   faces.forEach((face, faceIndex) => {
     (face.clippedScreenPolygons || []).forEach((polygon, polygonIndex) => {
-      const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, faceBrightnessNormalization, brightnessProfile);
+      const hatchedFace = buildHatchedFacePolygonSvg(face, polygon, faceIndex, polygonIndex, width, height, faceBrightnessNormalization, brightnessProfile, cubeFillColor);
       clipDefs.push(hatchedFace.defs);
       hatchedFaces.push(hatchedFace.content);
       if (hatchedFace.debug) {
@@ -5459,6 +5515,7 @@ function buildSceneSvgExport() {
     : "";
 
   const paperBackground = buildPaperBackgroundForExport(width, height);
+  const paperTopOverlay = buildPaperTextureOverlay(paperBackground.content, paperBackground.defs);
   const frameParts = buildSvgFrameParts(width, height, "exportFrame", exportVisualSettings);
   const noiseParts = buildSvgNoiseLayer(width, height, "export", exportVisualSettings);
 
@@ -5466,14 +5523,14 @@ function buildSceneSvgExport() {
 <defs>${paperBackground.defs}\n${clipDefs.join("\n")}\n${frameParts.defs}\n${noiseParts.defs}</defs>
 ${frameParts.background}
 ${frameParts.before}
-<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">
+<g id="paperAgedArtwork">
 ${paperBackground.content}
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${hatchedFaces.join("\n")}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
-<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" opacity="0.42" filter="url(#paperDirtyObjectFilter)" style="mix-blend-mode:multiply" pointer-events="none" />
+${paperTopOverlay}
 </g>
 ${noiseParts.content}
 ${frameParts.after}
@@ -5802,10 +5859,12 @@ function buildGrayscaleSceneSvgExport() {
   const shadows = clipShadowsByFaceOcclusion(rawShadows, faces);
   syncShadowSettingsFromUi();
   const rasterShadows = shadowExportSettings.useRaster ? buildExperimentalRasterShadowExtraction(width, height, faces) : null;
+  const paperPreset = readPaperBackgroundPresetFromStorage() || {};
+  const cubeFillColor = resolveCubeFillColorFromPaper(paperPreset, EXPORT_CUBE_FILL_COLOR);
 
   const facePolygons = faces.flatMap((face) => (
     (face.clippedScreenPolygons || []).map((polygon) => (
-      `<polygon points="${pointsToSvgString(polygon)}" fill="${sanitizeSvgColor(exportVisualSettings.cubeFillColor, EXPORT_CUBE_FILL_COLOR)}" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
+      `<polygon points="${pointsToSvgString(polygon)}" fill="${cubeFillColor}" stroke="#151515" stroke-opacity="0.36" stroke-width="0.85" data-layer="face" data-cube="${face.cubeIndex}" data-face="${face.faceName}" data-brightness="${face.brightness.toFixed(4)}" data-shadow="${face.shadowStrength.toFixed(4)}" data-tone="${faceToneFromLight(face).toFixed(4)}" />`
     ))
   )).join("\n");
 
@@ -5866,6 +5925,7 @@ function buildGrayscaleSceneSvgExport() {
   }));
 
   const paperBackground = buildPaperBackgroundForExport(width, height);
+  const paperTopOverlay = buildPaperTextureOverlay(paperBackground.content, paperBackground.defs);
   const frameParts = buildSvgFrameParts(width, height, "grayscaleFrame", exportVisualSettings);
   const noiseParts = buildSvgNoiseLayer(width, height, "grayscale", exportVisualSettings);
 
@@ -5873,14 +5933,14 @@ function buildGrayscaleSceneSvgExport() {
 <defs>${paperBackground.defs}\n${frameParts.defs}\n${noiseParts.defs}</defs>
 ${frameParts.background}
 ${frameParts.before}
-<g id="paperAgedArtwork" filter="url(#paperDirtyObjectFilter)">
+<g id="paperAgedArtwork">
 ${paperBackground.content}
 ${shadowDebugFillLayer}
 <g id="dropShadows">${shadowPolygons}</g>
 <g id="dropShadowsDarkest">${darkestShadowPolygons}</g>
 <g id="cubeFaces">${facePolygons}</g>
 <g id="faceShadows">${faceShadowPolygons}</g>
-<rect x="0" y="0" width="${width}" height="${height}" fill="#ffffff" opacity="0.42" filter="url(#paperDirtyObjectFilter)" style="mix-blend-mode:multiply" pointer-events="none" />
+${paperTopOverlay}
 </g>
 ${noiseParts.content}
 ${frameParts.after}
