@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SVG Filter Noise Playground</title>
+        <style>
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #101114;
+  color: #f2f2f2;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  min-height: 100vh;
+}
+
+aside {
+  padding: 18px;
+  background: #181a20;
+  border-right: 1px solid #2c2f38;
+  overflow-y: auto;
+}
+
+main {
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+h1 {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+.group {
+  border: 1px solid #30333d;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
+  background: #20232b;
+}
+
+.group h2 {
+  font-size: 14px;
+  margin: 0 0 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.control {
+  margin: 10px 0;
+}
+
+label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #cfd2dc;
+  margin-bottom: 4px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+select,
+button {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #3a3d48;
+  background: #121319;
+  color: #f2f2f2;
+}
+
+button {
+  cursor: pointer;
+}
+
+.toggle {
+  width: auto;
+}
+
+svg {
+  width: min(95vw, 1000px);
+  height: auto;
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  background: #050608;
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #aeb3c2;
+}
+</style>
+    </head>
+    <body>
+
+        <aside>
+            <h1>SVG Noise Playground</h1>
+            <p class="hint">
+                Enable/disable stages and tune the filter graph live.
+                Macro noise shapes the composition, mid noise adds veins, micro
+                noise adds grain.
+            </p>
+
+            <div class="group">
+                <h2>Filter stages</h2>
+
+                <label>
+                    Macro noise
+                    <input class="toggle" id="enableMacro" type="checkbox"
+                        checked>
+                </label>
+
+                <label>
+                    Mid noise
+                    <input class="toggle" id="enableMid" type="checkbox"
+                        checked>
+                </label>
+
+                <label>
+                    Micro grain
+                    <input class="toggle" id="enableMicro" type="checkbox"
+                        checked>
+                </label>
+
+                <label>
+                    Displacement
+                    <input class="toggle" id="enableDisplacement"
+                        type="checkbox" checked>
+                </label>
+
+                <label>
+                    Lighting
+                    <input class="toggle" id="enableLighting" type="checkbox"
+                        checked>
+                </label>
+            </div>
+
+            <div class="group">
+                <h2>Macro noise</h2>
+                <div class="control">
+                    <label>Frequency <span id="macroFreqValue"></span></label>
+                    <input id="macroFreq" type="range" min="0.001" max="0.03"
+                        step="0.001" value="0.008">
+                </div>
+                <div class="control">
+                    <label>Octaves <span id="macroOctavesValue"></span></label>
+                    <input id="macroOctaves" type="range" min="1" max="8"
+                        step="1" value="4">
+                </div>
+            </div>
+
+            <div class="group">
+                <h2>Mid noise</h2>
+                <div class="control">
+                    <label>Frequency <span id="midFreqValue"></span></label>
+                    <input id="midFreq" type="range" min="0.01" max="0.12"
+                        step="0.005" value="0.045">
+                </div>
+                <div class="control">
+                    <label>Octaves <span id="midOctavesValue"></span></label>
+                    <input id="midOctaves" type="range" min="1" max="6" step="1"
+                        value="3">
+                </div>
+            </div>
+
+            <div class="group">
+                <h2>Micro grain</h2>
+                <div class="control">
+                    <label>Frequency <span id="microFreqValue"></span></label>
+                    <input id="microFreq" type="range" min="0.08" max="0.5"
+                        step="0.01" value="0.18">
+                </div>
+                <div class="control">
+                    <label>Opacity <span id="microOpacityValue"></span></label>
+                    <input id="microOpacity" type="range" min="0" max="1"
+                        step="0.01" value="0.35">
+                </div>
+            </div>
+
+            <div class="group">
+                <h2>Displacement</h2>
+                <div class="control">
+                    <label>Scale <span
+                            id="displacementScaleValue"></span></label>
+                    <input id="displacementScale" type="range" min="0" max="180"
+                        step="1" value="65">
+                </div>
+                <div class="control">
+                    <label>Blend mode</label>
+                    <select id="noiseBlend">
+                        <option value="multiply" selected>multiply</option>
+                        <option value="screen">screen</option>
+                        <option value="overlay">overlay</option>
+                        <option value="darken">darken</option>
+                        <option value="lighten">lighten</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="group">
+                <h2>Lighting</h2>
+                <div class="control">
+                    <label>Surface scale <span
+                            id="surfaceScaleValue"></span></label>
+                    <input id="surfaceScale" type="range" min="0" max="30"
+                        step="1" value="10">
+                </div>
+                <div class="control">
+                    <label>Azimuth <span id="azimuthValue"></span></label>
+                    <input id="azimuth" type="range" min="0" max="360" step="1"
+                        value="235">
+                </div>
+                <div class="control">
+                    <label>Elevation <span id="elevationValue"></span></label>
+                    <input id="elevation" type="range" min="0" max="90" step="1"
+                        value="45">
+                </div>
+            </div>
+
+            <div class="group">
+                <button id="randomize">Randomize seeds</button>
+            </div>
+        </aside>
+
+        <main>
+            <svg viewBox="0 0 1000 700" role="img"
+                aria-label="Interactive SVG filter noise artwork">
+                <defs>
+                    <lineargradient id="bgGradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#102542" />
+                        <stop offset="45%" stop-color="#0f8b8d" />
+                        <stop offset="100%" stop-color="#f2d492" />
+                    </lineargradient>
+
+                    <filter id="noiseFilter" x="-20%" y="-20%" width="140%"
+                        height="140%">
+                        <feturbulence id="macroNoise"
+                            type="fractalNoise"
+                            baseFrequency="0.008"
+                            numOctaves="4"
+                            seed="12"
+                            result="macroNoise" />
+
+                        <feturbulence id="midNoise"
+                            type="fractalNoise"
+                            baseFrequency="0.045"
+                            numOctaves="3"
+                            seed="22"
+                            result="midNoise" />
+
+                        <feturbulence id="microNoise"
+                            type="fractalNoise"
+                            baseFrequency="0.18"
+                            numOctaves="2"
+                            seed="33"
+                            result="microNoise" />
+
+                        <feblend id="macroMidBlend"
+                            in="macroNoise"
+                            in2="midNoise"
+                            mode="multiply"
+                            result="macroMidNoise" />
+
+                        <fecomponenttransfer id="microOpacityTransfer"
+                            in="microNoise"
+                            result="microWeighted">
+                            <fefunca type="table" tableValues="0 0.35" />
+                        </fecomponenttransfer>
+
+                        <feblend id="combinedBlend"
+                            in="macroMidNoise"
+                            in2="microWeighted"
+                            mode="screen"
+                            result="combinedNoise" />
+
+                        <fedisplacementmap id="displacement"
+                            in="SourceGraphic"
+                            in2="combinedNoise"
+                            scale="65"
+                            xChannelSelector="R"
+                            yChannelSelector="G"
+                            result="distorted" />
+
+                        <fecolormatrix
+                            in="combinedNoise"
+                            type="saturate"
+                            values="0"
+                            result="heightMap" />
+
+                        <fediffuselighting id="lighting"
+                            in="heightMap"
+                            lighting-color="white"
+                            surfaceScale="10"
+                            result="lightingResult">
+                            <fedistantlight id="light"
+                                azimuth="235"
+                                elevation="45" />
+                        </fediffuselighting>
+
+                        <feblend id="finalBlend"
+                            in="distorted"
+                            in2="lightingResult"
+                            mode="overlay"
+                            result="finalImage" />
+                    </filter>
+                </defs>
+
+                <rect width="1000" height="700" fill="url(#bgGradient)"
+                    filter="url(#noiseFilter)" />
+
+                <circle cx="240" cy="210" r="130" fill="#ffffff" opacity="0.16"
+                    filter="url(#noiseFilter)" />
+                <circle cx="760" cy="470" r="180" fill="#000000" opacity="0.18"
+                    filter="url(#noiseFilter)" />
+            </svg>
+        </main>
+
+        <script>
+const ids = [
+  "enableMacro", "enableMid", "enableMicro", "enableDisplacement", "enableLighting",
+  "macroFreq", "macroOctaves",
+  "midFreq", "midOctaves",
+  "microFreq", "microOpacity",
+  "displacementScale", "noiseBlend",
+  "surfaceScale", "azimuth", "elevation"
+];
+
+const el = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+
+const macroNoise = document.getElementById("macroNoise");
+const midNoise = document.getElementById("midNoise");
+const microNoise = document.getElementById("microNoise");
+const macroMidBlend = document.getElementById("macroMidBlend");
+const combinedBlend = document.getElementById("combinedBlend");
+const displacement = document.getElementById("displacement");
+const lighting = document.getElementById("lighting");
+const light = document.getElementById("light");
+const finalBlend = document.getElementById("finalBlend");
+const alphaFunc = document.querySelector("#microOpacityTransfer feFuncA");
+
+function value(id) {
+  return el[id].value;
+}
+
+function enabled(id) {
+  return el[id].checked;
+}
+
+function label(id, text) {
+  document.getElementById(id + "Value").textContent = text;
+}
+
+function update() {
+  macroNoise.setAttribute("baseFrequency", enabled("enableMacro") ? value("macroFreq") : "0");
+  macroNoise.setAttribute("numOctaves", value("macroOctaves"));
+
+  midNoise.setAttribute("baseFrequency", enabled("enableMid") ? value("midFreq") : "0");
+  midNoise.setAttribute("numOctaves", value("midOctaves"));
+
+  microNoise.setAttribute("baseFrequency", enabled("enableMicro") ? value("microFreq") : "0");
+  alphaFunc.setAttribute("tableValues", "0 " + (enabled("enableMicro") ? value("microOpacity") : "0"));
+
+  macroMidBlend.setAttribute("mode", value("noiseBlend"));
+  combinedBlend.setAttribute("mode", enabled("enableMicro") ? "screen" : "normal");
+
+  displacement.setAttribute("scale", enabled("enableDisplacement") ? value("displacementScale") : "0");
+
+  lighting.setAttribute("surfaceScale", enabled("enableLighting") ? value("surfaceScale") : "0");
+  light.setAttribute("azimuth", value("azimuth"));
+  light.setAttribute("elevation", value("elevation"));
+  finalBlend.setAttribute("mode", enabled("enableLighting") ? "overlay" : "normal");
+
+  label("macroFreq", value("macroFreq"));
+  label("macroOctaves", value("macroOctaves"));
+  label("midFreq", value("midFreq"));
+  label("midOctaves", value("midOctaves"));
+  label("microFreq", value("microFreq"));
+  label("microOpacity", value("microOpacity"));
+  label("displacementScale", value("displacementScale"));
+  label("surfaceScale", value("surfaceScale"));
+  label("azimuth", value("azimuth"));
+  label("elevation", value("elevation"));
+}
+
+ids.forEach(id => el[id].addEventListener("input", update));
+ids.forEach(id => el[id].addEventListener("change", update));
+
+document.getElementById("randomize").addEventListener("click", () => {
+  macroNoise.setAttribute("seed", Math.floor(Math.random() * 1000));
+  midNoise.setAttribute("seed", Math.floor(Math.random() * 1000));
+  microNoise.setAttribute("seed", Math.floor(Math.random() * 1000));
+});
+
+update();
+</script>
+
+    </body>
+</html>
