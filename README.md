@@ -1,308 +1,186 @@
-# Scott
+# Scott (Camogli) - Project Guide
 
- start with: `python3 -m http.server 3301`
+This repository contains a browser-first generative art codebase with two active runtimes:
 
-## Paper Texture Debug View
+1. `index.html` + `index.js`: original 2D SVG stroke system (fxhash-style global scripts).
+2. `camogli-3d.html` + `camogli-3d.js`: modern 3D composition and SVG export studio (ES modules with Three.js + cannon-es).
 
-- URL: http://localhost:3301/debugPaperBackground.html
-- Start server: `python3 -m http.server 3301`
-- New files:
-  - `paperBackgroundTexture.js` reusable SVG paper/noise/dirt generator
-  - `debugPaperBackground.html` standalone visual lab with sliders and toggles
-  - `debugPaperBackground.js` UI bindings + render loop + SVG download
+The goal of this README is fast onboarding for human collaborators and coding agents (for example Claude Code).
 
-### another paper studio
-http://localhost:3301/noisy_paper_spike/svg_filter_playground.html 
+## Quick Start
 
-## todos
+### Local server
 
-* different hatching sttyles
+Serve the project root (no build step required):
 
-* check 3d generation
-  * Three.js scene: cube, plane, camera, light, shadows.
-  * Physics: use cannon-es or rapier to drop the cube.
-  * Freeze frame: stop animation when the cube rests.
-  * Extract 2D face coordinates: project cube vertices through the camera.
-  * Create flat image: generate SVG polygons for visible cube faces + projected shadow.
- 
-
-3D preview: http://localhost:3301/camogli-3d.html - with `python3 -m http.server 3301`
-
-
-debug hatching studio: embedded inside camogli 3d studio (tab "Hatching Debug")
-debug SVG hatching lab: http://localhost:3301/camogli-3d.html?debugSvgHatching=1 ???
-
-#### remove
-debug strokes boundaries: http://localhost:3301/?debugStroke=1 
-
-## Hatching Studio
-
-Purpose: tune hatching behavior on a simplified cube projection before using similar logic in export.
-
-### URLs
-
-- Base screen: use http://localhost:3301/camogli-3d.html and open Export Studio
-- Primary controls: use "Brightness Bins" in the right sidebar (source of truth)
-- Optional: the "Hatching Debug" tab is for visual inspection only
-
-### Logic Summary
-
-1. Build 10 vertical rectangles side-by-side in a single strip.
-2. Each rectangle maps to one brightness bucket from `0.5` to `9.5`.
-3. For each polygon:
-  - Compute principal axis from point covariance.
-  - Compute perpendicular direction to that principal axis.
-  - Draw direction helpers only when "Debug direction" is enabled.
-  - Principal axis is green and perpendicular direction arrow is red.
-4. Create hatch candidates by sweeping parallel lines through the polygon and intersecting with polygon edges.
-5. Convert each valid segment into a real filledPath stroke (`filledPath.js`) with bend/width/jitter.
-6. No clip mask is used for hatch containment. Strokes are drawn from geometrically clipped segment endpoints.
-7. Optional labels (`C?-? b=?`) can be enabled and are placed below each rectangle in gray.
-
-### Side Brightness Strategy
-
-- Brightness scale is inverted from earlier experiments:
-  - `0.0` = bright
-  - `1.0` = dark
-- Default hatch recipe:
-  - `brightness <= 0.5` -> single hatching
-  - `brightness > 0.5` -> cross hatching
-- Faces use `fill="none"`; perceived brightness is achieved by hatch strategy plus spacing density.
-
-### Seed + Continuity
-
-- The studio now uses a fixed numeric seed for deterministic geometry and stroke randomness.
-- Clicking sides or changing slider values keeps the same visual family for that seed.
-- Use "Apply Seed" to jump to a specific seed.
-- Use "New Seed" (or "New Seed + Re-roll") to intentionally generate a new arrangement.
-- Seed is controlled from the embedded debug panel and restored from studio state.
-
-### Brightness Profiles (0-10 ... 90-100)
-
-- In Export Studio -> "Brightness Bins", use:
-  - `Save Brightness Bins` to store the 10 brightness-bin overrides.
-  - `Load Brightness Bins` to restore the saved per-bin hatch settings after refresh.
-- Profiles are stored in browser localStorage under `camogli3d.hatchingBrightnessProfiles.v1`.
-- `camogli-3d.html` export reads this profile automatically and applies bin overrides to face hatching in the exported SVG.
-
-### Debug Direction Toggle
-
-- "Debug direction" is OFF by default.
-- When enabled, each side shows:
-  - principal axis (green)
-  - perpendicular direction arrow (red)
-
-### Side Labels Toggle
-
-- "Side labels" is OFF by default.
-- When enabled, each side shows a gray label below the rectangle, e.g. `C1-B b=0.15`.
-- Label visibility is stored in URL/studio state and restored on reload.
-
-### Parameters (query string)
-
-- `hatchWidth`: filledPath stroke width.
-- `hatchJitter`: endpoint jitter before curve construction.
-- `hatchBend`: long-edge bend factor in swingspitz profile.
-- `hatchSpacing`: global spacing multiplier for hatch sweep distance.
-- `hatchEdgeInset`: absolute trim from polygon boundaries.
-- `hatchTrimRatio`: how much of each hatch stroke is cut off at both ends as a fraction of its length. Higher values shorten the visible part of each stroke and create more breathing room at the edges.
-- `hatchMinVisible`: the minimum remaining stroke length allowed after trimming. If a stroke becomes shorter than this threshold, it is dropped completely.
-
-### Tuning Notes
-
-- If ends look washed out: lower `hatchJitter`, `hatchTrimRatio`, and `hatchEdgeInset`.
-- If too many short strokes disappear: lower `hatchMinVisible`.
-- If the face looks too dark/light: adjust `hatchSpacing`.
-
-
-## Hatch Studio
-
-http://localhost:3301/?debugFilledPath=1 
-
-Shape: 4 corners (A, B, C, D)
-
-The stroke is not a line — it's a filled polygon with curved edges. In swingspitz profile (currently active):
-
-A — near start, offset slightly inward (−70% of π)
-B — near end, slightly inward from one side
-C — near end, slightly inward from the other side
-D — near start, slightly inward
-So A/D are the "back" of the stroke (start side), B/C are the "tip" (end side). The whole shape is very narrow — distanceWidth = 1 pixel.
-
-Path: A → B → C → D → A (4 cubic Bézier curves)
-Each segment uses two control points (cAB/cBA, cBC/cCB, cCD/cDC, cDA/cAD) to give each edge a slight curve.
-
-Where randomness is injected:
-
-Variable	Where	Effect
-cat = 0.75	jitterPoint(start, cat) and jitterPoint(end, cat)	Wiggles both endpoints ±0.75px
-bogal = gaussianRandAdj(0, 0.03)	cAB, cBA, cCD, cDC control point angles	Slightly bends the long edges of the stroke
-The control points for the tip (cBC/cCB) and back (cDA/cAD) use fixed angle offsets (±4% and ±82% of π), so the pointy tip and blunt tail are deterministic in shape but move with the jittered endpoints.
-
-randomPath() exists but is commented out — it would additionally push all control points outward from the center.
-
-## generated documentation
-
-### Project purpose
-
-This repository is a browser-based generative SVG artwork for fxhash. The piece builds a geometric tile blueprint, generates many candidate stroke vectors, clips/splits those vectors against polygon faces, and renders the accepted segments as filled, pencil-like marks with paper and grain overlays.
-
-### Runtime pipeline
-
-1. `index.html` loads all scripts in global scope and starts `index.js`.
-2. `index.js` seeds randomness with `$fx.rand()`, sets canvas format and constants, and initializes scene groups/filters.
-3. `blueprintNew.js` creates repeated polygon tile faces (A-H) and returns shape data by group.
-4. `shapes.js` transforms blueprint data into ordered `loopMaterial` used for path containment checks.
-5. `grid.js` creates striped box regions and generates candidate stroke vectors per stripe.
-6. `strokeSystem.js` processes candidate paths and delegates split/full checks to `containedPath.js`.
-7. `containedPath.js` checks point-in-polygon and edge intersections, splitting paths when needed.
-8. `filledPath.js` draws accepted path segments as organic filled Bezier forms.
-9. Filter layers (`paperFilter.js`, `pencilFilter.js`, `noiseDotFilter.js`, `paperLightFilter.js`) add texture and final surface look.
-
-### Visible layer order
-
-When rendering in normal mode (`TEST = false`), the visual stack is:
-
-1. `backgroundRect` with `filterPaper`
-2. `groupB` strokes with `pencilFilter`
-3. `rectDot` overlay from `noiseDotFilter`
-4. `paperLightContainer` overlay from `paperLightFilter`
-
-This order is controlled in `index.js` by `showBackground()`, `showGroupB()`, `new noiseDotFilter()`, and `paperLight.showLayer()`.
-
-### File responsibilities
-
-- `index.js`: composition setup, object wiring, and render orchestration.
-- `blueprintNew.js`: core geometric blueprint and per-face metadata (`density`, `shapeMaxLoop`, `fillColor`).
-- `shapes.js`: flattening/sorting geometry into loop order.
-- `grid.js`: box grid, stripe categorization, and stroke candidate generation.
-- `strokeSystem.js`: iterative path solving and draw dispatch.
-- `containedPath.js`: geometry tests (inside/split/full) and path splitting.
-- `filledPath.js`: stroke appearance profile (`vanilla`/`swingspitz`) and final path drawing.
-- `utilsSVG.js`: vector math, helpers, metadata tags, SVG export.
-- `*.test.js`: manual debug/test routines toggled by `TEST` in `index.js` (not an automated test runner).
-
-### Main tuning controls
-
-- In `index.js`:
-  - `RESOLUTIONBOXCOUNT`: effective scene resolution.
-  - `STRIPEHEIGHT`: stripe band height.
-  - `MARGINRELATIVE`: drawing margin.
-  - Grid config (`stepCountRes`, `vectorMagnitude`, `angleRadiansStart`, `angleRadiansGain`).
-- In `blueprintNew.js`:
-  - Tile proportions (`heightAB`, offsets) and face-level `density`.
-- In `containedPath.js`:
-  - `minimalFactor`, `uncertaintyShift` for clipping behavior.
-- In filter files:
-  - Turbulence frequencies, blend modes, and overlay opacity.
-
-### Export and interaction
-
-- Press `E` to export the current SVG (`saveSvg(...)` in `index.js`).
-- fxhash metadata tags are set via `setTagsHTML(...)`.
-
-## Filter
-// *result* ist wichtig bei filtern, um auf die einelnen Ebenen referenzieren zu können
-
-Aktuell ein Paperfilter für Grundstruktr als Hintergrund. Papierknitter, Grain und Dirt kommen dann auf den Hintergrund und das gezeichnete Material. Mit Opacity, damit sich das alles gewichten lässt.
-
-* grid - creating the boxes, irrespective to the format chosen
-* blueprint - desigend coordinates of the shapes defined in count of boxes. here the design of the shapes can be changed.
-* shapes - redefining the blueprint to create a dict with ordering of elements
-* strokesystem
-* contained path
-* filledp path
-
-## library for merging polygons
-
-https://www.npmjs.com/package/polygon-clipping - from: https://stackoverflow.com/questions/33502767/merging-intersecting-polygons-to-single-polygon 
-
-
-
-
-# fx(hash) boilerplate
-
-A boilerplate for the creation of generative art that can be published on fx(hash).
-
-## Introduction
-
-This repository contains the most simple and recommended setup to publish a generative artwork on fxhash. You can do modifications to the existing files, create a zip that contains all of them and upload it on fxhash.xyz.
-
-This are the hard facts of the required setup:
-- A html entry point called `index.html`
-- The `@fxhash/project-sdk` as a local script file included in the html entry point called `./fxhash.js`
-- A script that generates the generative art included in the html entry point called `index.js`
-
-Anything else from there is optional (even this README 🙃). The boilerplate contains a .css file but this is theoretically not needed if you don't want to set any css.
-For a better developer experience we are offering the `@fxhash/cli` that will help you to create your generative artwork. 
-
-The rest of the README will actually speak about the usage of the `@fxhash/cli`. 
-
-## Prerequisites
-
-- `node >= 18.0.0`
-- `npm >= 9.0.0`
-
-That's it you are ready to develop your artwork with the `@fxhash/cli`
-
-### Creating a new project
-
-You probably think: "Why we start with creating a project if I am using the boilerplate?". Thats because you don't need to clone the boilerplate to start a project. You can create a project by using the `@fxhash/cli`. 
-
-```
-npx fxhash create
+```bash
+python3 -m http.server 3301
 ```
 
-This command will prompt you with the dialog to create a new project. Give your project a name and choose the "simple" project template. You just created your first project. We will speak about the "ejected" template later.
+### Primary URLs
 
-> The first time you run npx fxhash <command> npm is actually installing the `@fxhash/cli` package globally on your computer.
+- Main 2D renderer: `http://localhost:3301/`
+- 3D studio: `http://localhost:3301/camogli-3d.html`
+- Paper texture lab: `http://localhost:3301/debugPaperBackground.html`
+- Noisy paper spike playgrounds:
+  - `http://localhost:3301/noisy_paper_spike/svg_filter_playground.html`
+  - `http://localhost:3301/noisy_paper_spike/svg_filter_playground_2.html`
+  - `http://localhost:3301/noisy_paper_spike/svg_filter_playground_3.html`
 
-### Starting the development environment
+## Tech Stack
 
-The whole fx(lens) environment is exposed via the `@fxhash/cli`. So you just have to run the following command in the root of your project.
+- Plain JavaScript in browser.
+- SVG-heavy rendering and filter composition.
+- Deterministic randomness via fxhash (`$fx.rand`) in main paths.
+- No bundler for the main 2D runtime.
+- ES modules + vendor folders for the 3D runtime.
 
-```
-npx fxhash dev
-```
+## Project Modes At A Glance
 
-This will open up the fx(lens) environment in your browser. In the backend two servers are running: 
-- `http://localhost:3300` serves fx(lens) you can connect to a token
-- `http://localhost:3301` serves your project with live reloading
+### A) 2D generative renderer (`index.html` / `index.js`)
 
-### Building your project
+Pipeline summary:
 
-```
-npx fxhash build
-```
+1. Build geometric blueprint (`BlueprintNew`) for 8 groups.
+2. Convert blueprint polygons into ordered shape loops (`Shapes`).
+3. Build stripe/grid sampling and stroke candidates (`Grid`).
+4. Clip/split paths against polygons (`strokeSystem` + `containedPath`).
+5. Draw each accepted segment as a filled ribbon stroke (`filledPath`).
+6. Composite paper/pencil/noise/light filters.
 
-Will build your project and create an `upload.zip` that you can use to publish your artwork on fxhash.xyz
+Output is an SVG in the page (`#svgNode`) and can be exported with `E` key.
 
-## Advanced usage: Ejected Project
+### B) 3D composition + export studio (`camogli-3d.html` / `camogli-3d.js`)
 
-When you created your first project with `fxhash create` you saw that there is a second project template you can choose: "ejected"
+- Uses Three.js + cannon-es.
+- Lets you settle cube stacks, tune export controls, and export layered SVG variants.
+- Supports shadow extraction modes, hatching controls, and preset persistence in localStorage.
 
-If you want to use a package manager to install dependencies for your project or customize how webpack builds your project, the "ejected" template provides all those functionalities. 
+## Source Map (Important Files)
 
-The structure of the ejected template will look like this:
-```
-├─ package.json
-├─ webpack.dev.config.js
-├─ webpack.prod.config.js
-├─ src/
-  ├─ index.html
-  ├─ index.js
-  ├─ fxhash.js
-  ├─ LICENSE
-```
+### Core 2D runtime
 
-You can still use all the functionality the `@fxhash/cli` provides, but e.g. customize the webpack configuration for the `fxhash dev`(webpack.dev.config.js) and `fxhash build` (webpack.prod.config.js) commands.
+- `index.html`: global script load order and app entry.
+- `index.js`: runtime constants, debug switches, orchestration, export hotkey (`E`).
+- `blueprintNew.js`: main geometric tile definitions (A-H faces, densities, order).
+- `blueprint.js`: legacy blueprint variant.
+- `shapes.js`: converts blueprint data to `loopMaterial` ordering.
+- `grid.js`: generates stripe boxes and candidate stroke vectors.
+- `strokeSystem.js`: repeatedly classifies/splits candidates until drawable segments remain.
+- `containedPath.js`: point-in-polygon checks and edge intersection splitting logic.
+- `filledPath.js`: filled ribbon stroke geometry (currently `swingspitz` profile).
+- `circlePath.js`: filled/outlined organic circle primitive (used in hatching debug modes).
+- `utilsSVG.js`: math helpers, random helpers, polygon tests, SVG export helpers.
 
-### Going from simple to ejected
+### Filters and paper surface
 
-Even if you started your project with a simple template you can go all "ejected" by running
+- `paperFilter.js`: base paper relief texture filter.
+- `pencilFilter.js`: displacement/noise distortion for drawn marks.
+- `noiseDotFilter.js`: grain/specular noise overlay layer.
+- `paperLightFilter.js`: paper light + grain blend overlay.
+- `paperBackgroundTexture.js`: reusable, configurable paper background generator.
+- `debugPaperBackground.html` + `debugPaperBackground.js`: full UI lab for paper tuning.
 
-```
-fxhash eject
-```
+### 3D studio and related files
 
-This will transform your simple project structure into the ejected project structure. But be aware this change is not reversable via the `@fxhash/cli`.
+- `camogli-3d.html`: studio shell + controls UI.
+- `camogli-3d.js`: physics, camera, controls, shadow/hatching export logic.
+- `debugCubeAxes.js`: debugging helpers for cube principal axes/hatching direction.
+- `vendor/three/*`: Three.js runtime modules.
+- `vendor/cannon-es/*`: physics engine.
+
+### Test/debug scripts (browser-driven)
+
+These are not automated test-runner tests; they are helper functions used by debug flags:
+
+- `blueprint.test.js`
+- `blueprintNew.test.js`
+- `grid.test.js`
+- `shapes.test.js`
+- `strokeSystemContainedPath.test.js`
+- `filledPath.test.js`
+- `debugHatching.js`
+- `debugComposition.js`
+
+## Debug Entry Points (2D Runtime)
+
+Set query params on `index.html`:
+
+- `?debugGrid=1` or `?debug=grid`
+- `?debugCube=1` or `?debug=cube`
+- `?debugStroke=1` or `?debug=stroke`
+- `?debugFilledPath=1` or `?debug=filledPath`
+- `?debugFilledPathParams=1` or `?debug=filledPathParams`
+- `?debugSingleCircle=1`
+- `?debugHatchingStudio=1&embeddedDebugStudio=1`
+- `?zoom=1` swaps to `stylesZoomIn.css`
+
+Notes:
+
+- If any debug mode is active, `TEST = true` in `index.js` and normal render path is bypassed.
+- Legacy hatching debug URL redirects to `camogli-3d.html` unless embedded flag is also set.
+
+## Rendering/Layer Order (Normal 2D Mode)
+
+When `TEST == false`, visual stack is:
+
+1. Background rect with paper filter (`filterPaper`).
+2. Main stroke group (`groupB`) with `pencilFilter`.
+3. Dot noise overlay (`noiseDotFilter`, `rectDot`).
+4. Paper light overlay (`paperLightFilter`).
+
+## Runtime Characteristics and Conventions
+
+- Global scope architecture: many files rely on globals (`svgNode`, `defs`, constants from `index.js`).
+- Script order matters in `index.html`; modules are not imported/exported in 2D runtime.
+- Randomness:
+  - Main flow sets `Math.random = $fx.rand` and seeds `noise` with `$fx.rand()`.
+  - Some debug paths use custom seeded PRNG helpers.
+- Geometry assumptions are pixel-space and often depend on `SHORTSIDE`, `RESOLUTIONBOXCOUNT`, `STRIPEHEIGHT`.
+
+## Where To Change What
+
+- Change overall composition density/character:
+  - `index.js` grid configs (`stepCountRes`, `vectorMagnitude`, `angleRadiansGain`, etc.)
+  - `blueprintNew.js` face `density` and point layouts.
+- Change path clipping/splitting behavior:
+  - `containedPath.js` (`uncertaintyShift`, `minimalFactor`, intersection logic).
+- Change stroke look:
+  - `filledPath.js` profile geometry (`swingspitz`) and jitter/bend/width behavior.
+- Change paper and finishing look:
+  - `paperFilter.js`, `paperLightFilter.js`, `noiseDotFilter.js`, `pencilFilter.js`, `paperBackgroundTexture.js`.
+- Change 3D export behavior and controls:
+  - `camogli-3d.js`.
+
+## Packaging and Mirrors
+
+- `fxhash-camogli-package/` is a packaging-oriented copy of the 3D setup and utilities.
+- Keep this folder in sync when shipping fxhash-ready artifacts for that path.
+
+## Known Oddities / Legacy Notes
+
+- `pointInPolygon.js` currently exists but is empty; active `pointInPolygon` implementation is in `utilsSVG.js`.
+- Several legacy or archive files remain (`index_bak.js`, `strokeSystem_old.js`, `strokeSplitter copy.js`, etc.).
+- Main runtime uses class names with lowercase starts in places (for example `strokeSystem`, `containedPath`), which is intentional legacy style.
+
+## How To Verify Changes Quickly
+
+1. Start local server.
+2. Open `index.html` for baseline render.
+3. Open at least one debug mode relevant to your change (for example `?debugFilledPath=1`).
+4. Open `camogli-3d.html` if changes touched 3D/export/hatching.
+5. Use `E` in 2D runtime to verify SVG export still works.
+
+## AI Agent Onboarding Tips
+
+If you are an automated coding agent entering this repo:
+
+1. Read `index.js` first for global constants and mode switches.
+2. Read `index.html` to understand script load order dependencies.
+3. Treat `*.test.js` files as manual debug harnesses, not CI tests.
+4. Avoid introducing module syntax into the 2D runtime unless you migrate all dependent files together.
+5. Prefer minimal, localized edits because many files share implicit globals.
+
+## License
+
+See `LICENSE`.
