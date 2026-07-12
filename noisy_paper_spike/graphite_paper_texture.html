@@ -1,0 +1,179 @@
+<!-- npx live-server . --port=8000 --watch=noisy_paper_spike --no-browser -->
+<!-- http://localhost:8000/noisy_paper_spike/graphite_paper_texture.html -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Graphite Paper Texture</title>
+
+        <style>
+        body {
+            margin: 0;
+            background: #eef0ee;
+            overflow: hidden;
+        }
+
+        svg {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+    </head>
+    <body>
+
+        <svg id="paper" viewBox="0 0 1200 800">
+
+            <defs>
+
+                <filter id="paperMottle" x="-12%" y="-12%" width="124%"
+                    height="124%" color-interpolation-filters="sRGB">
+                    <feturbulence
+                        type="fractalNoise"
+                        baseFrequency="0.011 0.013"
+                        numOctaves="4"
+                        seed="7"
+                        result="mottleNoise" />
+
+                    <fecolormatrix
+                        in="mottleNoise"
+                        type="saturate"
+                        values="0"
+                        result="monoMottle" />
+
+                    <fecomponenttransfer in="monoMottle">
+                        <fefuncr type="linear" slope="0.16" intercept="0.86" />
+                        <fefuncg type="linear" slope="0.16" intercept="0.86" />
+                        <fefuncb type="linear" slope="0.16" intercept="0.86" />
+                    </fecomponenttransfer>
+                </filter>
+
+                <filter id="paperGrain" x="-12%" y="-12%" width="124%"
+                    height="124%" color-interpolation-filters="sRGB">
+                    <feturbulence
+                        type="fractalNoise"
+                        baseFrequency="0.28 0.30"
+                        numOctaves="3"
+                        seed="19"
+                        result="fineGrain" />
+
+                    <feturbulence
+                        type="fractalNoise"
+                        baseFrequency="0.012 0.014"
+                        numOctaves="3"
+                        seed="31"
+                        result="grainMottle" />
+
+                    <feblend
+                        in="fineGrain"
+                        in2="grainMottle"
+                        mode="multiply"
+                        result="combinedGrain" />
+
+                    <fecolormatrix
+                        in="combinedGrain"
+                        type="saturate"
+                        values="0"
+                        result="monoGrain" />
+
+                    <fecomponenttransfer in="monoGrain">
+                        <fefuncr type="linear" slope="0.55" intercept="0.60" />
+                        <fefuncg type="linear" slope="0.52" intercept="0.61" />
+                        <fefuncb type="linear" slope="0.50" intercept="0.62" />
+                    </fecomponenttransfer>
+                </filter>
+
+                <filter id="paperTooth" x="-12%" y="-12%" width="124%"
+                    height="124%" color-interpolation-filters="sRGB">
+                    <feturbulence
+                        type="fractalNoise"
+                        baseFrequency="0.55 0.60"
+                        numOctaves="3"
+                        seed="53"
+                        result="toothNoise" />
+
+                    <fecolormatrix
+                        in="toothNoise"
+                        type="matrix"
+                        values="0 0 0 0 0
+                                0 0 0 0 0
+                                0 0 0 0 0
+                                0.9 0.9 0.9 0 -0.32"
+                        result="toothAlpha" />
+
+                    <fecomponenttransfer in="toothAlpha" result="softToothAlpha">
+                        <fefunca type="linear" slope="0.8" intercept="0" />
+                    </fecomponenttransfer>
+
+                    <feflood
+                        flood-color="#1c2422"
+                        flood-opacity="0.55"
+                        result="toothColor" />
+
+                    <fecomposite
+                        in="toothColor"
+                        in2="softToothAlpha"
+                        operator="in" />
+                </filter>
+
+            </defs>
+
+            <rect
+                data-paper-layer
+                x="-125"
+                y="-83.333"
+                width="1450"
+                height="966.666"
+                fill="#f6f7f5"
+                filter="url(#paperMottle)" />
+
+            <rect
+                data-paper-layer
+                x="-125"
+                y="-83.333"
+                width="1450"
+                height="966.666"
+                fill="#f6f7f5"
+                filter="url(#paperGrain)" />
+
+            <rect
+                data-paper-layer
+                x="-125"
+                y="-83.333"
+                width="1450"
+                height="966.666"
+                fill="#000000"
+                opacity="0.32"
+                filter="url(#paperTooth)" />
+
+        </svg>
+
+        <script>
+            const svg = document.getElementById("paper");
+            const paperLayers = document.querySelectorAll("[data-paper-layer]");
+
+            function resizePaper() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+                const overscan = 80;
+                const scale = 1 + (overscan * 2) / Math.min(width, height);
+                const rectWidth = width * scale;
+                const rectHeight = height * scale;
+
+                svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+
+                paperLayers.forEach((layer) => {
+                    layer.setAttribute("x", (width - rectWidth) / 2);
+                    layer.setAttribute("y", (height - rectHeight) / 2);
+                    layer.setAttribute("width", rectWidth);
+                    layer.setAttribute("height", rectHeight);
+                });
+            }
+
+            resizePaper();
+            window.addEventListener("resize", resizePaper);
+        </script>
+
+    </body>
+</html>

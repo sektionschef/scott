@@ -27,19 +27,6 @@
 
             <defs>
 
-                <radialGradient id="edgeTint" cx="50%" cy="47%" r="72%">
-                    <stop offset="0%" stop-color="#ffffff"
-                        stop-opacity="0" />
-                    <stop offset="42%" stop-color="#ffffff"
-                        stop-opacity="0" />
-                    <stop offset="66%" stop-color="#b4c7c2"
-                        stop-opacity="0.14" />
-                    <stop offset="84%" stop-color="#5d817a"
-                        stop-opacity="0.38" />
-                    <stop offset="100%" stop-color="#0f4b47"
-                        stop-opacity="0.74" />
-                </radialGradient>
-
                 <filter id="paperFiber" x="-12%" y="-12%" width="124%"
                     height="124%" color-interpolation-filters="sRGB">
                     <feturbulence
@@ -93,7 +80,7 @@
                                 0.78 0.78 0.78 0 -1.08"
                         result="stainAlpha" />
 
-                    <feGaussianBlur
+                    <fegaussianblur
                         in="stainAlpha"
                         stdDeviation="0.65"
                         result="softStainAlpha" />
@@ -103,7 +90,7 @@
                         flood-opacity="0.62"
                         result="stainColor" />
 
-                    <feComposite
+                    <fecomposite
                         in="stainColor"
                         in2="softStainAlpha"
                         operator="in" />
@@ -128,7 +115,8 @@
                         result="gritAlpha" />
 
                     <fecomponenttransfer in="gritAlpha" result="hardGritAlpha">
-                        <fefunca type="discrete" tableValues="0 0.08 0.24 0.82" />
+                        <fefunca type="discrete"
+                            tableValues="0 0.08 0.24 0.82" />
                     </fecomponenttransfer>
 
                     <feflood
@@ -136,7 +124,7 @@
                         flood-opacity="0.66"
                         result="gritColor" />
 
-                    <feComposite
+                    <fecomposite
                         in="gritColor"
                         in2="hardGritAlpha"
                         operator="in" />
@@ -160,8 +148,10 @@
                                 1.8 1.8 1.8 0 -2.36"
                         result="fleckAlpha" />
 
-                    <fecomponenttransfer in="fleckAlpha" result="hardFleckAlpha">
-                        <fefunca type="table" tableValues="0 0.06 0.18 0.42 0.86" />
+                    <fecomponenttransfer in="fleckAlpha"
+                        result="hardFleckAlpha">
+                        <fefunca type="table"
+                            tableValues="0 0.06 0.18 0.42 0.86" />
                     </fecomponenttransfer>
 
                     <feflood
@@ -169,7 +159,7 @@
                         flood-opacity="0.58"
                         result="fleckColor" />
 
-                    <feComposite
+                    <fecomposite
                         in="fleckColor"
                         in2="hardFleckAlpha"
                         operator="in" />
@@ -202,82 +192,10 @@
                         flood-opacity="0.55"
                         result="dustColor" />
 
-                    <feComposite
+                    <fecomposite
                         in="dustColor"
                         in2="softDustAlpha"
                         operator="in" />
-                </filter>
-
-                <filter id="edgeGrime" x="-16%" y="-16%" width="132%"
-                    height="132%" color-interpolation-filters="sRGB">
-                    <feturbulence
-                        type="fractalNoise"
-                        baseFrequency="0.010 0.020"
-                        numOctaves="6"
-                        seed="8"
-                        result="edgeNoise" />
-
-                    <fedisplacementmap
-                        in="SourceGraphic"
-                        in2="edgeNoise"
-                        scale="55"
-                        xChannelSelector="R"
-                        yChannelSelector="G"
-                        result="warpedEdge" />
-
-                    <fecolormatrix
-                        in="edgeNoise"
-                        type="matrix"
-                        values="0 0 0 0 0
-                                0 0 0 0 0
-                                0 0 0 0 0
-                                0.9 0.9 0.9 0 -0.92"
-                        result="edgeBreakup" />
-
-                    <feComposite
-                        in="warpedEdge"
-                        in2="edgeBreakup"
-                        operator="in"
-                        result="brokenEdge" />
-
-                    <feGaussianBlur
-                        in="brokenEdge"
-                        stdDeviation="0.45"
-                        result="softBrokenEdge" />
-
-                    <feMerge>
-                        <feMergeNode in="SourceGraphic" />
-                        <feMergeNode in="softBrokenEdge" />
-                    </feMerge>
-                </filter>
-
-                <filter id="scratchBreakup" x="-8%" y="-8%" width="116%"
-                    height="116%" color-interpolation-filters="sRGB">
-                    <feturbulence
-                        type="fractalNoise"
-                        baseFrequency="0.030 0.70"
-                        numOctaves="3"
-                        seed="92"
-                        result="scratchNoise" />
-
-                    <fecolormatrix
-                        in="scratchNoise"
-                        type="matrix"
-                        values="0 0 0 0 0
-                                0 0 0 0 0
-                                0 0 0 0 0
-                                1.8 1.8 1.8 0 -1.55"
-                        result="scratchMask" />
-
-                    <feComposite
-                        in="SourceGraphic"
-                        in2="scratchMask"
-                        operator="in"
-                        result="brokenScratch" />
-
-                    <feGaussianBlur
-                        in="brokenScratch"
-                        stdDeviation="0.18" />
                 </filter>
 
             </defs>
@@ -322,15 +240,6 @@
                 filter="url(#charcoalFlecks)" />
 
             <rect
-                id="edgeLayer"
-                x="0"
-                y="0"
-                width="1200"
-                height="800"
-                fill="url(#edgeTint)"
-                filter="url(#edgeGrime)" />
-
-            <rect
                 data-paper-layer
                 x="-125"
                 y="-83.333"
@@ -340,31 +249,11 @@
                 opacity="0.68"
                 filter="url(#fineGrit)" />
 
-            <g id="scratchLayer" filter="url(#scratchBreakup)"
-                stroke-linecap="round" fill="none">
-                <path d="M87 25 C150 41 245 37 329 55"
-                    stroke="#315754" stroke-width="1.25" opacity="0.18" />
-                <path d="M165 155 C201 179 242 208 282 260"
-                    stroke="#14211f" stroke-width="1.1" opacity="0.12" />
-                <path d="M470 91 C498 138 502 186 485 232"
-                    stroke="#111817" stroke-width="0.9" opacity="0.12" />
-                <path d="M660 323 C730 309 805 325 870 310"
-                    stroke="#1e3130" stroke-width="1.2" opacity="0.10" />
-                <path d="M1015 98 C1058 130 1093 171 1118 223"
-                    stroke="#335f5b" stroke-width="1" opacity="0.16" />
-                <path d="M74 604 C142 555 176 508 220 440"
-                    stroke="#295551" stroke-width="1.3" opacity="0.19" />
-                <path d="M914 718 C978 650 1037 608 1116 572"
-                    stroke="#172624" stroke-width="1.4" opacity="0.13" />
-            </g>
-
         </svg>
 
         <script>
             const svg = document.getElementById("paper");
             const paperLayers = document.querySelectorAll("[data-paper-layer]");
-            const edgeLayer = document.getElementById("edgeLayer");
-            const scratchLayer = document.getElementById("scratchLayer");
 
             function resizePaper() {
                 const width = window.innerWidth;
@@ -382,14 +271,6 @@
                     layer.setAttribute("width", rectWidth);
                     layer.setAttribute("height", rectHeight);
                 });
-
-                edgeLayer.setAttribute("width", width);
-                edgeLayer.setAttribute("height", height);
-
-                scratchLayer.setAttribute(
-                    "transform",
-                    `scale(${width / 1200} ${height / 800})`
-                );
             }
 
             resizePaper();
