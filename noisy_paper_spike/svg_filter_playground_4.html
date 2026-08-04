@@ -1,0 +1,947 @@
+<!-- npx live-server . --port=8000 --watch=noisy_paper_spike --no-browser -->
+<!-- http://localhost:8000/noisy_paper_spike/svg_filter_playground_4.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SVG Noise Playground 4 — Domain Warping</title>
+    <style>
+:root {
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #101114;
+  color: #f2f2f2;
+  display: grid;
+  grid-template-columns: 330px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+aside {
+  padding: 16px;
+  background: #181a20;
+  border-right: 1px solid #2c2f38;
+  overflow-y: auto;
+}
+
+main {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 12px;
+  padding: 16px;
+  min-width: 0;
+  min-height: 0;
+}
+
+h1 {
+  font-size: 18px;
+  margin: 0 0 10px;
+}
+
+.hint {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #aeb3c2;
+  margin: 0 0 14px;
+}
+
+.group {
+  border: 1px solid #30333d;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  background: #20232b;
+}
+
+.group h2 {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9fa6b8;
+  margin: 0 0 8px;
+}
+
+.control {
+  margin: 8px 0;
+}
+
+label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #cfd2dc;
+  margin-bottom: 3px;
+}
+
+label .val {
+  color: #7fd1c4;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+select,
+button {
+  width: 100%;
+  padding: 7px;
+  border-radius: 8px;
+  border: 1px solid #3a3d48;
+  background: #121319;
+  color: #f2f2f2;
+  font: inherit;
+  font-size: 12px;
+}
+
+button {
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+button:hover {
+  border-color: #7fd1c4;
+}
+
+.row label.inline {
+  align-items: center;
+}
+
+.row input[type="checkbox"] {
+  width: auto;
+}
+
+#stage {
+  min-height: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #050608;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+#stage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#thumbs {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+#thumbs figure {
+  margin: 0;
+}
+
+#thumbs svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: #050608;
+}
+
+#thumbs figcaption {
+  font-size: 11px;
+  color: #8d93a3;
+  margin-top: 4px;
+  text-align: center;
+}
+
+#thumbs.hidden {
+  display: none;
+}
+</style>
+  </head>
+  <body>
+
+    <aside>
+      <h1>Domain Warped Noise</h1>
+      <p class="hint">
+        Grey-tone noise built by warping one turbulence field with
+        another (<code>feDisplacementMap</code>), twice, then modulating
+        the result with a third field and folding it through a transfer
+        curve. Surface stages (weave, grain, flecks, relief, edge grime)
+        sit on top. Everything stays greyscale — the luma is pushed into
+        all three channels after each mixing stage.
+        Presets are also linkable: <code>?preset=canvas-scan</code>.
+      </p>
+
+      <div class="group">
+        <h2>Preset</h2>
+        <div class="control">
+          <select id="preset"></select>
+        </div>
+      </div>
+
+      <div id="panel"></div>
+
+      <div class="group">
+        <button id="randomize">Randomize seeds (R)</button>
+        <button id="copyFilter">Copy filter markup</button>
+      </div>
+    </aside>
+
+    <main>
+      <div id="stage">
+        <svg id="preview" viewBox="0 0 1200 800"
+          preserveAspectRatio="xMidYMid slice"
+          role="img" aria-label="Domain warped greyscale noise">
+          <defs id="previewDefs"></defs>
+          <rect id="previewRect" x="0" y="0" width="1200" height="800"
+            fill="#808080" filter="url(#warpNoise)" />
+        </svg>
+      </div>
+
+      <div id="thumbs"></div>
+    </main>
+
+    <script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+/* ---------------------------------------------------------------- controls */
+
+const CONTROLS = [
+    { group: "Base pattern", key: "baseType", label: "Type", type: "select",
+      value: "fractalNoise", options: ["turbulence", "fractalNoise"] },
+    { group: "Base pattern", key: "baseFreqX", label: "Frequency X", type: "range",
+      min: 0.002, max: 0.08, step: 0.001, value: 0.03 },
+    { group: "Base pattern", key: "baseFreqY", label: "Frequency Y", type: "range",
+      min: 0.002, max: 0.08, step: 0.001, value: 0.005 },
+    { group: "Base pattern", key: "baseOct", label: "Octaves", type: "range",
+      min: 1, max: 8, step: 1, value: 8 },
+
+    { group: "Warp 1 (coarse field)", key: "warpAFreq", label: "Field frequency", type: "range",
+      min: 0.0005, max: 0.04, step: 0.0005, value: 0.02 },
+    { group: "Warp 1 (coarse field)", key: "warpAOct", label: "Field octaves", type: "range",
+      min: 1, max: 6, step: 1, value: 3 },
+    { group: "Warp 1 (coarse field)", key: "warp1Scale", label: "Warp amount", type: "range",
+      min: 0, max: 500, step: 1, value: 327 },
+
+    { group: "Warp 2 (fine field)", key: "warp2Source", label: "Field", type: "select",
+      value: "iterated",
+      options: [
+          { value: "fieldB", label: "plain field B" },
+          { value: "iterated", label: "field B warped by A (iterated)" }
+      ] },
+    { group: "Warp 2 (fine field)", key: "warpBFreq", label: "Field frequency", type: "range",
+      min: 0.002, max: 0.06, step: 0.001, value: 0.058 },
+    { group: "Warp 2 (fine field)", key: "warpBOct", label: "Field octaves", type: "range",
+      min: 1, max: 6, step: 1, value: 2 },
+    { group: "Warp 2 (fine field)", key: "warp2Scale", label: "Warp amount", type: "range",
+      min: 0, max: 400, step: 1, value: 200 },
+
+    { group: "Modulation", key: "modMode", label: "Mode", type: "select",
+      value: "multiply",
+      options: ["multiply", "screen", "overlay", "difference", "darken", "lighten"] },
+    { group: "Modulation", key: "modFreq", label: "Modulator frequency", type: "range",
+      min: 0.001, max: 0.05, step: 0.001, value: 0.01 },
+    { group: "Modulation", key: "modOct", label: "Modulator octaves", type: "range",
+      min: 1, max: 6, step: 1, value: 2 },
+    { group: "Modulation", key: "modWarp", label: "Warp modulator", type: "range",
+      min: 0, max: 400, step: 1, value: 268 },
+    { group: "Modulation", key: "modAmount", label: "Mix", type: "range",
+      min: 0, max: 1, step: 0.01, value: 0.49 },
+
+    { group: "Shaping", key: "contour", label: "Transfer curve", type: "select",
+      value: "ridged",
+      options: [
+          { value: "smooth", label: "smooth (identity)" },
+          { value: "ridged", label: "ridged (single fold)" },
+          { value: "folded", label: "folded (contour bands)" },
+          { value: "lines", label: "lines (thin contours)" },
+          { value: "terraced", label: "terraced (discrete steps)" }
+      ] },
+    { group: "Shaping", key: "contourDetail", label: "Folds / steps", type: "range",
+      min: 1, max: 8, step: 1, value: 2 },
+    { group: "Shaping", key: "contrast", label: "Contrast", type: "range",
+      min: 0.2, max: 3, step: 0.05, value: 0.8 },
+    { group: "Shaping", key: "brightness", label: "Brightness", type: "range",
+      min: -0.5, max: 1, step: 0.01, value: 0.3 },
+    { group: "Shaping", key: "gamma", label: "Gamma", type: "range",
+      min: 0.4, max: 2.5, step: 0.05, value: 0.4 },
+    { group: "Shaping", key: "blur", label: "Soften", type: "range",
+      min: 0, max: 4, step: 0.1, value: 0.4 },
+
+    { group: "Weave", key: "weaveAmount", label: "Amount", type: "range",
+      min: 0, max: 0.5, step: 0.01, value: 0 },
+    { group: "Weave", key: "weaveFreq", label: "Thread density", type: "range",
+      min: 0.1, max: 0.8, step: 0.01, value: 0.42 },
+    { group: "Weave", key: "weaveSlow", label: "Thread wander", type: "range",
+      min: 0.002, max: 0.05, step: 0.001, value: 0.008 },
+    { group: "Weave", key: "weaveBlend", label: "Cross mode", type: "select",
+      value: "screen", options: ["screen", "multiply", "darken", "lighten"] },
+
+    { group: "Grain", key: "grainType", label: "Type", type: "select",
+      value: "fractalNoise", options: ["fractalNoise", "turbulence"] },
+    { group: "Grain", key: "grainFreq", label: "Frequency", type: "range",
+      min: 0.1, max: 1.2, step: 0.01, value: 0.74 },
+    { group: "Grain", key: "grainOct", label: "Octaves", type: "range",
+      min: 1, max: 3, step: 1, value: 2 },
+    { group: "Grain", key: "grainAmount", label: "Amount", type: "range",
+      min: 0, max: 0.6, step: 0.01, value: 0.47 },
+
+    { group: "Flecks", key: "fleckStrength", label: "Strength", type: "range",
+      min: 0, max: 1, step: 0.01, value: 0 },
+    { group: "Flecks", key: "fleckFreq", label: "Frequency", type: "range",
+      min: 0.05, max: 0.8, step: 0.01, value: 0.35 },
+    { group: "Flecks", key: "fleckThreshold", label: "Threshold (sparser →)", type: "range",
+      min: 0.3, max: 0.9, step: 0.005, value: 0.675 },
+    { group: "Flecks", key: "fleckStretch", label: "Stretch (→ scratches)", type: "range",
+      min: 1, max: 40, step: 1, value: 1 },
+    { group: "Flecks", key: "fleckCurve", label: "Curve", type: "range",
+      min: 0, max: 60, step: 1, value: 0 },
+    { group: "Flecks", key: "fleckCluster", label: "Clustering", type: "range",
+      min: 0, max: 1, step: 0.01, value: 0 },
+
+    { group: "Edge grime", key: "edgeStrength", label: "Strength", type: "range",
+      min: 0, max: 0.8, step: 0.01, value: 0 },
+    { group: "Edge grime", key: "edgeInset", label: "Inset", type: "range",
+      min: 0, max: 60, step: 1, value: 2 },
+    { group: "Edge grime", key: "edgeSoft", label: "Softness", type: "range",
+      min: 0, max: 30, step: 0.5, value: 2 },
+    { group: "Edge grime", key: "edgeRagged", label: "Raggedness", type: "range",
+      min: 0, max: 60, step: 1, value: 3 },
+
+    { group: "Relief", key: "relief", label: "Enable lighting", type: "checkbox",
+      value: false },
+    { group: "Relief", key: "surfaceScale", label: "Surface scale", type: "range",
+      min: 0, max: 40, step: 1, value: 12 },
+    { group: "Relief", key: "azimuth", label: "Azimuth", type: "range",
+      min: 0, max: 360, step: 1, value: 225 },
+    { group: "Relief", key: "elevation", label: "Elevation", type: "range",
+      min: 0, max: 90, step: 1, value: 55 },
+
+    { group: "View", key: "showStages", label: "Stage previews", type: "checkbox",
+      value: true }
+];
+
+const SEED_KEYS = [
+    "seedBase", "seedWarpA", "seedWarpB", "seedMod", "seedGrain",
+    "seedWeave", "seedFleck"
+];
+
+const DEFAULTS = {};
+CONTROLS.forEach((c) => { DEFAULTS[c.key] = c.value; });
+SEED_KEYS.forEach((k, i) => { DEFAULTS[k] = 7 + i * 13; });
+
+/* ------------------------------------------------------------------ presets */
+/* Each preset is an override on top of DEFAULTS, so it only names what it
+   changes. Anything a preset omits falls back to the default value. */
+
+const PRESETS = {
+    "warped-graphite": {
+        label: "Warped graphite (start)",
+        params: {}
+    },
+
+    "marble-veins": {
+        label: "Marble veins",
+        params: {
+            baseType: "turbulence", baseFreqX: 0.012, baseFreqY: 0.012, baseOct: 5,
+            warpAFreq: 0.004, warpAOct: 3, warp1Scale: 170,
+            warp2Source: "iterated", warpBFreq: 0.014, warpBOct: 4, warp2Scale: 60,
+            modMode: "multiply", modFreq: 0.007, modOct: 3, modWarp: 90, modAmount: 0.7,
+            contour: "ridged", contrast: 1.0, brightness: 0, gamma: 1, blur: 0,
+            grainFreq: 0.65, grainAmount: 0.12, relief: false
+        }
+    },
+
+    "rough-paper": {
+        label: "Rough paper (relief)",
+        params: {
+            baseType: "fractalNoise", baseFreqX: 0.03, baseFreqY: 0.005, baseOct: 8,
+            warpAFreq: 0.02, warpAOct: 3, warp1Scale: 55,
+            warp2Source: "iterated", warpBFreq: 0.058, warpBOct: 2, warp2Scale: 22,
+            modMode: "multiply", modFreq: 0.01, modOct: 2, modWarp: 90, modAmount: 0.35,
+            contour: "smooth", contrast: 0.45, brightness: 0.37, gamma: 1, blur: 0.3,
+            grainType: "fractalNoise", grainFreq: 0.95, grainOct: 2, grainAmount: 0.22,
+            relief: true, surfaceScale: 4, azimuth: 135, elevation: 30
+        }
+    },
+
+    "canvas-scan": {
+        label: "White canvas scan",
+        params: {
+            baseType: "fractalNoise", baseFreqX: 0.007, baseFreqY: 0.007, baseOct: 4,
+            warpAFreq: 0.006, warpAOct: 3, warp1Scale: 40,
+            warp2Source: "fieldB", warpBFreq: 0.03, warpBOct: 2, warp2Scale: 15,
+            modMode: "multiply", modFreq: 0.003, modOct: 3, modWarp: 60, modAmount: 0.30,
+            contour: "smooth", contrast: 0.10, brightness: 0.48, gamma: 1, blur: 0.3,
+            weaveAmount: 0.10, weaveFreq: 0.42, weaveSlow: 0.008, weaveBlend: "screen",
+            grainType: "fractalNoise", grainFreq: 0.9, grainOct: 1, grainAmount: 0.06,
+            fleckStrength: 0.6, fleckFreq: 0.4, fleckThreshold: 0.62,
+            fleckStretch: 8, fleckCurve: 15, fleckCluster: 0.85,
+            relief: false,
+            edgeStrength: 0.16, edgeInset: 3, edgeSoft: 2.5, edgeRagged: 5,
+            seedWeave: 71, seedFleck: 88
+        }
+    },
+
+    "smoke-wisps": {
+        label: "Smoke wisps",
+        params: {
+            baseType: "fractalNoise", baseFreqX: 0.006, baseFreqY: 0.006, baseOct: 4,
+            warpAFreq: 0.003, warpAOct: 4, warp1Scale: 330,
+            warp2Source: "iterated", warpBFreq: 0.01, warpBOct: 3, warp2Scale: 120,
+            modMode: "screen", modFreq: 0.003, modOct: 2, modWarp: 150, modAmount: 0.5,
+            contour: "smooth", contrast: 1.6, brightness: -0.05, gamma: 1.2, blur: 1.2,
+            grainAmount: 0.04, relief: false
+        }
+    },
+
+    "topographic": {
+        label: "Topographic contours",
+        params: {
+            baseType: "fractalNoise", baseFreqX: 0.008, baseFreqY: 0.008, baseOct: 3,
+            warpAFreq: 0.004, warpAOct: 3, warp1Scale: 140,
+            warp2Source: "iterated", warpBFreq: 0.016, warpBOct: 2, warp2Scale: 40,
+            modMode: "screen", modFreq: 0.005, modOct: 2, modWarp: 70, modAmount: 0.25,
+            contour: "lines", contourDetail: 7,
+            contrast: 1.0, brightness: 0.12, gamma: 1, blur: 0.3,
+            grainType: "fractalNoise", grainFreq: 0.7, grainOct: 1, grainAmount: 0.05,
+            relief: false
+        }
+    },
+
+    "terraced-camo": {
+        label: "Terraced camo",
+        params: {
+            baseType: "turbulence", baseFreqX: 0.01, baseFreqY: 0.01, baseOct: 6,
+            warpAFreq: 0.005, warpAOct: 3, warp1Scale: 120,
+            warp2Source: "iterated", warpBFreq: 0.02, warpBOct: 3, warp2Scale: 45,
+            modMode: "overlay", modFreq: 0.006, modOct: 2, modWarp: 70, modAmount: 0.4,
+            contour: "terraced", contourDetail: 6,
+            contrast: 1.1, brightness: 0.1, gamma: 1, blur: 0.5,
+            grainFreq: 0.5, grainAmount: 0.08,
+            relief: true, surfaceScale: 8, azimuth: 225, elevation: 45
+        }
+    }
+};
+
+const params = Object.assign({}, DEFAULTS);
+
+/* ------------------------------------------------------------ filter graph */
+
+const GREY_OPAQUE =
+    "0.2126 0.7152 0.0722 0 0 " +
+    "0.2126 0.7152 0.0722 0 0 " +
+    "0.2126 0.7152 0.0722 0 0 " +
+    "0 0 0 0 1";
+
+// Luma of the RGB channels moved into alpha — feDiffuseLighting bumps on alpha.
+const LUMA_TO_ALPHA =
+    "0 0 0 0 0 " +
+    "0 0 0 0 0 " +
+    "0 0 0 0 0 " +
+    "0.2126 0.7152 0.0722 0 0";
+
+function rgbFuncs(attrs) {
+    return ["R", "G", "B"].map((ch) => `<feFunc${ch} ${attrs} />`).join("");
+}
+
+function contourTable(mode, detail) {
+    if (mode === "ridged") return { type: "table", values: "1 0 1" };
+
+    if (mode === "folded") {
+        const stops = [];
+        for (let i = 0; i <= detail * 2; i++) stops.push(i % 2 === 0 ? 0 : 1);
+        return { type: "table", values: stops.join(" ") };
+    }
+
+    if (mode === "lines") {
+        // Mostly white with a narrow dip every third entry -> thin contour lines.
+        const stops = [];
+        for (let i = 0; i <= detail * 3; i++) stops.push(i % 3 === 1 ? 0 : 1);
+        return { type: "table", values: stops.join(" ") };
+    }
+
+    if (mode === "terraced") {
+        const steps = Math.max(2, detail + 1);
+        const stops = [];
+        for (let i = 0; i < steps; i++) {
+            stops.push((i / (steps - 1)).toFixed(3));
+        }
+        return { type: "discrete", values: stops.join(" ") };
+    }
+
+    return null;
+}
+
+/**
+ * Builds the primitive list. `stopAt` truncates the graph for the stage
+ * previews: base | warp1 | warp2 | mod | final.
+ */
+function buildPrimitives(p, stopAt) {
+    const out = [];
+    let last;
+
+    const push = (markup) => out.push(markup);
+    const grey = (input, result) =>
+        push(`<feColorMatrix in="${input}" type="matrix" values="${GREY_OPAQUE}" result="${result}" />`);
+
+    // --- source fields ----------------------------------------------------
+    push(`<feTurbulence type="fractalNoise" baseFrequency="${p.warpAFreq}" numOctaves="${p.warpAOct}" seed="${p.seedWarpA}" result="warpFieldA" />`);
+    push(`<feTurbulence type="fractalNoise" baseFrequency="${p.warpBFreq}" numOctaves="${p.warpBOct}" seed="${p.seedWarpB}" result="warpFieldB" />`);
+    push(`<feTurbulence type="${p.baseType}" baseFrequency="${p.baseFreqX} ${p.baseFreqY}" numOctaves="${p.baseOct}" seed="${p.seedBase}" result="basePattern" />`);
+
+    grey("basePattern", "baseGrey");
+    last = "baseGrey";
+    if (stopAt === "base") return finish(out, last, p);
+
+    // --- warp pass 1: q = base(p + A(p)) ----------------------------------
+    push(`<feDisplacementMap in="${last}" in2="warpFieldA" scale="${p.warp1Scale}" xChannelSelector="R" yChannelSelector="G" result="warped1" />`);
+    last = "warped1";
+    if (stopAt === "warp1") return finish(out, last, p);
+
+    // --- warp pass 2: field B optionally warped by A first ----------------
+    let field2 = "warpFieldB";
+    if (p.warp2Source === "iterated") {
+        push(`<feDisplacementMap in="warpFieldB" in2="warpFieldA" scale="${p.warp1Scale}" xChannelSelector="R" yChannelSelector="G" result="warpFieldBW" />`);
+        field2 = "warpFieldBW";
+    }
+    push(`<feDisplacementMap in="${last}" in2="${field2}" scale="${p.warp2Scale}" xChannelSelector="G" yChannelSelector="B" result="warped2" />`);
+    last = "warped2";
+    if (stopAt === "warp2") return finish(out, last, p);
+
+    // --- modulation -------------------------------------------------------
+    push(`<feTurbulence type="fractalNoise" baseFrequency="${p.modFreq}" numOctaves="${p.modOct}" seed="${p.seedMod}" result="modRaw" />`);
+
+    let modSource = "modRaw";
+    if (Number(p.modWarp) > 0) {
+        push(`<feDisplacementMap in="modRaw" in2="warpFieldA" scale="${p.modWarp}" xChannelSelector="B" yChannelSelector="R" result="modWarped" />`);
+        modSource = "modWarped";
+    }
+    grey(modSource, "modGrey");
+
+    push(`<feBlend in="${last}" in2="modGrey" mode="${p.modMode}" result="modBlend" />`);
+    grey("modBlend", "modBlendGrey");
+
+    const mix = Number(p.modAmount);
+    push(`<feComposite in="${last}" in2="modBlendGrey" operator="arithmetic" k1="0" k2="${(1 - mix).toFixed(3)}" k3="${mix.toFixed(3)}" k4="0" result="modulated" />`);
+    last = "modulated";
+    if (stopAt === "mod") return finish(out, last, p);
+
+    // --- shaping: fold / terrace, then levels -----------------------------
+    const table = contourTable(p.contour, Number(p.contourDetail));
+    if (table) {
+        push(`<feComponentTransfer in="${last}" result="contoured">${rgbFuncs(`type="${table.type}" tableValues="${table.values}"`)}</feComponentTransfer>`);
+        last = "contoured";
+    }
+
+    const contrast = Number(p.contrast);
+    const intercept = 0.5 - contrast * 0.5 + Number(p.brightness);
+    push(`<feComponentTransfer in="${last}" result="leveled">${rgbFuncs(`type="linear" slope="${contrast.toFixed(3)}" intercept="${intercept.toFixed(3)}"`)}</feComponentTransfer>`);
+    last = "leveled";
+
+    if (Number(p.gamma) !== 1) {
+        push(`<feComponentTransfer in="${last}" result="gammaed">${rgbFuncs(`type="gamma" exponent="${Number(p.gamma).toFixed(3)}" amplitude="1" offset="0"`)}</feComponentTransfer>`);
+        last = "gammaed";
+    }
+
+    if (Number(p.blur) > 0) {
+        push(`<feGaussianBlur in="${last}" stdDeviation="${p.blur}" result="softened" />`);
+        last = "softened";
+    }
+    if (stopAt === "shape") return finish(out, last, p);
+
+    // --- weave: two extremely anisotropic turbulences crossed -------------
+    const weaveAmount = Number(p.weaveAmount);
+    if (weaveAmount > 0) {
+        push(`<feTurbulence type="turbulence" baseFrequency="${p.weaveSlow} ${p.weaveFreq}" numOctaves="1" seed="${p.seedWeave}" result="weaveH" />`);
+        push(`<feTurbulence type="turbulence" baseFrequency="${p.weaveFreq} ${p.weaveSlow}" numOctaves="1" seed="${Number(p.seedWeave) + 1}" result="weaveV" />`);
+        push(`<feBlend in="weaveH" in2="weaveV" mode="${p.weaveBlend}" result="weaveMix" />`);
+        grey("weaveMix", "weaveGrey");
+        push(`<feComposite in="${last}" in2="weaveGrey" operator="arithmetic" k1="0" k2="1" k3="${weaveAmount.toFixed(3)}" k4="${(-weaveAmount * 0.5).toFixed(3)}" result="woven" />`);
+        last = "woven";
+    }
+
+    // --- grain: last + amount * (grain - 0.5) -----------------------------
+    const grainAmount = Number(p.grainAmount);
+    if (grainAmount > 0) {
+        push(`<feTurbulence type="${p.grainType}" baseFrequency="${p.grainFreq}" numOctaves="${p.grainOct}" seed="${p.seedGrain}" result="grainRaw" />`);
+        grey("grainRaw", "grainGrey");
+        push(`<feComposite in="${last}" in2="grainGrey" operator="arithmetic" k1="0" k2="1" k3="${grainAmount.toFixed(3)}" k4="${(-grainAmount * 0.5).toFixed(3)}" result="grained" />`);
+        last = "grained";
+    }
+
+    // --- flecks: thresholded noise painted as dark specks / scratches -----
+    const fleckStrength = Number(p.fleckStrength);
+    if (fleckStrength > 0) {
+        const freq = Number(p.fleckFreq);
+        const stretch = Math.max(1, Number(p.fleckStretch));
+        push(`<feTurbulence type="turbulence" baseFrequency="${(freq / stretch).toFixed(4)} ${freq}" numOctaves="1" seed="${p.seedFleck}" result="fleckRaw" />`);
+
+        let fleckSource = "fleckRaw";
+        if (Number(p.fleckCurve) > 0) {
+            push(`<feDisplacementMap in="fleckRaw" in2="warpFieldA" scale="${p.fleckCurve}" xChannelSelector="R" yChannelSelector="G" result="fleckCurved" />`);
+            fleckSource = "fleckCurved";
+        }
+
+        // Luma -> alpha with a steep gain so only values past the threshold survive.
+        const gain = 20;
+        const bias = gain * Number(p.fleckThreshold);
+        push(`<feColorMatrix in="${fleckSource}" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  ${(0.2126 * gain).toFixed(3)} ${(0.7152 * gain).toFixed(3)} ${(0.0722 * gain).toFixed(3)} 0 ${(-bias).toFixed(3)}" result="fleckAlpha" />`);
+
+        // Real grime clumps. Multiplying the speck alpha by the coarse field's
+        // alpha thins specks out in "clean" areas instead of spreading evenly.
+        let fleckMask = "fleckAlpha";
+        const cluster = Number(p.fleckCluster);
+        if (cluster > 0) {
+            push(`<feComponentTransfer in="warpFieldA" result="fleckClusterMask"><feFuncA type="table" tableValues="${(1 - cluster).toFixed(3)} 1" /></feComponentTransfer>`);
+            push(`<feComposite in="fleckAlpha" in2="fleckClusterMask" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="fleckClustered" />`);
+            fleckMask = "fleckClustered";
+        }
+
+        push(`<feFlood flood-color="#000000" flood-opacity="${fleckStrength.toFixed(3)}" result="fleckInk" />`);
+        push(`<feComposite in="fleckInk" in2="${fleckMask}" operator="in" result="fleckLayer" />`);
+        push(`<feComposite in="fleckLayer" in2="${last}" operator="over" result="flecked" />`);
+        last = "flecked";
+    }
+
+    // --- optional relief lighting ----------------------------------------
+    if (p.relief) {
+        push(`<feColorMatrix in="${last}" type="matrix" values="${LUMA_TO_ALPHA}" result="heightMap" />`);
+        push(`<feDiffuseLighting in="heightMap" lighting-color="#ffffff" surfaceScale="${p.surfaceScale}" diffuseConstant="1" result="relief"><feDistantLight azimuth="${p.azimuth}" elevation="${p.elevation}" /></feDiffuseLighting>`);
+        // shaped * (relief + 0.5): a flat relief of 0.5 leaves the tones alone.
+        push(`<feComposite in="${last}" in2="relief" operator="arithmetic" k1="1" k2="0.5" k3="0" k4="0" result="reliefMixed" />`);
+        grey("reliefMixed", "reliefGrey");
+        last = "reliefGrey";
+    }
+
+    // --- edge grime: the source rect eroded into a ragged border band -----
+    const edgeStrength = Number(p.edgeStrength);
+    if (edgeStrength > 0) {
+        push(`<feMorphology in="SourceAlpha" operator="erode" radius="${p.edgeInset}" result="edgeCore" />`);
+        push(`<feGaussianBlur in="edgeCore" stdDeviation="${p.edgeSoft}" result="edgeSoft" />`);
+
+        let band = "edgeSoft";
+        if (Number(p.edgeRagged) > 0) {
+            push(`<feDisplacementMap in="edgeSoft" in2="warpFieldB" scale="${p.edgeRagged}" xChannelSelector="R" yChannelSelector="G" result="edgeRagged" />`);
+            band = "edgeRagged";
+        }
+
+        // Invert (so the band lives at the rim), clip to the rect, break it up
+        // with field B's alpha so the grime is patchy instead of a clean frame.
+        push(`<feComponentTransfer in="${band}" result="edgeInv"><feFuncA type="table" tableValues="1 0" /></feComponentTransfer>`);
+        push(`<feComposite in="edgeInv" in2="SourceAlpha" operator="in" result="edgeBand" />`);
+        push(`<feComponentTransfer in="warpFieldB" result="edgeMottle"><feFuncA type="table" tableValues="0.35 1" /></feComponentTransfer>`);
+        push(`<feComposite in="edgeBand" in2="edgeMottle" operator="arithmetic" k1="1" k2="0" k3="0" k4="0" result="edgePatchy" />`);
+        push(`<feFlood flood-color="#000000" flood-opacity="${edgeStrength.toFixed(3)}" result="edgeInk" />`);
+        push(`<feComposite in="edgeInk" in2="edgePatchy" operator="in" result="edgeShadow" />`);
+        push(`<feComposite in="edgeShadow" in2="${last}" operator="over" result="edged" />`);
+        last = "edged";
+    }
+
+    return finish(out, last, p);
+}
+
+// Terminal primitive: identity RGB, forced opaque alpha, no `result`.
+function finish(primitives, last) {
+    return primitives.concat(
+        `<feColorMatrix in="${last}" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" />`
+    ).join("\n");
+}
+
+function filterMarkup(id, p, stopAt) {
+    return [
+        `<filter id="${id}" x="-30%" y="-30%" width="160%" height="160%"`,
+        `        filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"`,
+        `        color-interpolation-filters="sRGB">`,
+        buildPrimitives(p, stopAt),
+        `</filter>`
+    ].join("\n");
+}
+
+function installFilter(defs, id, p, stopAt) {
+    const doc = new DOMParser().parseFromString(
+        `<svg xmlns="${SVG_NS}">${filterMarkup(id, p, stopAt)}</svg>`,
+        "image/svg+xml"
+    );
+    const parsed = doc.querySelector("filter");
+    if (!parsed) return;
+
+    const node = document.importNode(parsed, true);
+    const existing = defs.querySelector("#" + id);
+    if (existing) defs.replaceChild(node, existing);
+    else defs.appendChild(node);
+}
+
+/* -------------------------------------------------------------- panel + UI */
+
+const panel = document.getElementById("panel");
+const groups = new Map();
+
+CONTROLS.forEach((c) => {
+    if (!groups.has(c.group)) {
+        const box = document.createElement("div");
+        box.className = "group";
+        box.innerHTML = `<h2>${c.group}</h2>`;
+        panel.appendChild(box);
+        groups.set(c.group, box);
+    }
+    const box = groups.get(c.group);
+    const wrap = document.createElement("div");
+    wrap.className = "control" + (c.type === "checkbox" ? " row" : "");
+
+    if (c.type === "checkbox") {
+        wrap.innerHTML =
+            `<label class="inline">${c.label}` +
+            `<input id="${c.key}" type="checkbox" ${c.value ? "checked" : ""}></label>`;
+    } else if (c.type === "select") {
+        const options = c.options
+            .map((o) => {
+                const value = typeof o === "string" ? o : o.value;
+                const text = typeof o === "string" ? o : o.label;
+                return `<option value="${value}"${value === c.value ? " selected" : ""}>${text}</option>`;
+            })
+            .join("");
+        wrap.innerHTML = `<label>${c.label}</label><select id="${c.key}">${options}</select>`;
+    } else {
+        wrap.innerHTML =
+            `<label>${c.label}<span class="val" id="${c.key}Value"></span></label>` +
+            `<input id="${c.key}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.value}">`;
+    }
+
+    box.appendChild(wrap);
+});
+
+const STAGES = [
+    { id: "stageBase", stopAt: "base", caption: "1 · base noise" },
+    { id: "stageWarp1", stopAt: "warp1", caption: "2 · warp pass 1" },
+    { id: "stageWarp2", stopAt: "warp2", caption: "3 · warp pass 2" },
+    { id: "stageMod", stopAt: "mod", caption: "4 · modulated" },
+    { id: "stageShape", stopAt: "shape", caption: "5 · shaped" },
+    { id: "stageFinal", stopAt: "final", caption: "6 · surface + edges" }
+];
+
+const thumbs = document.getElementById("thumbs");
+STAGES.forEach((stage) => {
+    const figure = document.createElement("figure");
+    figure.innerHTML =
+        `<svg viewBox="0 0 300 200" preserveAspectRatio="xMidYMid slice">` +
+        `<defs id="${stage.id}Defs"></defs>` +
+        `<rect x="0" y="0" width="300" height="200" fill="#808080" filter="url(#${stage.id})" />` +
+        `</svg><figcaption>${stage.caption}</figcaption>`;
+    thumbs.appendChild(figure);
+});
+
+const preview = document.getElementById("preview");
+const previewRect = document.getElementById("previewRect");
+const previewDefs = document.getElementById("previewDefs");
+
+function readControls() {
+    CONTROLS.forEach((c) => {
+        const el = document.getElementById(c.key);
+        params[c.key] = c.type === "checkbox" ? el.checked : el.value;
+        const out = document.getElementById(c.key + "Value");
+        if (out) out.textContent = params[c.key];
+    });
+}
+
+/* Presets write into the inputs, then the normal read/render path runs, so a
+   preset and a hand-tweaked state are never out of sync. */
+
+const presetSelect = document.getElementById("preset");
+presetSelect.innerHTML =
+    Object.entries(PRESETS)
+        .map(([key, preset]) => `<option value="${key}">${preset.label}</option>`)
+        .join("") + `<option value="">— custom —</option>`;
+
+function applyPreset(key) {
+    const preset = PRESETS[key];
+    if (!preset) return;
+
+    const merged = Object.assign({}, DEFAULTS, preset.params);
+
+    CONTROLS.forEach((c) => {
+        const el = document.getElementById(c.key);
+        if (c.type === "checkbox") el.checked = Boolean(merged[c.key]);
+        else el.value = merged[c.key];
+    });
+    SEED_KEYS.forEach((k) => { params[k] = merged[k]; });
+
+    update();
+    presetSelect.value = key;
+}
+
+presetSelect.addEventListener("change", () => {
+    if (presetSelect.value) applyPreset(presetSelect.value);
+});
+
+let pending = null;
+
+function render() {
+    installFilter(previewDefs, "warpNoise", params, "final");
+
+    thumbs.classList.toggle("hidden", !params.showStages);
+    if (params.showStages) {
+        STAGES.forEach((stage) => {
+            installFilter(
+                document.getElementById(stage.id + "Defs"),
+                stage.id,
+                params,
+                stage.stopAt
+            );
+        });
+    }
+}
+
+function update() {
+    readControls();
+    if (pending) cancelAnimationFrame(pending);
+    pending = requestAnimationFrame(() => {
+        pending = null;
+        render();
+    });
+}
+
+CONTROLS.forEach((c) => {
+    const el = document.getElementById(c.key);
+    const onEdit = () => {
+        presetSelect.value = "";
+        update();
+    };
+    el.addEventListener("input", onEdit);
+    el.addEventListener("change", onEdit);
+});
+
+function randomizeSeeds() {
+    SEED_KEYS.forEach((k) => {
+        params[k] = Math.floor(Math.random() * 1000);
+    });
+    render();
+}
+
+document.getElementById("randomize").addEventListener("click", randomizeSeeds);
+
+document.getElementById("copyFilter").addEventListener("click", async () => {
+    const markup = filterMarkup("warpNoise", params, "final");
+    const button = document.getElementById("copyFilter");
+    try {
+        await navigator.clipboard.writeText(markup);
+        button.textContent = "Copied to clipboard";
+    } catch (error) {
+        console.log(markup);
+        button.textContent = "Logged to console";
+    }
+    setTimeout(() => { button.textContent = "Copy filter markup"; }, 1600);
+});
+
+window.addEventListener("keydown", (event) => {
+    if (event.key === "r" || event.key === "R") randomizeSeeds();
+});
+
+// Keep one user unit == one CSS pixel so baseFrequency stays predictable.
+function resizePreview() {
+    const rect = document.getElementById("stage").getBoundingClientRect();
+    const width = Math.max(1, Math.round(rect.width));
+    const height = Math.max(1, Math.round(rect.height));
+    preview.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    previewRect.setAttribute("width", width);
+    previewRect.setAttribute("height", height);
+}
+
+window.addEventListener("resize", resizePreview);
+
+resizePreview();
+
+// ?preset=canvas-scan etc. — handy for linking a look straight from the URL.
+const requestedPreset = new URLSearchParams(location.search).get("preset");
+applyPreset(PRESETS[requestedPreset] ? requestedPreset : "warped-graphite");
+</script>
+
+  </body>
+</html>
+
+<!-- 
+<filter id="warpNoise" x="-30%" y="-30%" width="160%" height="160%"
+        filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"
+        color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="6" seed="20" result="warpFieldA" />
+<feTurbulence type="fractalNoise" baseFrequency="0.033" numOctaves="4" seed="33" result="warpFieldB" />
+<feTurbulence type="fractalNoise" baseFrequency="0.012 0.008" numOctaves="5" seed="7" result="basePattern" />
+<feColorMatrix in="basePattern" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="baseGrey" />
+<feDisplacementMap in="baseGrey" in2="warpFieldA" scale="354" xChannelSelector="R" yChannelSelector="G" result="warped1" />
+<feDisplacementMap in="warpFieldB" in2="warpFieldA" scale="354" xChannelSelector="R" yChannelSelector="G" result="warpFieldBW" />
+<feDisplacementMap in="warped1" in2="warpFieldBW" scale="184" xChannelSelector="G" yChannelSelector="B" result="warped2" />
+<feTurbulence type="fractalNoise" baseFrequency="0.005" numOctaves="2" seed="46" result="modRaw" />
+<feDisplacementMap in="modRaw" in2="warpFieldA" scale="76" xChannelSelector="B" yChannelSelector="R" result="modWarped" />
+<feColorMatrix in="modWarped" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="modGrey" />
+<feBlend in="warped2" in2="modGrey" mode="multiply" result="modBlend" />
+<feColorMatrix in="modBlend" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="modBlendGrey" />
+<feComposite in="warped2" in2="modBlendGrey" operator="arithmetic" k1="0" k2="0.170" k3="0.830" k4="0" result="modulated" />
+<feComponentTransfer in="modulated" result="contoured"><feFuncR type="table" tableValues="1 0 1" /><feFuncG type="table" tableValues="1 0 1" /><feFuncB type="table" tableValues="1 0 1" /></feComponentTransfer>
+<feComponentTransfer in="contoured" result="leveled"><feFuncR type="linear" slope="0.500" intercept="0.550" /><feFuncG type="linear" slope="0.500" intercept="0.550" /><feFuncB type="linear" slope="0.500" intercept="0.550" /></feComponentTransfer>
+<feComponentTransfer in="leveled" result="gammaed"><feFuncR type="gamma" exponent="0.400" amplitude="1" offset="0" /><feFuncG type="gamma" exponent="0.400" amplitude="1" offset="0" /><feFuncB type="gamma" exponent="0.400" amplitude="1" offset="0" /></feComponentTransfer>
+<feGaussianBlur in="gammaed" stdDeviation="0.4" result="softened" />
+<feTurbulence type="fractalNoise" baseFrequency="0.74" numOctaves="2" seed="59" result="grainRaw" />
+<feColorMatrix in="grainRaw" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="grainGrey" />
+<feComposite in="softened" in2="grainGrey" operator="arithmetic" k1="0" k2="1" k3="0.470" k4="-0.235" result="grained" />
+<feColorMatrix in="grained" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" />
+</filter>
+
+or
+
+<filter id="warpNoise" x="-30%" y="-30%" width="160%" height="160%"
+        filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"
+        color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="20" result="warpFieldA" />
+<feTurbulence type="fractalNoise" baseFrequency="0.058" numOctaves="2" seed="33" result="warpFieldB" />
+<feTurbulence type="fractalNoise" baseFrequency="0.03 0.005" numOctaves="8" seed="7" result="basePattern" />
+<feColorMatrix in="basePattern" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="baseGrey" />
+<feDisplacementMap in="baseGrey" in2="warpFieldA" scale="327" xChannelSelector="R" yChannelSelector="G" result="warped1" />
+<feDisplacementMap in="warpFieldB" in2="warpFieldA" scale="327" xChannelSelector="R" yChannelSelector="G" result="warpFieldBW" />
+<feDisplacementMap in="warped1" in2="warpFieldBW" scale="200" xChannelSelector="G" yChannelSelector="B" result="warped2" />
+<feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="2" seed="46" result="modRaw" />
+<feDisplacementMap in="modRaw" in2="warpFieldA" scale="268" xChannelSelector="B" yChannelSelector="R" result="modWarped" />
+<feColorMatrix in="modWarped" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="modGrey" />
+<feBlend in="warped2" in2="modGrey" mode="multiply" result="modBlend" />
+<feColorMatrix in="modBlend" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="modBlendGrey" />
+<feComposite in="warped2" in2="modBlendGrey" operator="arithmetic" k1="0" k2="0.510" k3="0.490" k4="0" result="modulated" />
+<feComponentTransfer in="modulated" result="contoured"><feFuncR type="table" tableValues="1 0 1" /><feFuncG type="table" tableValues="1 0 1" /><feFuncB type="table" tableValues="1 0 1" /></feComponentTransfer>
+<feComponentTransfer in="contoured" result="leveled"><feFuncR type="linear" slope="0.800" intercept="0.400" /><feFuncG type="linear" slope="0.800" intercept="0.400" /><feFuncB type="linear" slope="0.800" intercept="0.400" /></feComponentTransfer>
+<feComponentTransfer in="leveled" result="gammaed"><feFuncR type="gamma" exponent="0.400" amplitude="1" offset="0" /><feFuncG type="gamma" exponent="0.400" amplitude="1" offset="0" /><feFuncB type="gamma" exponent="0.400" amplitude="1" offset="0" /></feComponentTransfer>
+<feGaussianBlur in="gammaed" stdDeviation="0.4" result="softened" />
+<feTurbulence type="fractalNoise" baseFrequency="0.74" numOctaves="2" seed="59" result="grainRaw" />
+<feColorMatrix in="grainRaw" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="grainGrey" />
+<feComposite in="softened" in2="grainGrey" operator="arithmetic" k1="0" k2="1" k3="0.470" k4="-0.235" result="grained" />
+<feColorMatrix in="grained" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" />
+</filter>
+
+or 
+<filter id="warpNoise" x="-30%" y="-30%" width="160%" height="160%"
+        filterUnits="objectBoundingBox" primitiveUnits="userSpaceOnUse"
+        color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="20" result="warpFieldA" />
+<feTurbulence type="fractalNoise" baseFrequency="0.058" numOctaves="2" seed="33" result="warpFieldB" />
+<feTurbulence type="fractalNoise" baseFrequency="0.03 0.005" numOctaves="8" seed="7" result="basePattern" />
+<feColorMatrix in="basePattern" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="baseGrey" />
+<feDisplacementMap in="baseGrey" in2="warpFieldA" scale="327" xChannelSelector="R" yChannelSelector="G" result="warped1" />
+<feDisplacementMap in="warpFieldB" in2="warpFieldA" scale="327" xChannelSelector="R" yChannelSelector="G" result="warpFieldBW" />
+<feDisplacementMap in="warped1" in2="warpFieldBW" scale="200" xChannelSelector="G" yChannelSelector="B" result="warped2" />
+<feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="2" seed="46" result="modRaw" />
+<feDisplacementMap in="modRaw" in2="warpFieldA" scale="268" xChannelSelector="B" yChannelSelector="R" result="modWarped" />
+<feColorMatrix in="modWarped" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="modGrey" />
+<feBlend in="warped2" in2="modGrey" mode="multiply" result="modBlend" />
+<feColorMatrix in="modBlend" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="modBlendGrey" />
+<feComposite in="warped2" in2="modBlendGrey" operator="arithmetic" k1="0" k2="0.510" k3="0.490" k4="0" result="modulated" />
+<feComponentTransfer in="modulated" result="contoured"><feFuncR type="table" tableValues="1 0 1" /><feFuncG type="table" tableValues="1 0 1" /><feFuncB type="table" tableValues="1 0 1" /></feComponentTransfer>
+<feComponentTransfer in="contoured" result="leveled"><feFuncR type="linear" slope="1.500" intercept="0.750" /><feFuncG type="linear" slope="1.500" intercept="0.750" /><feFuncB type="linear" slope="1.500" intercept="0.750" /></feComponentTransfer>
+<feComponentTransfer in="leveled" result="gammaed"><feFuncR type="gamma" exponent="1.100" amplitude="1" offset="0" /><feFuncG type="gamma" exponent="1.100" amplitude="1" offset="0" /><feFuncB type="gamma" exponent="1.100" amplitude="1" offset="0" /></feComponentTransfer>
+<feGaussianBlur in="gammaed" stdDeviation="1" result="softened" />
+<feTurbulence type="fractalNoise" baseFrequency="0.74" numOctaves="2" seed="59" result="grainRaw" />
+<feColorMatrix in="grainRaw" type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 0 1" result="grainGrey" />
+<feComposite in="softened" in2="grainGrey" operator="arithmetic" k1="0" k2="1" k3="0.470" k4="-0.235" result="grained" />
+<feColorMatrix in="grained" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 1" />
+</filter>
+
+-->
